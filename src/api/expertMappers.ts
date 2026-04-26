@@ -1,24 +1,31 @@
 import type {
   BidStatusCode,
   BidStatusLabel,
+  ClientContactDto,
+  ClientContactVM,
   CreateBidRequest,
   CreateBidRequestDto,
-  CreateVerificationRequestDto,
   ExpertJobDetailVM,
   ExpertJobListItemVM,
   ExpertProfileFormVM,
   ExpertProfileResponseDto,
-  ExpertVerificationStatusVM,
-  ExpertVerificationStatusResponseDto,
   JobPostDetailResponseDto,
   JobPostListItemDto,
   JobPostListResponseDto,
   JobPostStatusCode,
+  JobPostTypeCode,
+  JobPostTypeLabel,
   MyBidItemDto,
   MyBidItemVM,
-  SubmitExpertVerificationRequest,
   UpdateExpertProfileRequestDto,
 } from "../types/expert";
+
+const jobPostTypeLabels: Record<JobPostTypeCode, JobPostTypeLabel> = {
+  LICENSE: "필요 면허",
+  SURVEY: "실태 조사",
+  PERIODIC_REPORT: "주기적 신고",
+  ETC: "기타",
+};
 
 const jobPostStatusLabels: Record<JobPostStatusCode, string> = {
   BIDDING: "입찰 중",
@@ -41,23 +48,50 @@ function formatDate(value: string) {
   return value.slice(0, 10);
 }
 
+function normalizeNullable(value: string | null | undefined) {
+  return value ?? undefined;
+}
+
+function mapJobPostType(dto: JobPostListItemDto) {
+  return dto.job_type_label ?? jobPostTypeLabels[dto.job_type];
+}
+
+function mapClientContactDtoToVM(
+  contact: ClientContactDto | null,
+): ClientContactVM | undefined {
+  if (!contact) return undefined;
+
+  const parts = [contact.name, contact.phone, contact.email].filter(Boolean);
+
+  return {
+    copyText: parts.join(" / "),
+    displayText: parts.join(" · "),
+    email: normalizeNullable(contact.email),
+    name: normalizeNullable(contact.name),
+    phone: normalizeNullable(contact.phone),
+  };
+}
+
 export function mapJobPostListItemDtoToVM(dto: JobPostListItemDto): ExpertJobListItemVM {
   return {
     id: dto.id,
+    companyName: dto.company_name,
     title: dto.title,
     industry: dto.industry,
-    type: dto.job_type,
-    businessType: dto.business_type,
-    classification: dto.classification,
-    requiredLicense: dto.required_license,
-    currentIndustry: dto.current_industry,
-    currentLicense: dto.current_license,
-    reason: dto.reason,
-    assetScale: dto.asset_scale_label,
+    typeCode: dto.job_type,
+    type: mapJobPostType(dto),
+    businessType: normalizeNullable(dto.business_type),
+    classification: normalizeNullable(dto.classification),
+    requiredLicense: normalizeNullable(dto.required_license),
+    currentIndustry: normalizeNullable(dto.current_industry),
+    currentLicense: normalizeNullable(dto.current_license),
+    reason: normalizeNullable(dto.reason),
+    assetScale: normalizeNullable(dto.asset_scale_label),
     bids: dto.bid_count,
     postedDate: formatDate(dto.posted_at),
     isNew: dto.is_new,
     status: jobPostStatusLabels[dto.status],
+    hasMyBid: dto.has_my_bid,
   };
 }
 
@@ -72,8 +106,8 @@ export function mapJobPostDetailDtoToVM(dto: JobPostDetailResponseDto): ExpertJo
     company: {
       id: dto.company.id,
       name: dto.company.name,
-      representative: dto.company.representative,
-      location: dto.company.location,
+      representative: dto.company.representative ?? "",
+      location: normalizeNullable(dto.company.location),
     },
   };
 }
@@ -87,7 +121,7 @@ export function mapBidDtoToVM(dto: MyBidItemDto): MyBidItemVM {
     status: bidStatusLabels[dto.status],
     bidDate: formatDate(dto.submitted_at),
     totalBids: dto.total_bid_count,
-    clientContact: dto.client_contact,
+    clientContact: mapClientContactDtoToVM(dto.client_contact),
   };
 }
 
@@ -99,21 +133,17 @@ export function mapExpertProfileDtoToVM(dto: ExpertProfileResponseDto): ExpertPr
     userId: profile.user_id,
     name: dto.user.name,
     email: dto.user.email,
-    phone: dto.user.phone,
+    phone: dto.user.phone ?? "",
     companyName: profile.company_name,
-    licenseType: profile.license_type,
-    licenseNumber: profile.license_number,
+    licenseType: profile.license_type ?? undefined,
     expertiseAreas: profile.expertise_areas,
-    experienceYears: profile.experience_years,
-    education: profile.education,
-    introduction: profile.introduction,
-    portfolio: profile.portfolio,
+    portfolio: profile.portfolio ?? undefined,
     verificationStatus: profile.verification_status,
     stats: {
       activeBids: profile.stats.active_bids,
       wonProjects: profile.stats.won_projects,
       completedProjects: profile.stats.completed_projects,
-      totalEarned: profile.stats.total_earned_label,
+      totalEarned: formatCurrency(profile.stats.total_earned),
     },
   };
 }
@@ -123,57 +153,15 @@ export function mapExpertProfileVMToUpdateDto(
 ): UpdateExpertProfileRequestDto {
   return {
     name: profile.name,
-    email: profile.email,
     phone: profile.phone,
     company_name: profile.companyName,
-    license_type: profile.licenseType,
-    license_number: profile.licenseNumber,
     expertise_areas: profile.expertiseAreas,
-    experience_years: profile.experienceYears,
-    education: profile.education,
-    introduction: profile.introduction,
     portfolio: profile.portfolio,
-  };
-}
-
-export function mapVerificationStatusDtoToVM(
-  dto: ExpertVerificationStatusResponseDto,
-): ExpertVerificationStatusVM {
-  const request = dto.verification_request;
-
-  return {
-    id: request.id,
-    expertProfileId: request.expert_profile_id,
-    status: request.status,
-    licenseType: request.license_type,
-    licenseNumber: request.license_number,
-    issueDate: request.issue_date,
-    companyName: request.company_name,
-    portfolio: request.portfolio,
-    submittedAt: request.submitted_at,
-    reviewedAt: request.reviewed_at,
-    rejectedReason: request.rejected_reason,
   };
 }
 
 export function mapCreateBidRequestToDto(payload: CreateBidRequest): CreateBidRequestDto {
   return {
-    job_post_id: payload.jobPostId,
     bid_amount: payload.price,
-  };
-}
-
-export function mapSubmitVerificationRequestToDto(
-  payload: SubmitExpertVerificationRequest,
-  expertProfileId: number,
-): CreateVerificationRequestDto {
-  return {
-    expert_profile_id: expertProfileId,
-    license_type: payload.licenseType,
-    license_number: payload.licenseNumber,
-    issue_date: payload.issueDate,
-    company_name: payload.companyName,
-    portfolio: payload.portfolio,
-    file_ids: payload.fileIds,
   };
 }

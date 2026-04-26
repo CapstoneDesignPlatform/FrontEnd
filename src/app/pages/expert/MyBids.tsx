@@ -1,18 +1,20 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
+import { AsyncStateCard } from "../../components/common/AsyncStateCard";
 import { MyBidCard } from "../../components/expert/MyBidCard";
 import { getMyBids } from "../../../api/expert";
 import type { MyBidItemVM } from "../../../types/expert";
+import { useAsyncData } from "../../hooks/useAsyncData";
+
+const emptyBids: MyBidItemVM[] = [];
 
 export function MyBids() {
-  const [bids, setBids] = useState<MyBidItemVM[]>([]);
-
-  useEffect(() => {
-    void getMyBids().then(setBids);
-  }, []);
+  const { data, error, isLoading } = useAsyncData(getMyBids, {
+    initialData: emptyBids,
+  });
+  const bids = data ?? [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -52,6 +54,14 @@ export function MyBids() {
           <Link to="/expert/jobs">새 공고 찾기</Link>
         </Button>
       </div>
+
+      {isLoading ? (
+        <AsyncStateCard message="입찰 내역을 불러오는 중입니다." />
+      ) : null}
+
+      {error ? (
+        <AsyncStateCard message="입찰 내역을 불러오지 못했습니다." tone="danger" />
+      ) : null}
 
       {/* 통계 */}
       <div className="grid md:grid-cols-3 gap-4">
@@ -108,14 +118,14 @@ export function MyBids() {
           ))}
 
           {activeBids.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-gray-600 mb-4">활성 입찰이 없습니다.</p>
+            <AsyncStateCard
+              action={
                 <Button asChild>
                   <Link to="/expert/jobs">공고 찾아보기</Link>
                 </Button>
-              </CardContent>
-            </Card>
+              }
+              message="활성 입찰이 없습니다."
+            />
           )}
         </div>
       </div>

@@ -81,7 +81,8 @@ export function MyBidCard({ bid, variant, getStatusColor, onCopyContact }: MyBid
                 🎉 축하합니다! 의뢰인이 회원님을 선택했습니다.
               </p>
               <p className="text-sm text-green-800">
-                의뢰인 연락처: <span className="font-medium">{bid.clientContact}</span>
+                의뢰인 연락처:{" "}
+                <span className="font-medium">{bid.clientContact.displayText}</span>
               </p>
               <p className="text-xs text-green-700 mt-1">
                 연락하여 최종 가격을 협상해주세요.
@@ -97,7 +98,7 @@ export function MyBidCard({ bid, variant, getStatusColor, onCopyContact }: MyBid
           {bid.status === "선정됨" && bid.clientContact && (
             <Button
               size="sm"
-              onClick={() => onCopyContact(bid.clientContact!)}
+              onClick={() => onCopyContact(bid.clientContact!.copyText)}
               className="gap-2"
             >
               <Copy className="h-4 w-4" />

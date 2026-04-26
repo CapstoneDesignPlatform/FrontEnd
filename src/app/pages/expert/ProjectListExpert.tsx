@@ -1,109 +1,176 @@
-import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Search, Bell } from "lucide-react";
-import { JobCard } from "../../components/expert/JobCard";
+import { useState } from "react";
+import { Bell, Search, SlidersHorizontal, Table2 } from "lucide-react";
+
 import { getExpertJobs } from "../../../api/expert";
 import type { ExpertJobListItemVM } from "../../../types/expert";
+import { AsyncStateCard } from "../../components/common/AsyncStateCard";
+import { JobTable } from "../../components/expert/JobTable";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { useAsyncData } from "../../hooks/useAsyncData";
+
+const emptyProjects: ExpertJobListItemVM[] = [];
 
 export function ProjectListExpert() {
-  const { setUser } = useOutletContext<{ user: unknown; setUser: (user: unknown) => void }>();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [projects, setProjects] = useState<ExpertJobListItemVM[]>([]);
+  const { data, error, isLoading } = useAsyncData(getExpertJobs, {
+    initialData: emptyProjects,
+  });
+  const projects = data ?? [];
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
 
-  // 컴포넌트 마운트 시 전문가로 user 설정
-  useEffect(() => {
-    setUser({ type: "expert", name: "전문가" });
-  }, [setUser]);
-
-  useEffect(() => {
-    void getExpertJobs().then(setProjects);
-  }, []);
-
-  // 필터링된 의뢰
   const filteredProjects = projects.filter((project) => {
+    const searchableText = [
+      project.title,
+      project.companyName,
+      project.industry,
+      project.type,
+      project.businessType,
+      project.requiredLicense,
+      project.currentLicense,
+      project.currentIndustry,
+      project.reason,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
     const matchesSearch =
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.industry.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.type.toLowerCase().includes(searchTerm.toLowerCase());
+      normalizedSearchTerm.length === 0 ||
+      searchableText.includes(normalizedSearchTerm);
     const matchesType = filterType === "all" || project.type === filterType;
+
     return matchesSearch && matchesType;
   });
+  const newProjectCount = filteredProjects.filter((project) => project.isNew).length;
+  const averageBidCount =
+    filteredProjects.length > 0
+      ? Math.round(
+          filteredProjects.reduce((sum, project) => sum + project.bids, 0) /
+            filteredProjects.length,
+        )
+      : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl mb-2">공고 목록</h1>
-          <p className="text-gray-600">관심있는 의뢰에 입찰하세요.</p>
+          <div className="mb-2 flex items-center gap-2">
+            <Badge variant="outline" className="border-teal-200 bg-teal-50 text-teal-700">
+              Expert Board
+            </Badge>
+            <span className="text-sm text-gray-500">스프레드시트형 공고 탐색</span>
+          </div>
+          <h1 className="text-3xl">공고 목록</h1>
+          <p className="mt-2 text-gray-600">
+            많은 공고를 빠르게 비교할 수 있도록 핵심 정보만 촘촘하게 정리했습니다.
+          </p>
         </div>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="w-fit gap-2">
           <Bell className="h-4 w-4" />
-          알림 서비스 (유료)
+          알림 서비스
         </Button>
       </div>
 
-      {/* 검색 및 필터 */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <Card className="border-slate-200">
+        <CardContent className="pt-4">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
-                placeholder="의뢰 검색..."
+                placeholder="공고명, 기업명, 업종, 면허 조건 검색"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="전체" />
+              <SelectTrigger className="w-full xl:w-48">
+                <SelectValue placeholder="전체 유형" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">전체</SelectItem>
+                <SelectItem value="all">전체 유형</SelectItem>
                 <SelectItem value="필요 면허">필요 면허</SelectItem>
                 <SelectItem value="실태 조사">실태 조사</SelectItem>
                 <SelectItem value="주기적 신고">주기적 신고</SelectItem>
                 <SelectItem value="기타">기타</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex flex-wrap gap-2 text-sm text-slate-600 xl:ml-auto">
+              <span className="rounded-md border bg-slate-50 px-3 py-2">
+                표시 {filteredProjects.length}건
+              </span>
+              <span className="rounded-md border bg-slate-50 px-3 py-2">
+                신규 {newProjectCount}건
+              </span>
+              <span className="rounded-md border bg-slate-50 px-3 py-2">
+                평균 입찰 {averageBidCount}명
+              </span>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* 공고 목록 */}
-      <div className="grid gap-4">
-        {filteredProjects.map((project) => (
-          <JobCard key={project.id} project={project} />
-        ))}
-      </div>
-
-      {filteredProjects.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-gray-600">검색 결과가 없습니다.</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* 알림 서비스 안내 */}
-      <Card className="bg-teal-50 border-teal-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-teal-900">
-            <Bell className="h-5 w-5 text-teal-600" />
-            알림 서비스 (유료)
-          </CardTitle>
-          <CardDescription className="text-teal-800">
-            새로운 공고가 등록되면 즉시 알림을 받을 수 있습니다. 경쟁자보다 빠르게 입찰하세요!
-          </CardDescription>
+      <Card className="overflow-hidden border-slate-200">
+        <CardHeader className="border-b bg-white px-4 py-3">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Table2 className="h-4 w-4 text-teal-600" />
+                실시간 공고 보드
+              </CardTitle>
+              <CardDescription>
+                행을 훑으면서 조건을 비교하고, 필요한 공고만 상세로 들어가세요.
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <SlidersHorizontal className="h-4 w-4" />
+              가로 스크롤로 전체 열을 확인할 수 있습니다.
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
-          <Button className="bg-teal-600 hover:bg-teal-700">알림 서비스 신청하기</Button>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-4">
+              <AsyncStateCard message="공고 목록을 불러오는 중입니다." />
+            </div>
+          ) : null}
+
+          {error ? (
+            <div className="p-4">
+              <AsyncStateCard message="공고 목록을 불러오지 못했습니다." tone="danger" />
+            </div>
+          ) : null}
+
+          {!isLoading && !error && filteredProjects.length === 0 ? (
+            <div className="p-4">
+              <AsyncStateCard message="검색 결과가 없습니다." />
+            </div>
+          ) : null}
+
+          {!isLoading && !error && filteredProjects.length > 0 ? (
+            <JobTable projects={filteredProjects} />
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card className="border-teal-200 bg-teal-50">
+        <CardContent className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-3">
+            <Bell className="mt-0.5 h-5 w-5 text-teal-600" />
+            <div>
+              <p className="font-medium text-teal-950">알림 서비스 (유료)</p>
+              <p className="text-sm text-teal-800">
+                새로운 공고가 등록되면 즉시 알림을 받을 수 있습니다.
+              </p>
+            </div>
+          </div>
+          <Button className="w-fit bg-teal-600 hover:bg-teal-700">
+            알림 서비스 신청하기
+          </Button>
         </CardContent>
       </Card>
     </div>

@@ -1,19 +1,34 @@
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { FileText, DollarSign, CheckCircle2, ClipboardList } from "lucide-react";
+import { AsyncStateCard } from "../../components/common/AsyncStateCard";
 import { getExpertProfile, getMyBids } from "../../../api/expert";
 import type { ExpertProfileFormVM, MyBidItemVM } from "../../../types/expert";
+import { useAsyncData } from "../../hooks/useAsyncData";
+
+type ExpertDashboardData = {
+  profile: ExpertProfileFormVM;
+  recentBids: MyBidItemVM[];
+};
 
 export function ExpertDashboard() {
-  const [profile, setProfile] = useState<ExpertProfileFormVM | null>(null);
-  const [recentBids, setRecentBids] = useState<MyBidItemVM[]>([]);
-
-  useEffect(() => {
-    void getExpertProfile().then(setProfile);
-    void getMyBids().then((bids) => setRecentBids(bids.slice(0, 3)));
-  }, []);
+  const loadDashboardData = useCallback(
+    async () => {
+      const [profile, bids] = await Promise.all([getExpertProfile(), getMyBids()]);
+      return {
+        profile,
+        recentBids: bids.slice(0, 3),
+      };
+    },
+    [],
+  );
+  const { data, error, isLoading } = useAsyncData<ExpertDashboardData>(
+    loadDashboardData,
+  );
+  const profile = data?.profile ?? null;
+  const recentBids = data?.recentBids ?? [];
 
   const stats = profile?.stats ?? {
     activeBids: 0,
@@ -27,6 +42,17 @@ export function ExpertDashboard() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl">전문가 마이페이지</h1>
       </div>
+
+      {isLoading ? (
+        <AsyncStateCard message="대시보드 정보를 불러오는 중입니다." />
+      ) : null}
+
+      {error ? (
+        <AsyncStateCard
+          message="대시보드 정보를 불러오지 못했습니다."
+          tone="danger"
+        />
+      ) : null}
 
       {/* 통계 카드 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

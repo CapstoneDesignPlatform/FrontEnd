@@ -1,3 +1,5 @@
+import type { VerificationPreviewKind } from "./filePreview";
+
 export interface VerificationCertificateData {
   id: string;
   type: string;
@@ -5,6 +7,9 @@ export interface VerificationCertificateData {
   issueDate: string;
   name: string;
   file: File | null;
+  fileId?: number;
+  fileName: string;
+  previewKind: VerificationPreviewKind | null;
   previewUrl: string;
 }
 
@@ -13,6 +18,9 @@ export interface VerificationBusinessLicenseData {
   name: string;
   companyName: string;
   file: File | null;
+  fileId?: number;
+  fileName: string;
+  previewKind: VerificationPreviewKind | null;
   previewUrl: string;
 }
 

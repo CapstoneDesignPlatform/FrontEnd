@@ -9,12 +9,19 @@ export interface BidFormData {
 
 interface BidFormProps {
   bidData: BidFormData;
+  isSubmitting?: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCancel: () => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
-export function BidForm({ bidData, onChange, onCancel, onSubmit }: BidFormProps) {
+export function BidForm({
+  bidData,
+  isSubmitting = false,
+  onChange,
+  onCancel,
+  onSubmit,
+}: BidFormProps) {
   return (
     <Card className="border-teal-500 border-2">
       <CardHeader>
@@ -33,9 +40,13 @@ export function BidForm({ bidData, onChange, onCancel, onSubmit }: BidFormProps)
               id="price"
               name="price"
               type="number"
+              inputMode="numeric"
+              min={1}
               placeholder="2500000"
+              step={1}
               value={bidData.price}
               onChange={onChange}
+              disabled={isSubmitting}
               required
             />
             <p className="text-xs text-gray-600">
@@ -44,13 +55,18 @@ export function BidForm({ bidData, onChange, onCancel, onSubmit }: BidFormProps)
           </div>
 
           <div className="flex gap-4">
-            <Button type="submit" className="flex-1 bg-teal-600 hover:bg-teal-700">
-              입찰 제출하기
+            <Button
+              type="submit"
+              className="flex-1 bg-teal-600 hover:bg-teal-700"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "입찰 제출 중..." : "입찰 제출하기"}
             </Button>
             <Button
               type="button"
               variant="outline"
               className="flex-1"
+              disabled={isSubmitting}
               onClick={onCancel}
             >
               취소

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -8,28 +7,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "sonner";
 import { Info } from "lucide-react";
+import { useFormFields } from "../../hooks/useFormFields";
+
+const initialCompanyInfoForm = {
+  companyName: "",
+  businessNumber: "",
+  representative: "",
+  address: "",
+  phone: "",
+  email: "",
+  website: "",
+  description: "",
+};
 
 export function CompanyInfo() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    companyName: "",
-    businessNumber: "",
-    representative: "",
-    address: "",
-    phone: "",
-    email: "",
-    website: "",
-    description: "",
-  });
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const { handleChange, values: formData } = useFormFields(
+    initialCompanyInfoForm,
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

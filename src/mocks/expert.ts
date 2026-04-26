@@ -1,8 +1,5 @@
 import type {
-  ExpertCertificate,
   ExpertProfileResponseDto,
-  ExpertVerificationFile,
-  ExpertVerificationStatusResponseDto,
   JobPostDetailResponseDto,
   JobPostListItemDto,
   JobPostListResponseDto,
@@ -21,66 +18,18 @@ export const mockExpertProfileDto: ExpertProfileResponseDto = {
     user_id: 101,
     company_name: "케이법무법인",
     license_type: "경영지도사",
-    license_number: "EXP-2026-001",
     expertise_areas: ["건설업 인허가", "전기공사업 실태조사"],
-    experience_years: 10,
-    education: "한국대학교 경영학과",
-    introduction: "건설업과 전기공사업 인허가 업무를 중심으로 기업 진단과 면허 취득을 지원합니다.",
     portfolio: "건설업 신규 면허 120건, 실태조사 대응 80건 이상 수행",
-    verification_status: "NOT_APPLIED",
-    is_verified: false,
+    verification_status: "APPROVED",
+    is_verified: true,
     stats: {
       active_bids: 4,
       won_projects: 2,
       completed_projects: 8,
-      total_earned_label: "₩24,500,000",
+      total_earned: 24500000,
     },
   },
 };
-
-export const mockExpertVerificationStatusDto: ExpertVerificationStatusResponseDto = {
-  verification_request: {
-    id: 1,
-    expert_profile_id: mockExpertProfileDto.expert_profile.id,
-    status: "NOT_APPLIED",
-    license_type: mockExpertProfileDto.expert_profile.license_type,
-    license_number: mockExpertProfileDto.expert_profile.license_number,
-    issue_date: "2020-03-15",
-    company_name: mockExpertProfileDto.expert_profile.company_name,
-    portfolio: mockExpertProfileDto.expert_profile.portfolio,
-    rejected_reason: "제출한 자격증 사본의 식별 정보가 흐릿합니다. 선명한 파일로 다시 제출해주세요.",
-  },
-};
-
-export const mockExpertCertificatesDto: ExpertCertificate[] = [
-  {
-    id: 1,
-    expertProfileId: mockExpertProfileDto.expert_profile.id,
-    certificateType: "경영지도사",
-    certificateNumber: "EXP-2026-001",
-    issueDate: "2020-03-15",
-    fileId: 1,
-  },
-];
-
-export const mockExpertVerificationFilesDto: ExpertVerificationFile[] = [
-  {
-    id: 1,
-    verificationRequestId: mockExpertVerificationStatusDto.verification_request.id,
-    fileId: 1,
-    fileName: "certificate.pdf",
-    fileType: "LICENSE",
-    uploadedAt: "2026-04-05 10:30",
-  },
-  {
-    id: 2,
-    verificationRequestId: mockExpertVerificationStatusDto.verification_request.id,
-    fileId: 2,
-    fileName: "business-license.pdf",
-    fileType: "BUSINESS_LICENSE",
-    uploadedAt: "2026-04-05 10:31",
-  },
-];
 
 const mockExpertJobItemsDto: JobPostListItemDto[] = [
   {
@@ -89,7 +38,7 @@ const mockExpertJobItemsDto: JobPostListItemDto[] = [
     company_name: "(주)건설개발",
     title: "건설업 일반건설업(토목) 신규 면허 취득",
     industry: "건설업",
-    job_type: "필요 면허",
+    job_type: "LICENSE",
     business_type: "법인 사업자",
     classification: "신규",
     required_license: "일반건설업(토목공사업)",
@@ -106,7 +55,7 @@ const mockExpertJobItemsDto: JobPostListItemDto[] = [
     company_name: "(주)전기파트너스",
     title: "전기공사업 실태조사 의뢰",
     industry: "전기공사업",
-    job_type: "실태 조사",
+    job_type: "SURVEY",
     business_type: "법인 사업자",
     current_license: "전기공사업 면허",
     asset_scale_label: "30억원",
@@ -121,7 +70,7 @@ const mockExpertJobItemsDto: JobPostListItemDto[] = [
     company_name: "(주)아이티링크",
     title: "정보통신공사업 면허 추가 등록",
     industry: "정보통신공사업",
-    job_type: "필요 면허",
+    job_type: "LICENSE",
     business_type: "개인 사업자",
     classification: "추가",
     required_license: "정보통신공사업",
@@ -138,7 +87,7 @@ const mockExpertJobItemsDto: JobPostListItemDto[] = [
     company_name: "(주)소방안전",
     title: "소방시설공사업 자본금 변동 진단",
     industry: "소방시설공사업",
-    job_type: "기타",
+    job_type: "ETC",
     business_type: "법인 사업자",
     reason: "자본금 변동",
     asset_scale_label: "20억원",
@@ -153,7 +102,7 @@ const mockExpertJobItemsDto: JobPostListItemDto[] = [
     company_name: "(주)인테리어랩",
     title: "건설업 전문건설업(실내건축) 면허 신규",
     industry: "건설업",
-    job_type: "필요 면허",
+    job_type: "LICENSE",
     business_type: "창업 예정",
     classification: "신규",
     required_license: "전문건설업(실내건축공사업)",
@@ -170,7 +119,7 @@ const mockExpertJobItemsDto: JobPostListItemDto[] = [
     company_name: "(주)의약유통",
     title: "의약품도매상 실태조사",
     industry: "의약품도매상",
-    job_type: "실태 조사",
+    job_type: "SURVEY",
     business_type: "법인 사업자",
     current_license: "의약품도매업 면허",
     asset_scale_label: "15억원",
@@ -185,7 +134,7 @@ const mockExpertJobItemsDto: JobPostListItemDto[] = [
     company_name: "(주)전력기술",
     title: "전기공사업 주기적 신고 대행",
     industry: "전기공사업",
-    job_type: "주기적 신고",
+    job_type: "PERIODIC_REPORT",
     business_type: "법인 사업자",
     asset_scale_label: "40억원",
     bid_count: 6,
@@ -199,7 +148,7 @@ const mockExpertJobItemsDto: JobPostListItemDto[] = [
     company_name: "(주)커넥트넷",
     title: "정보통신공사업 합병 진단",
     industry: "정보통신공사업",
-    job_type: "기타",
+    job_type: "ETC",
     business_type: "법인 사업자",
     reason: "합병",
     asset_scale_label: "25억원",
@@ -235,6 +184,7 @@ export const mockMyBidsDto: MyBidsResponseDto = {
       status: "PENDING",
       submitted_at: "2026-04-05T10:00:00+09:00",
       total_bid_count: 5,
+      client_contact: null,
     },
     {
       id: 2,
@@ -244,7 +194,11 @@ export const mockMyBidsDto: MyBidsResponseDto = {
       status: "SELECTED",
       submitted_at: "2026-04-03T10:00:00+09:00",
       total_bid_count: 3,
-      client_contact: "010-1234-5678",
+      client_contact: {
+        name: "김담당",
+        phone: "010-1234-5678",
+        email: "client@example.com",
+      },
     },
     {
       id: 3,
@@ -254,6 +208,7 @@ export const mockMyBidsDto: MyBidsResponseDto = {
       status: "PENDING",
       submitted_at: "2026-04-04T10:00:00+09:00",
       total_bid_count: 7,
+      client_contact: null,
     },
     {
       id: 4,
@@ -263,7 +218,11 @@ export const mockMyBidsDto: MyBidsResponseDto = {
       status: "SELECTED",
       submitted_at: "2026-04-06T10:00:00+09:00",
       total_bid_count: 2,
-      client_contact: "010-9876-5432",
+      client_contact: {
+        name: "이담당",
+        phone: "010-9876-5432",
+        email: "partner@example.com",
+      },
     },
     {
       id: 5,
@@ -273,6 +232,7 @@ export const mockMyBidsDto: MyBidsResponseDto = {
       status: "REJECTED",
       submitted_at: "2026-03-30T10:00:00+09:00",
       total_bid_count: 4,
+      client_contact: null,
     },
   ],
 };

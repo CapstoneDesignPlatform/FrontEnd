@@ -1,38 +1,30 @@
 import { useState } from "react";
-import { Link, useNavigate, useOutletContext, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { toast } from "sonner";
+import { useFormFields } from "../hooks/useFormFields";
+import { useRootOutletContext } from "../hooks/useRootOutletContext";
 
-type OutletContext = {
-  setUser: (user: { type: "client" | "expert"; name: string }) => void;
+const initialRegisterForm = {
+  name: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  phone: "",
 };
 
 export function Register() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setUser } = useOutletContext<OutletContext>();
+  const { setUser } = useRootOutletContext();
   
   // location.state에서 userType을 가져오고, 없으면 기본값 "client" 사용
   const initialUserType = (location.state?.userType as "client" | "expert") || "client";
   const [userType, setUserType] = useState<"client" | "expert">(initialUserType);
-  
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    phone: "",
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const { handleChange, values: formData } = useFormFields(initialRegisterForm);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

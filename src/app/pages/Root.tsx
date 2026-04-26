@@ -1,7 +1,8 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { Building2, UserCircle, LogOut, Menu, ChevronDown } from "lucide-react";
+import { Building2, LogOut, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import type { AppUser, RootOutletContext } from "../types/rootContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,31 +10,74 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 
+type LayoutVariant = "contained" | "full";
+
+const INDUSTRIES = [
+  { label: "건설업", value: "construction" },
+  { label: "전기공사업", value: "electrical" },
+  { label: "정보통신공사업", value: "information" },
+  { label: "소방시설공사업", value: "fire" },
+  { label: "의약품도매상", value: "pharmaceutical" },
+  { label: "기타", value: "other" },
+];
+
+function getLayoutVariant({
+  isAdminRoute,
+  isClientRoute,
+  isExpertRoute,
+  isPendingPage,
+}: {
+  isAdminRoute: boolean;
+  isClientRoute: boolean;
+  isExpertRoute: boolean;
+  isPendingPage: boolean;
+}): LayoutVariant {
+  if (isAdminRoute || isClientRoute || (isExpertRoute && !isPendingPage)) {
+    return "contained";
+  }
+
+  return "full";
+}
+
+function ContainedOutlet({ context }: { context: RootOutletContext }) {
+  return (
+    <div className="container mx-auto px-4 py-4">
+      <main className="max-w-7xl mx-auto">
+        <Outlet context={context} />
+      </main>
+    </div>
+  );
+}
+
+function FullWidthOutlet({ context }: { context: RootOutletContext }) {
+  return (
+    <main>
+      <Outlet context={context} />
+    </main>
+  );
+}
+
 export function Root() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ type: "client" | "expert" | null; name: string } | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
 
   const isClientRoute = location.pathname.startsWith("/client");
   const isExpertRoute = location.pathname.startsWith("/expert");
   const isAdminRoute = location.pathname.startsWith("/admin");
-  const isMyPage = location.pathname.startsWith("/client/mypage");
   const isPendingPage = location.pathname === "/expert/pending";
-  const isGuestRequestView = location.pathname.includes("/client/guest-request-view");
-  const isCompanyInfoView = location.pathname === "/client/company-info-view";
+  const layoutVariant = getLayoutVariant({
+    isAdminRoute,
+    isClientRoute,
+    isExpertRoute,
+    isPendingPage,
+  });
+  const shouldShowExpertNavigation = user?.type === "expert" || isExpertRoute;
+  const outletContext: RootOutletContext = { user, setUser };
 
   const handleLogout = () => {
     setUser(null);
   };
-
-  const industries = [
-    { label: "건설업", value: "construction" },
-    { label: "전기공사업", value: "electrical" },
-    { label: "정보통신공사업", value: "information" },
-    { label: "소방시설공사업", value: "fire" },
-    { label: "의약품도매상", value: "pharmaceutical" },
-    { label: "기타", value: "other" },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -64,7 +108,7 @@ export function Root() {
                     <Link to="/admin/community">커뮤니티</Link>
                   </Button>
                 </>
-              ) : user?.type === "expert" ? (
+              ) : shouldShowExpertNavigation ? (
                 // 전문가용 네비게이션
                 <>
                   <Button variant="ghost" asChild>
@@ -91,7 +135,7 @@ export function Root() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-48">
-                      {industries.map((industry) => (
+                      {INDUSTRIES.map((industry) => (
                         <DropdownMenuItem
                           key={industry.value}
                           onClick={() => navigate(`/client/create-project/${industry.value}`)}
@@ -156,72 +200,10 @@ export function Root() {
         </div>
       </header>
 
-      {/* 전문가 페이지 레이아웃 (사이드바 없음) */}
-      {isExpertRoute && !isPendingPage && (
-        <div className="container mx-auto px-4 py-4">
-          <main className="max-w-7xl mx-auto">
-            <Outlet context={{ user, setUser }} />
-          </main>
-        </div>
-      )}
-
-      {/* 의뢰인 페이지 레이아웃 (사이드바 없음) */}
-      {isClientRoute && !isMyPage && !isGuestRequestView && !isCompanyInfoView && (
-        <div className="container mx-auto px-4 py-4">
-          <main className="max-w-7xl mx-auto">
-            <Outlet context={{ user, setUser }} />
-          </main>
-        </div>
-      )}
-
-      {/* 마이페이지 전용 레이아웃 (사이드바 없음) */}
-      {isMyPage && (
-        <div className="container mx-auto px-4 py-4">
-          <main className="max-w-7xl mx-auto">
-            <Outlet context={{ user, setUser }} />
-          </main>
-        </div>
-      )}
-
-      {/* 기업 정보 페이지 레이아웃 (사이드바 없음) */}
-      {isCompanyInfoView && (
-        <div className="container mx-auto px-4 py-4">
-          <main className="max-w-7xl mx-auto">
-            <Outlet context={{ user, setUser }} />
-          </main>
-        </div>
-      )}
-
-      {/* 승인 대기 페이지 레이아웃 (사이드바 없음, 전체 화면) */}
-      {isPendingPage && (
-        <main>
-          <Outlet context={{ user, setUser }} />
-        </main>
-      )}
-
-      {/* 비회원 의뢰 조회 페이지 레이아웃 (사이드바 없음) */}
-      {isGuestRequestView && (
-        <div className="container mx-auto px-4 py-4">
-          <main className="max-w-7xl mx-auto">
-            <Outlet context={{ user, setUser }} />
-          </main>
-        </div>
-      )}
-
-      {/* 관리자 페이지 레이아웃 */}
-      {isAdminRoute && (
-        <div className="container mx-auto px-4 py-4">
-          <main className="max-w-7xl mx-auto">
-            <Outlet context={{ user, setUser }} />
-          </main>
-        </div>
-      )}
-
-      {/* 일반 페이지 */}
-      {!isClientRoute && !isExpertRoute && !isAdminRoute && (
-        <main>
-          <Outlet context={{ user, setUser }} />
-        </main>
+      {layoutVariant === "contained" ? (
+        <ContainedOutlet context={outletContext} />
+      ) : (
+        <FullWidthOutlet context={outletContext} />
       )}
 
       {/* 푸터 */}

@@ -15,7 +15,7 @@ export function JobCard({ project }: JobCardProps) {
 
     details.push({
       icon: Building2,
-      label: project.businessType,
+      label: project.businessType ?? "사업자 유형 미공개",
     });
 
     if (project.type === "필요 면허") {

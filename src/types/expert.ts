@@ -1,10 +1,12 @@
-export type ExpertVerificationStatus =
-  | "NOT_APPLIED"
-  | "PENDING"
-  | "APPROVED"
-  | "REJECTED";
+import type { ExpertVerificationStatus } from "./expertVerification";
 
-export type JobPostType = "필요 면허" | "실태 조사" | "주기적 신고" | "기타";
+export type { ExpertVerificationStatus } from "./expertVerification";
+
+export type JobPostTypeCode = "LICENSE" | "SURVEY" | "PERIODIC_REPORT" | "ETC";
+
+export type JobPostTypeLabel = "필요 면허" | "실태 조사" | "주기적 신고" | "기타";
+
+export type JobPostType = JobPostTypeLabel;
 
 export type JobPostStatusCode = "BIDDING" | "IN_PROGRESS" | "COMPLETED" | "CLOSED";
 
@@ -25,55 +27,10 @@ export interface ExpertProfile {
   userId: number;
   companyName: string;
   licenseType: string;
-  licenseNumber: string;
   expertiseAreas: string[];
-  experienceYears: number;
-  education?: string;
-  introduction: string;
   portfolio?: string;
   isVerified: boolean;
   verificationStatus: ExpertVerificationStatus;
-}
-
-export interface ExpertVerificationRequest {
-  id: number;
-  expertProfileId: number;
-  status: ExpertVerificationStatus;
-  licenseType: string;
-  licenseNumber: string;
-  issueDate: string;
-  companyName: string;
-  portfolio?: string;
-  submittedAt?: string;
-  reviewedAt?: string;
-  rejectedReason?: string;
-}
-
-export interface ExpertCertificate {
-  id: number;
-  expertProfileId: number;
-  certificateType: string;
-  certificateNumber: string;
-  issueDate: string;
-  fileId?: number;
-}
-
-export interface ExpertVerificationFile {
-  id: number;
-  verificationRequestId: number;
-  fileId: number;
-  fileName: string;
-  fileType: "LICENSE" | "BUSINESS_LICENSE" | "PORTFOLIO" | "ETC";
-  uploadedAt: string;
-}
-
-export interface FileResource {
-  id: number;
-  originalName: string;
-  storedName: string;
-  mimeType: string;
-  size: number;
-  url: string;
 }
 
 export interface Company {
@@ -109,21 +66,22 @@ export interface Bid {
   message: string;
   status: BidStatusCode;
   createdAt: string;
-  clientContact?: string;
+  clientContact?: ClientContactVM;
 }
 
 export interface ExpertProfileStatsDto {
   active_bids: number;
   won_projects: number;
   completed_projects: number;
-  total_earned_label: string;
+  total_earned: number;
+  total_earned_label?: string;
 }
 
 export interface UserSummaryDto {
   id: number;
   name: string;
   email: string;
-  phone: string;
+  phone: string | null;
 }
 
 export interface ExpertProfileResponseDto {
@@ -132,13 +90,9 @@ export interface ExpertProfileResponseDto {
     id: number;
     user_id: number;
     company_name: string;
-    license_type: string;
-    license_number: string;
+    license_type: string | null;
     expertise_areas: string[];
-    experience_years: number;
-    education?: string;
-    introduction: string;
-    portfolio?: string;
+    portfolio: string | null;
     verification_status: ExpertVerificationStatus;
     is_verified: boolean;
     stats: ExpertProfileStatsDto;
@@ -146,90 +100,74 @@ export interface ExpertProfileResponseDto {
 }
 
 export interface UpdateExpertProfileRequestDto {
-  name: string;
-  email: string;
-  phone: string;
-  company_name: string;
-  license_type: string;
-  license_number: string;
-  expertise_areas: string[];
-  experience_years: number;
-  education?: string;
-  introduction: string;
+  name?: string;
+  phone?: string;
+  company_name?: string;
+  expertise_areas?: string[];
   portfolio?: string;
 }
 
 export type ExpertProfileResponseUpdateDto = ExpertProfileResponseDto;
 
-export interface VerificationRequestDto {
-  id: number;
-  expert_profile_id: number;
-  status: ExpertVerificationStatus;
-  license_type: string;
-  license_number: string;
-  issue_date: string;
-  company_name: string;
-  portfolio?: string;
-  submitted_at?: string;
-  reviewed_at?: string;
-  rejected_reason?: string;
-}
-
-export interface ExpertVerificationStatusResponseDto {
-  verification_request: VerificationRequestDto;
-}
-
-export interface CreateVerificationRequestDto {
-  expert_profile_id: number;
-  license_type: string;
-  license_number: string;
-  issue_date: string;
-  company_name: string;
-  portfolio?: string;
-  file_ids?: number[];
-}
-
-export type CreateVerificationResponseDto = ExpertVerificationStatusResponseDto;
-
 export interface JobPostListItemDto {
   id: number;
   company_id: number;
-  company_name?: string;
+  company_name: string;
   title: string;
   industry: string;
-  job_type: JobPostType;
-  business_type: string;
-  classification?: string;
-  required_license?: string;
-  current_industry?: string;
-  current_license?: string;
-  reason?: string;
-  asset_scale_label?: string;
+  job_type: JobPostTypeCode;
+  job_type_label?: JobPostTypeLabel;
+  business_type: string | null;
+  classification?: string | null;
+  required_license?: string | null;
+  current_industry?: string | null;
+  current_license?: string | null;
+  reason?: string | null;
+  asset_scale_label?: string | null;
   bid_count: number;
   posted_at: string;
   is_new: boolean;
   status: JobPostStatusCode;
+  has_my_bid?: boolean;
 }
 
 export interface JobPostListResponseDto {
   items: JobPostListItemDto[];
+  page?: number;
+  size?: number;
+  total_count?: number;
+  total_pages?: number;
+  has_next?: boolean;
 }
 
 export interface CompanySummaryDto {
   id: number;
   name: string;
-  representative: string;
-  location?: string;
+  representative: string | null;
+  location?: string | null;
 }
 
 export interface JobPostDetailResponseDto extends JobPostListItemDto {
   created_at: string;
   company: CompanySummaryDto;
+  my_bid?: MyBidSummaryDto | null;
 }
 
 export interface CreateBidRequestDto {
-  job_post_id: number;
   bid_amount: number;
+}
+
+export interface MyBidSummaryDto {
+  id: number;
+  bid_amount: number;
+  status: BidStatusCode;
+  submitted_at: string;
+}
+
+export interface ClientContactDto {
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
 }
 
 export interface MyBidItemDto {
@@ -240,7 +178,7 @@ export interface MyBidItemDto {
   status: BidStatusCode;
   submitted_at: string;
   total_bid_count: number;
-  client_contact?: string;
+  client_contact: ClientContactDto | null;
 }
 
 export interface CreateBidResponseDto {
@@ -249,6 +187,11 @@ export interface CreateBidResponseDto {
 
 export interface MyBidsResponseDto {
   items: MyBidItemDto[];
+  page?: number;
+  size?: number;
+  total_count?: number;
+  total_pages?: number;
+  has_next?: boolean;
 }
 
 export interface ExpertSignupRequestDto {
@@ -266,16 +209,18 @@ export interface ExpertSignupResponseDto {
 export interface CompanySummaryVM {
   id: number;
   name: string;
-  representative: string;
-  location?: string;
+  representative: string | null;
+  location?: string | null;
 }
 
 export interface ExpertJobListItemVM {
   id: number;
+  companyName?: string;
   title: string;
   industry: string;
+  typeCode: JobPostTypeCode;
   type: JobPostType;
-  businessType: string;
+  businessType?: string;
   classification?: string;
   requiredLicense?: string;
   currentIndustry?: string;
@@ -286,6 +231,7 @@ export interface ExpertJobListItemVM {
   postedDate: string;
   isNew: boolean;
   status?: string;
+  hasMyBid?: boolean;
 }
 
 export interface ExpertJobDetailVM extends ExpertJobListItemVM {
@@ -301,7 +247,15 @@ export interface MyBidItemVM {
   status: BidStatusLabel;
   bidDate: string;
   totalBids: number;
-  clientContact?: string;
+  clientContact?: ClientContactVM;
+}
+
+export interface ClientContactVM {
+  copyText: string;
+  displayText: string;
+  email?: string;
+  name?: string;
+  phone?: string;
 }
 
 export interface ExpertProfileFormVM {
@@ -311,12 +265,8 @@ export interface ExpertProfileFormVM {
   email: string;
   phone: string;
   companyName: string;
-  licenseType: string;
-  licenseNumber: string;
+  licenseType?: string;
   expertiseAreas: string[];
-  experienceYears: number;
-  education?: string;
-  introduction: string;
   portfolio?: string;
   verificationStatus: ExpertVerificationStatus;
   stats: {
@@ -327,32 +277,9 @@ export interface ExpertProfileFormVM {
   };
 }
 
-export interface ExpertVerificationStatusVM {
-  id: number;
-  expertProfileId: number;
-  status: ExpertVerificationStatus;
-  licenseType: string;
-  licenseNumber: string;
-  issueDate: string;
-  companyName: string;
-  portfolio?: string;
-  submittedAt?: string;
-  reviewedAt?: string;
-  rejectedReason?: string;
-}
-
 export interface CreateBidRequest {
   jobPostId: number;
   price: number;
-}
-
-export interface SubmitExpertVerificationRequest {
-  licenseType: string;
-  licenseNumber: string;
-  issueDate: string;
-  companyName: string;
-  portfolio?: string;
-  fileIds?: number[];
 }
 
 export interface ExpertSignupRequest {

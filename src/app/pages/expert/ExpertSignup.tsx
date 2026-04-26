@@ -1,33 +1,40 @@
-import { useState } from "react";
-import { Link, useNavigate, useOutletContext } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { toast } from "sonner";
 import { registerExpert } from "../../../api/expert";
+import { useAsyncAction } from "../../hooks/useAsyncAction";
+import { useFormFields } from "../../hooks/useFormFields";
+import { useRootOutletContext } from "../../hooks/useRootOutletContext";
 
-type OutletContext = {
-  setUser: (user: { type: "client" | "expert"; name: string }) => void;
+const initialExpertSignupForm = {
+  name: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  phone: "",
 };
 
 export function ExpertSignup() {
   const navigate = useNavigate();
-  const { setUser } = useOutletContext<OutletContext>();
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    phone: "",
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const { setUser } = useRootOutletContext();
+  const { isPending: isRegistering, run: submitRegistration } = useAsyncAction(
+    registerExpert,
+    {
+      onError: () => {
+        toast.error("회원가입에 실패했습니다.");
+      },
+      onSuccess: (profile) => {
+        setUser({ type: "expert", name: profile.name });
+        toast.success("회원가입이 완료되었습니다!");
+        navigate("/expert/verification/apply");
+      },
+    },
+  );
+  const { handleChange, values: formData } =
+    useFormFields(initialExpertSignupForm);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,15 +44,11 @@ export function ExpertSignup() {
       return;
     }
 
-    void registerExpert({
+    void submitRegistration({
       name: formData.name,
       email: formData.email,
       password: formData.password,
       phone: formData.phone,
-    }).then((profile) => {
-      setUser({ type: "expert", name: profile.name });
-      toast.success("회원가입이 완료되었습니다!");
-      navigate("/expert/verification/apply");
     });
   };
 
@@ -87,6 +90,7 @@ export function ExpertSignup() {
                 placeholder="홍길동"
                 value={formData.name}
                 onChange={handleChange}
+                disabled={isRegistering}
                 required
               />
             </div>
@@ -100,6 +104,7 @@ export function ExpertSignup() {
                 placeholder="example@email.com"
                 value={formData.email}
                 onChange={handleChange}
+                disabled={isRegistering}
                 required
               />
             </div>
@@ -113,6 +118,7 @@ export function ExpertSignup() {
                 placeholder="010-0000-0000"
                 value={formData.phone}
                 onChange={handleChange}
+                disabled={isRegistering}
                 required
               />
             </div>
@@ -126,6 +132,7 @@ export function ExpertSignup() {
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
+                disabled={isRegistering}
                 required
               />
             </div>
@@ -139,12 +146,13 @@ export function ExpertSignup() {
                 placeholder="••••••••"
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                disabled={isRegistering}
                 required
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              회원가입
+            <Button type="submit" className="w-full" disabled={isRegistering}>
+              {isRegistering ? "회원가입 중..." : "회원가입"}
             </Button>
 
             <div className="text-center text-sm">

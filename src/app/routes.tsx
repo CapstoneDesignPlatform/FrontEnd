@@ -1,201 +1,266 @@
 import { createBrowserRouter } from "react-router-dom";
+import type { ComponentType, ReactNode } from "react";
+
 import { Root } from "./pages/Root";
-import { Home } from "./pages/Home";
-import { Login } from "./pages/Login";
-import { Register } from "./pages/Register";
-import { CheckRequest } from "./pages/CheckRequest";
-import { ClientStart } from "./pages/client/ClientStart";
-import { CompanyInfo } from "./pages/client/CompanyInfo";
-import { CompanyInfoView } from "./pages/client/CompanyInfoView";
-import { CreateProject } from "./pages/client/CreateProject";
-import { ProjectSuccess } from "./pages/client/ProjectSuccess";
-import { ProjectList } from "./pages/client/ProjectList";
-import { ProjectDetail } from "./pages/client/ProjectDetail";
-import { BidList } from "./pages/client/BidList";
-import { ClientMyPage } from "./pages/client/ClientMyPage";
-import { MyPageLayout } from "./pages/client/MyPageLayout";
-import { ClientOtherPage } from "./pages/client/ClientOtherPage";
-import { GuestRequestView } from "./pages/client/GuestRequestView";
-import { ExpertDashboard } from "./pages/expert/ExpertDashboard";
-import { ExpertSignup } from "./pages/expert/ExpertSignup";
-import { ExpertVerification } from "./pages/expert/ExpertVerification";
-import { ExpertVerificationStatus } from "./pages/expert/ExpertVerificationStatus";
-import { ProjectListExpert } from "./pages/expert/ProjectListExpert";
-import { ProjectDetailExpert } from "./pages/expert/ProjectDetailExpert";
-import { MyBids } from "./pages/expert/MyBids";
-import { ExpertProfile } from "./pages/expert/ExpertProfile";
-import { ExpertActivityGuard } from "./components/expert/ExpertActivityGuard";
-import { ExpertVerificationApplyGuard } from "./components/expert/ExpertVerificationApplyGuard";
-import { ExpertVerificationStatusGuard } from "./components/expert/ExpertVerificationStatusGuard";
-import { AdminProjectList } from "./pages/admin/AdminProjectList";
-import { AdminExperts } from "./pages/admin/AdminExperts";
-import { AdminCommunity } from "./pages/admin/AdminCommunity";
-import { AdminProjectDetail } from "./pages/admin/AdminProjectDetail";
-import { AdminExpertApproval } from "./pages/admin/AdminExpertApproval";
-import { AdminExpertList } from "./pages/admin/AdminExpertList";
-import { AdminExpertDetail } from "./pages/admin/AdminExpertDetail";
-import { Payment } from "./pages/Payment";
-import { NotFound } from "./pages/NotFound";
+
+type RouteGuard = ComponentType<{ children: ReactNode }>;
+type PagePicker<TModule> = (module: TModule) => ComponentType;
+type GuardPicker<TModule> = (module: TModule) => RouteGuard;
+type LazyGuard<TModule> = {
+  load: () => Promise<TModule>;
+  pickGuard: GuardPicker<TModule>;
+};
+
+function page<TModule>(
+  load: () => Promise<TModule>,
+  pickPage: PagePicker<TModule>,
+) {
+  return async () => {
+    const module = await load();
+    return { Component: pickPage(module) };
+  };
+}
+
+function guard<TModule>(
+  load: () => Promise<TModule>,
+  pickGuard: GuardPicker<TModule>,
+): LazyGuard<TModule> {
+  return { load, pickGuard };
+}
+
+function guardedPage<TGuardModule, TPageModule>(
+  routeGuard: LazyGuard<TGuardModule>,
+  load: () => Promise<TPageModule>,
+  pickPage: PagePicker<TPageModule>,
+) {
+  return async () => {
+    const [guardModule, module] = await Promise.all([
+      routeGuard.load(),
+      load(),
+    ]);
+    const Guard = routeGuard.pickGuard(guardModule);
+    const Page = pickPage(module);
+
+    return {
+      Component() {
+        return (
+          <Guard>
+            <Page />
+          </Guard>
+        );
+      },
+    };
+  };
+}
+
+const expertActivityGuard = guard(
+  () => import("./components/expert/ExpertActivityGuard"),
+  ({ ExpertActivityGuard }) => ExpertActivityGuard,
+);
+const expertVerificationApplyGuard = guard(
+  () => import("./components/expert/ExpertVerificationApplyGuard"),
+  ({ ExpertVerificationApplyGuard }) => ExpertVerificationApplyGuard,
+);
+const expertVerificationStatusGuard = guard(
+  () => import("./components/expert/ExpertVerificationStatusGuard"),
+  ({ ExpertVerificationStatusGuard }) => ExpertVerificationStatusGuard,
+);
+
+const homePage = page(() => import("./pages/Home"), ({ Home }) => Home);
+const loginPage = page(() => import("./pages/Login"), ({ Login }) => Login);
+const registerPage = page(
+  () => import("./pages/Register"),
+  ({ Register }) => Register,
+);
+const checkRequestPage = page(
+  () => import("./pages/CheckRequest"),
+  ({ CheckRequest }) => CheckRequest,
+);
+const paymentPage = page(() => import("./pages/Payment"), ({ Payment }) => Payment);
+const notFoundPage = page(
+  () => import("./pages/NotFound"),
+  ({ NotFound }) => NotFound,
+);
+
+const clientStartPage = page(
+  () => import("./pages/client/ClientStart"),
+  ({ ClientStart }) => ClientStart,
+);
+const companyInfoPage = page(
+  () => import("./pages/client/CompanyInfo"),
+  ({ CompanyInfo }) => CompanyInfo,
+);
+const companyInfoViewPage = page(
+  () => import("./pages/client/CompanyInfoView"),
+  ({ CompanyInfoView }) => CompanyInfoView,
+);
+const createProjectPage = page(
+  () => import("./pages/client/CreateProject"),
+  ({ CreateProject }) => CreateProject,
+);
+const projectSuccessPage = page(
+  () => import("./pages/client/ProjectSuccess"),
+  ({ ProjectSuccess }) => ProjectSuccess,
+);
+const projectListPage = page(
+  () => import("./pages/client/ProjectList"),
+  ({ ProjectList }) => ProjectList,
+);
+const projectDetailPage = page(
+  () => import("./pages/client/ProjectDetail"),
+  ({ ProjectDetail }) => ProjectDetail,
+);
+const bidListPage = page(
+  () => import("./pages/client/BidList"),
+  ({ BidList }) => BidList,
+);
+const clientMyPage = page(
+  () => import("./pages/client/ClientMyPage"),
+  ({ ClientMyPage }) => ClientMyPage,
+);
+const myPageLayoutPage = page(
+  () => import("./pages/client/MyPageLayout"),
+  ({ MyPageLayout }) => MyPageLayout,
+);
+const clientOtherPage = page(
+  () => import("./pages/client/ClientOtherPage"),
+  ({ ClientOtherPage }) => ClientOtherPage,
+);
+const guestRequestViewPage = page(
+  () => import("./pages/client/GuestRequestView"),
+  ({ GuestRequestView }) => GuestRequestView,
+);
+
+const expertSignupPage = page(
+  () => import("./pages/expert/ExpertSignup"),
+  ({ ExpertSignup }) => ExpertSignup,
+);
+const expertDashboardPage = guardedPage(
+  expertActivityGuard,
+  () => import("./pages/expert/ExpertDashboard"),
+  ({ ExpertDashboard }) => ExpertDashboard,
+);
+const expertVerificationPage = guardedPage(
+  expertVerificationApplyGuard,
+  () => import("./pages/expert/ExpertVerification"),
+  ({ ExpertVerification }) => ExpertVerification,
+);
+const expertVerificationStatusPage = guardedPage(
+  expertVerificationStatusGuard,
+  () => import("./pages/expert/ExpertVerificationStatus"),
+  ({ ExpertVerificationStatus }) => ExpertVerificationStatus,
+);
+const projectListExpertPage = guardedPage(
+  expertActivityGuard,
+  () => import("./pages/expert/ProjectListExpert"),
+  ({ ProjectListExpert }) => ProjectListExpert,
+);
+const projectDetailExpertPage = guardedPage(
+  expertActivityGuard,
+  () => import("./pages/expert/ProjectDetailExpert"),
+  ({ ProjectDetailExpert }) => ProjectDetailExpert,
+);
+const myBidsPage = guardedPage(
+  expertActivityGuard,
+  () => import("./pages/expert/MyBids"),
+  ({ MyBids }) => MyBids,
+);
+const expertProfilePage = guardedPage(
+  expertActivityGuard,
+  () => import("./pages/expert/ExpertProfile"),
+  ({ ExpertProfile }) => ExpertProfile,
+);
+
+const adminExpertsPage = page(
+  () => import("./pages/admin/AdminExperts"),
+  ({ AdminExperts }) => AdminExperts,
+);
+const adminProjectListPage = page(
+  () => import("./pages/admin/AdminProjectList"),
+  ({ AdminProjectList }) => AdminProjectList,
+);
+const adminProjectDetailPage = page(
+  () => import("./pages/admin/AdminProjectDetail"),
+  ({ AdminProjectDetail }) => AdminProjectDetail,
+);
+const adminExpertApprovalPage = page(
+  () => import("./pages/admin/AdminExpertApproval"),
+  ({ AdminExpertApproval }) => AdminExpertApproval,
+);
+const adminExpertListPage = page(
+  () => import("./pages/admin/AdminExpertList"),
+  ({ AdminExpertList }) => AdminExpertList,
+);
+const adminExpertDetailPage = page(
+  () => import("./pages/admin/AdminExpertDetail"),
+  ({ AdminExpertDetail }) => AdminExpertDetail,
+);
+const adminCommunityPage = page(
+  () => import("./pages/admin/AdminCommunity"),
+  ({ AdminCommunity }) => AdminCommunity,
+);
 
 export const router = createBrowserRouter([
   {
     path: "/",
     Component: Root,
     children: [
-      { index: true, Component: Home },
-      { path: "login", Component: Login },
-      { path: "register", Component: Register },
-      { path: "signup/expert", Component: ExpertSignup },
-      { path: "check-request", Component: CheckRequest },
+      { index: true, lazy: homePage },
+      { path: "login", lazy: loginPage },
+      { path: "register", lazy: registerPage },
+      { path: "signup/expert", lazy: expertSignupPage },
+      { path: "check-request", lazy: checkRequestPage },
       
       // 의뢰인 라우트
-      { path: "client/start", Component: ClientStart },
+      { path: "client/start", lazy: clientStartPage },
       { 
         path: "client/mypage", 
-        Component: MyPageLayout,
+        lazy: myPageLayoutPage,
         children: [
-          { index: true, Component: ClientMyPage },
-          { path: "company-info", Component: CompanyInfoView },
-          { path: "other", Component: ClientOtherPage },
+          { index: true, lazy: clientMyPage },
+          { path: "company-info", lazy: companyInfoViewPage },
+          { path: "other", lazy: clientOtherPage },
         ]
       },
-      { path: "client/guest-request-view/:projectCode", Component: GuestRequestView },
-      { path: "client/company-info", Component: CompanyInfo },
-      { path: "client/create-project", Component: CreateProject },
-      { path: "client/create-project/:industry", Component: CreateProject },
-      { path: "client/project-success/:projectCode", Component: ProjectSuccess },
-      { path: "client/projects", Component: ProjectList },
-      { path: "client/projects/:id", Component: ProjectDetail },
-      { path: "client/projects/:id/bids", Component: BidList },
+      { path: "client/guest-request-view/:projectCode", lazy: guestRequestViewPage },
+      { path: "client/company-info", lazy: companyInfoPage },
+      { path: "client/create-project", lazy: createProjectPage },
+      { path: "client/create-project/:industry", lazy: createProjectPage },
+      { path: "client/project-success/:projectCode", lazy: projectSuccessPage },
+      { path: "client/projects", lazy: projectListPage },
+      { path: "client/projects/:id", lazy: projectDetailPage },
+      { path: "client/projects/:id/bids", lazy: bidListPage },
       
       // 전문가 라우트
-      {
-        path: "expert/dashboard",
-        element: (
-          <ExpertActivityGuard>
-            <ExpertDashboard />
-          </ExpertActivityGuard>
-        ),
-      },
-      {
-        path: "expert/verification",
-        element: (
-          <ExpertVerificationApplyGuard>
-            <ExpertVerification />
-          </ExpertVerificationApplyGuard>
-        ),
-      },
-      {
-        path: "expert/verification/apply",
-        element: (
-          <ExpertVerificationApplyGuard>
-            <ExpertVerification />
-          </ExpertVerificationApplyGuard>
-        ),
-      },
-      {
-        path: "expert/verification/status",
-        element: (
-          <ExpertVerificationStatusGuard>
-            <ExpertVerificationStatus />
-          </ExpertVerificationStatusGuard>
-        ),
-      },
-      {
-        path: "expert/pending",
-        element: (
-          <ExpertVerificationStatusGuard>
-            <ExpertVerificationStatus />
-          </ExpertVerificationStatusGuard>
-        ),
-      },
-      {
-        path: "expert/projects",
-        element: (
-          <ExpertActivityGuard>
-            <ProjectListExpert />
-          </ExpertActivityGuard>
-        ),
-      },
-      {
-        path: "expert/jobs",
-        element: (
-          <ExpertActivityGuard>
-            <ProjectListExpert />
-          </ExpertActivityGuard>
-        ),
-      },
-      {
-        path: "expert/projects/:id",
-        element: (
-          <ExpertActivityGuard>
-            <ProjectDetailExpert />
-          </ExpertActivityGuard>
-        ),
-      },
-      {
-        path: "expert/projects/:id/bid",
-        element: (
-          <ExpertActivityGuard>
-            <ProjectDetailExpert />
-          </ExpertActivityGuard>
-        ),
-      },
-      {
-        path: "expert/jobs/:id",
-        element: (
-          <ExpertActivityGuard>
-            <ProjectDetailExpert />
-          </ExpertActivityGuard>
-        ),
-      },
-      {
-        path: "expert/jobs/:id/bid",
-        element: (
-          <ExpertActivityGuard>
-            <ProjectDetailExpert />
-          </ExpertActivityGuard>
-        ),
-      },
-      {
-        path: "expert/my-bids",
-        element: (
-          <ExpertActivityGuard>
-            <MyBids />
-          </ExpertActivityGuard>
-        ),
-      },
-      {
-        path: "expert/bids",
-        element: (
-          <ExpertActivityGuard>
-            <MyBids />
-          </ExpertActivityGuard>
-        ),
-      },
-      {
-        path: "expert/profile",
-        element: (
-          <ExpertActivityGuard>
-            <ExpertProfile />
-          </ExpertActivityGuard>
-        ),
-      },
+      { path: "expert/dashboard", lazy: expertDashboardPage },
+      { path: "expert/verification", lazy: expertVerificationPage },
+      { path: "expert/verification/apply", lazy: expertVerificationPage },
+      { path: "expert/verification/status", lazy: expertVerificationStatusPage },
+      { path: "expert/pending", lazy: expertVerificationStatusPage },
+      { path: "expert/projects", lazy: projectListExpertPage },
+      { path: "expert/jobs", lazy: projectListExpertPage },
+      { path: "expert/projects/:id", lazy: projectDetailExpertPage },
+      { path: "expert/projects/:id/bid", lazy: projectDetailExpertPage },
+      { path: "expert/jobs/:id", lazy: projectDetailExpertPage },
+      { path: "expert/jobs/:id/bid", lazy: projectDetailExpertPage },
+      { path: "expert/my-bids", lazy: myBidsPage },
+      { path: "expert/bids", lazy: myBidsPage },
+      { path: "expert/profile", lazy: expertProfilePage },
       
       // 관리자 라우트
-      { path: "admin", Component: AdminExperts },
-      { path: "admin/projects", Component: AdminProjectList },
-      { path: "admin/projects/:id", Component: AdminProjectDetail },
-      { path: "admin/experts", Component: AdminExperts },
-      { path: "admin/experts/list", Component: AdminExpertList },
-      { path: "admin/experts/approval/:id", Component: AdminExpertApproval },
-      { path: "admin/experts/detail/:id", Component: AdminExpertDetail },
-      { path: "admin/community", Component: AdminCommunity },
+      { path: "admin", lazy: adminExpertsPage },
+      { path: "admin/projects", lazy: adminProjectListPage },
+      { path: "admin/projects/:id", lazy: adminProjectDetailPage },
+      { path: "admin/experts", lazy: adminExpertsPage },
+      { path: "admin/experts/list", lazy: adminExpertListPage },
+      { path: "admin/experts/approval/:id", lazy: adminExpertApprovalPage },
+      { path: "admin/experts/detail/:id", lazy: adminExpertDetailPage },
+      { path: "admin/community", lazy: adminCommunityPage },
       
       // 결제
-      { path: "payment/:projectId", Component: Payment },
+      { path: "payment/:projectId", lazy: paymentPage },
       
-      { path: "*", Component: NotFound },
+      { path: "*", lazy: notFoundPage },
     ],
   },
 ]);

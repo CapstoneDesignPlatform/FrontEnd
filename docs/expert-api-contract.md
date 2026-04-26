@@ -1,28 +1,126 @@
-# Expert API Contract Draft
+# Expert API Contract v2
 
-이 문서는 전문가 파트 프론트엔드가 백엔드 API와 연결될 때 필요한 계약 초안입니다.
-현재 코드는 mock DTO를 `src/api/expert.ts`에서 읽고, `src/api/expertMappers.ts`에서 화면용 ViewModel로 바꿔 사용합니다.
+이 문서는 `serviceplatform` 전문가 파트 프론트엔드와 백엔드 연동을 위한 API 계약입니다.
+`/Users/imin-yeong/Downloads/expert-api-contract-v2.md`를 기준으로 현재 프로젝트 코드에 맞게 정리했습니다.
 
-## Data Flow By Page
+## Frontend API Mode
 
-| Page | Reads | Writes | Current API Function | ERD Tables |
-| --- | --- | --- | --- | --- |
-| `ExpertSignup` | 없음 | 전문가 회원가입 입력값 | `registerExpert()` | `users`, `expert_profiles` |
-| `ExpertVerification` | 현재 인증 상태 | 인증 신청 정보, 첨부 파일 id | `getExpertVerificationStatus()`, `submitExpertVerification()` | `expert_profiles`, `expert_verification_requests`, `expert_certificates`, `expert_verification_files`, `files` |
-| `ExpertVerificationStatus` | 인증 요청 상태, 반려 사유 | 없음 | `getExpertVerificationStatus()` | `expert_profiles`, `expert_verification_requests` |
-| `ProjectListExpert` | 전문가가 볼 수 있는 공고 목록 | 없음 | `getExpertJobs()` | `job_posts`, `companies`, `bids` |
-| `ProjectDetailExpert` | 공고 상세, 회사 요약 | 입찰 생성 | `getExpertJobDetail()`, `createBid()` | `job_posts`, `companies`, `bids`, `expert_profiles` |
-| `MyBids` | 내 입찰 목록 | 연락처 복사만 로컬 동작 | `getMyBids()` | `bids`, `job_posts`, `companies` |
-| `ExpertProfile` | 전문가 프로필 | 전문가 프로필 수정 | `getExpertProfile()`, `updateExpertProfile()` | `users`, `expert_profiles`, `expert_certificates` |
-| `ExpertDashboard` | 전문가 프로필 통계, 최근 입찰 | 없음 | `getExpertProfile()`, `getMyBids()` | `expert_profiles`, `bids`, `job_posts` |
+프론트는 mock adapter와 HTTP adapter를 분리합니다.
 
-## API Draft
+```text
+VITE_API_MODE=mock
+VITE_API_MODE=http
+VITE_API_BASE_URL=/api
+```
+
+- 로컬 개발 기본값은 `mock`입니다.
+- 프로덕션 빌드 기본값은 `http`입니다.
+- `http` 모드에서는 `?status=APPROVED` 같은 개발용 인증 상태 override를 사용하지 않습니다.
+- UI 컴포넌트는 기존 함수명을 유지하고, `src/api/*HttpApi.ts`와 DTO mapper에서 백엔드 계약을 흡수합니다.
+
+## API Namespace
+
+```text
+POST   /api/auth/signup/expert
+GET    /api/expert/me/profile
+PATCH  /api/expert/me/profile
+GET    /api/expert/me/verification-status
+POST   /api/expert/me/verification-requests
+GET    /api/expert/me/bids
+GET    /api/expert/me/dashboard                # optional
+
+GET    /api/expert/job-posts
+GET    /api/expert/job-posts/{job_post_id}
+POST   /api/expert/job-posts/{job_post_id}/bids
+
+POST   /api/files
+GET    /api/files/{file_id}/download-url        # optional
+```
+
+## Shared Rules
+
+- `POST /api/auth/signup/expert`를 제외한 전문가 API는 인증된 전문가 사용자 기준입니다.
+- `expert_profile_id`는 request body/query에서 받지 않고 서버의 auth context에서 추론합니다.
+- 인증되지 않은 요청은 `401 UNAUTHORIZED`를 반환합니다.
+- 전문가 권한이 없거나 승인 전 제한된 API 접근은 `403 FORBIDDEN` 또는 `403 EXPERT_NOT_APPROVED`를 반환합니다.
+- 날짜/시간은 ISO 8601 문자열을 사용합니다.
+- 금액과 통계는 원 단위 `number`로 내려주고 프론트에서 포맷팅합니다.
+- 목록 API는 `page`, `size`, `total_count`, `total_pages`, `has_next`를 포함할 수 있습니다.
+
+## Enums
+
+```ts
+type ExpertVerificationStatus =
+  | "NOT_APPLIED"
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED";
+
+type JobPostStatusCode =
+  | "BIDDING"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CLOSED";
+
+type BidStatusCode =
+  | "PENDING"
+  | "SELECTED"
+  | "REJECTED";
+
+type JobPostTypeCode =
+  | "LICENSE"
+  | "SURVEY"
+  | "PERIODIC_REPORT"
+  | "ETC";
+```
+
+`JobPostTypeCode`는 API 코드 enum입니다. 프론트 mapper에서 아래 한글 라벨로 변환합니다.
+
+| API code | Korean label |
+| --- | --- |
+| `LICENSE` | 필요 면허 |
+| `SURVEY` | 실태 조사 |
+| `PERIODIC_REPORT` | 주기적 신고 |
+| `ETC` | 기타 |
+
+## Error Shape
+
+```json
+{
+  "code": "VALIDATION_ERROR",
+  "message": "입력값을 확인해주세요.",
+  "details": {
+    "bid_amount": "입찰 금액은 1원 이상이어야 합니다."
+  }
+}
+```
+
+권장 코드:
+
+| HTTP | code |
+| --- | --- |
+| 400 | `VALIDATION_ERROR` |
+| 401 | `UNAUTHORIZED` |
+| 403 | `FORBIDDEN` |
+| 403 | `EXPERT_NOT_APPROVED` |
+| 404 | `NOT_FOUND` |
+| 409 | `DUPLICATE_EMAIL` |
+| 409 | `DUPLICATE_BID` |
+| 409 | `ALREADY_VERIFICATION_PENDING` |
+| 409 | `ALREADY_VERIFIED` |
+| 409 | `JOB_POST_CLOSED` |
+| 413 | `FILE_TOO_LARGE` |
+| 415 | `UNSUPPORTED_FILE_TYPE` |
+
+## Endpoints
 
 ### 1. Expert Signup
 
-`POST /api/auth/signup/expert`
+```http
+POST /api/auth/signup/expert
+```
 
-Request draft:
+Request:
 
 ```json
 {
@@ -33,7 +131,7 @@ Request draft:
 }
 ```
 
-Response draft:
+Response:
 
 ```json
 {
@@ -46,211 +144,29 @@ Response draft:
   "expert_profile": {
     "id": 1,
     "user_id": 101,
+    "company_name": "",
+    "license_type": null,
+    "expertise_areas": [],
+    "portfolio": "",
     "verification_status": "NOT_APPLIED",
-    "is_verified": false
-  }
-}
-```
-
-Tables: `users`, `expert_profiles`
-
-### 2. Submit Expert Verification
-
-`POST /api/experts/me/verification-requests`
-
-Request draft:
-
-```json
-{
-  "expert_profile_id": 1,
-  "license_type": "경영지도사",
-  "license_number": "EXP-2026-001",
-  "issue_date": "2020-03-15",
-  "company_name": "케이법무법인",
-  "portfolio": "건설업 신규 면허 120건",
-  "file_ids": [1, 2]
-}
-```
-
-Response draft:
-
-```json
-{
-  "verification_request": {
-    "id": 1,
-    "expert_profile_id": 1,
-    "status": "PENDING",
-    "submitted_at": "2026-04-15"
-  }
-}
-```
-
-Tables: `expert_verification_requests`, `expert_certificates`, `expert_verification_files`, `files`
-
-### 3. Get Expert Verification Status
-
-`GET /api/experts/me/verification-status`
-
-Response draft:
-
-```json
-{
-  "verification_request": {
-    "id": 1,
-    "expert_profile_id": 1,
-    "status": "APPROVED",
-    "license_type": "경영지도사",
-    "license_number": "EXP-2026-001",
-    "issue_date": "2020-03-15",
-    "company_name": "케이법무법인",
-    "submitted_at": "2026-04-05",
-    "reviewed_at": "2026-04-06",
-    "rejected_reason": null
-  }
-}
-```
-
-Tables: `expert_profiles`, `expert_verification_requests`
-
-### 4. Get Expert Job List
-
-`GET /api/expert/job-posts`
-
-Response draft:
-
-```json
-{
-  "items": [
-    {
-      "id": 1,
-      "company_id": 1,
-      "company_name": "(주)건설개발",
-      "title": "건설업 일반건설업(토목) 신규 면허 취득",
-      "industry": "건설업",
-      "job_type": "필요 면허",
-      "business_type": "법인 사업자",
-      "required_license": "일반건설업(토목공사업)",
-      "asset_scale_label": "50억원",
-      "bid_count": 5,
-      "posted_at": "2026-04-01T09:00:00+09:00",
-      "is_new": true,
-      "status": "BIDDING"
+    "is_verified": false,
+    "stats": {
+      "active_bids": 0,
+      "won_projects": 0,
+      "completed_projects": 0,
+      "total_earned": 0
     }
-  ]
-}
-```
-
-Tables: `job_posts`, `companies`, `bids`
-
-### 5. Get Expert Job Detail
-
-`GET /api/expert/job-posts/{job_post_id}`
-
-Response draft:
-
-```json
-{
-  "id": 1,
-  "company_id": 1,
-  "title": "건설업 일반건설업(토목) 신규 면허 취득",
-  "industry": "건설업",
-  "job_type": "필요 면허",
-  "business_type": "법인 사업자",
-  "bid_count": 5,
-  "created_at": "2026-04-01T09:00:00+09:00",
-  "status": "BIDDING",
-  "company": {
-    "id": 1,
-    "name": "(주)건설개발",
-    "representative": "김철수",
-    "location": "서울특별시 강남구"
   }
 }
 ```
 
-Tables: `job_posts`, `companies`, `bids`
+### 2. Get My Expert Profile
 
-### 6. Create Bid
-
-`POST /api/expert/job-posts/{job_post_id}/bids`
-
-Request draft:
-
-```json
-{
-  "job_post_id": 1,
-  "bid_amount": 2500000
-}
+```http
+GET /api/expert/me/profile
 ```
 
-Response draft:
-
-```json
-{
-  "bid": {
-    "id": 1,
-    "job_post_id": 1,
-    "job_post_title": "건설업 일반건설업(토목) 신규 면허 취득",
-    "bid_amount": 2500000,
-    "status": "PENDING",
-    "submitted_at": "2026-04-15T10:00:00+09:00",
-    "total_bid_count": 6
-  }
-}
-```
-
-Tables: `bids`, `job_posts`, `expert_profiles`
-
-### 7. Get My Bids
-
-`GET /api/experts/me/bids`
-
-Response draft:
-
-```json
-{
-  "items": [
-    {
-      "id": 1,
-      "job_post_id": 1,
-      "job_post_title": "건설업 일반건설업(토목) 신규 면허 취득",
-      "bid_amount": 2500000,
-      "status": "PENDING",
-      "submitted_at": "2026-04-05T10:00:00+09:00",
-      "total_bid_count": 5,
-      "client_contact": null
-    }
-  ]
-}
-```
-
-Tables: `bids`, `job_posts`, `companies`
-
-### 8. Get And Update Expert Profile
-
-`GET /api/experts/me/profile`
-
-`PATCH /api/experts/me/profile`
-
-Update request draft:
-
-```json
-{
-  "name": "전문가",
-  "email": "expert@example.com",
-  "phone": "010-1234-5678",
-  "company_name": "케이법무법인",
-  "license_type": "경영지도사",
-  "license_number": "EXP-2026-001",
-  "expertise_areas": ["건설업 인허가"],
-  "experience_years": 10,
-  "education": "한국대학교 경영학과",
-  "introduction": "건설업 인허가 업무를 지원합니다.",
-  "portfolio": "신규 면허 120건 수행"
-}
-```
-
-Response draft:
+Response:
 
 ```json
 {
@@ -265,31 +181,339 @@ Response draft:
     "user_id": 101,
     "company_name": "케이법무법인",
     "license_type": "경영지도사",
-    "license_number": "EXP-2026-001",
     "expertise_areas": ["건설업 인허가"],
-    "experience_years": 10,
+    "portfolio": "신규 면허 120건 수행",
     "verification_status": "APPROVED",
     "is_verified": true,
     "stats": {
       "active_bids": 4,
       "won_projects": 2,
       "completed_projects": 8,
-      "total_earned_label": "₩24,500,000"
+      "total_earned": 24500000
     }
   }
 }
 ```
 
-Tables: `users`, `expert_profiles`, `expert_certificates`
+### 3. Update My Expert Profile
 
-## Open Questions For Backend
+```http
+PATCH /api/expert/me/profile
+```
 
-1. 인증 상태의 source of truth는 `expert_profiles.is_verified`인지, `expert_verification_requests.status`인지 확인이 필요합니다.
-2. 반려 사유 필드 이름은 `rejected_reason`, `reject_reason`, `review_comment` 중 무엇인지 확정이 필요합니다.
-3. 인증 요청 재신청 시 기존 요청을 갱신하는지, 새 요청 row를 생성하고 이전 요청과 연결하는지 확인이 필요합니다.
-4. 입찰 상태 enum 값은 `PENDING`, `SELECTED`, `REJECTED`로 충분한지 확인이 필요합니다.
-5. `job_posts.status` enum 값은 `BIDDING`, `IN_PROGRESS`, `COMPLETED`, `CLOSED`로 충분한지 확인이 필요합니다.
-6. 로그인 후 현재 사용자와 `expert_profiles`를 연결하는 방식이 `users.id` 기준인지, 별도 expert profile id를 토큰에 넣는지 확인이 필요합니다.
-7. 파일 업로드 방식은 먼저 업로드 후 `file_id`를 받는 방식인지, 인증 신청 요청과 함께 multipart로 보내는 방식인지 확인이 필요합니다.
-8. 공고 목록에서 전문가가 볼 수 없는 상태의 공고를 백엔드에서 필터링하는지, 프론트에서 필터링해야 하는지 확인이 필요합니다.
-9. 입찰 금액 단위는 원 단위 정수인지, VAT 포함 여부가 별도 필드로 필요한지 확인이 필요합니다.
+Request:
+
+```json
+{
+  "name": "전문가",
+  "phone": "010-1234-5678",
+  "company_name": "케이법무법인",
+  "expertise_areas": ["건설업 인허가"],
+  "portfolio": "신규 면허 120건 수행"
+}
+```
+
+Response: `GET /api/expert/me/profile`과 동일합니다.
+
+정책:
+
+- `email`은 이 API에서 수정하지 않습니다.
+- `license_type`, `license_number`, `issue_date`, 인증 첨부 파일은 인증 심사 플로우에서 관리합니다.
+
+### 4. Get Expert Verification Status
+
+```http
+GET /api/expert/me/verification-status
+```
+
+Approved response:
+
+```json
+{
+  "verification_request": {
+    "id": 1,
+    "status": "APPROVED",
+    "license_type": "경영지도사",
+    "license_number": "EXP-2026-001",
+    "issue_date": "2020-03-15",
+    "company_name": "케이법무법인",
+    "portfolio": "건설업 신규 면허 120건",
+    "certificates": [
+      {
+        "license_type": "경영지도사",
+        "license_number": "EXP-2026-001",
+        "issue_date": "2020-03-15",
+        "holder_name": "홍길동",
+        "file_id": 1,
+        "file_name": "license.pdf"
+      }
+    ],
+    "business_license": {
+      "business_number": "123-45-67890",
+      "owner_name": "홍길동",
+      "company_name": "케이법무법인",
+      "file_id": 2,
+      "file_name": "business-license.pdf"
+    },
+    "submitted_at": "2026-04-05T10:00:00+09:00",
+    "reviewed_at": "2026-04-06T15:00:00+09:00",
+    "rejected_reason": null
+  }
+}
+```
+
+Not applied response:
+
+```json
+{
+  "verification_request": {
+    "id": null,
+    "status": "NOT_APPLIED",
+    "license_type": null,
+    "license_number": null,
+    "issue_date": null,
+    "company_name": null,
+    "portfolio": null,
+    "certificates": [],
+    "business_license": null,
+    "submitted_at": null,
+    "reviewed_at": null,
+    "rejected_reason": null
+  }
+}
+```
+
+### 5. Submit Expert Verification
+
+```http
+POST /api/expert/me/verification-requests
+```
+
+Request:
+
+```json
+{
+  "license_type": "경영지도사",
+  "license_number": "EXP-2026-001",
+  "issue_date": "2020-03-15",
+  "company_name": "케이법무법인",
+  "portfolio": "건설업 신규 면허 120건",
+  "certificates": [
+    {
+      "license_type": "경영지도사",
+      "license_number": "EXP-2026-001",
+      "issue_date": "2020-03-15",
+      "holder_name": "홍길동",
+      "file_id": 1
+    }
+  ],
+  "business_license": {
+    "business_number": "123-45-67890",
+    "owner_name": "홍길동",
+    "company_name": "케이법무법인",
+    "file_id": 2
+  }
+}
+```
+
+정책:
+
+- request body에 `expert_profile_id`를 포함하지 않습니다.
+- `PENDING`이면 `409 ALREADY_VERIFICATION_PENDING`을 반환합니다.
+- `APPROVED`이면 `409 ALREADY_VERIFIED`를 반환합니다.
+- `REJECTED` 재신청은 새 인증 신청 row 생성을 권장합니다.
+
+### 6. Upload Verification Files
+
+```http
+POST /api/files
+```
+
+Request: `multipart/form-data`
+
+```text
+file: <binary>
+purpose: EXPERT_VERIFICATION
+```
+
+Response:
+
+```json
+{
+  "file": {
+    "id": 1,
+    "original_name": "license.pdf",
+    "stored_name": "2026/04/license-uuid.pdf",
+    "mime_type": "application/pdf",
+    "size": 123456,
+    "purpose": "EXPERT_VERIFICATION",
+    "created_at": "2026-04-15T10:00:00+09:00"
+  }
+}
+```
+
+### 7. Get Expert Job List
+
+```http
+GET /api/expert/job-posts
+```
+
+Query:
+
+```text
+status=BIDDING
+keyword=건설
+job_type=LICENSE
+industry=건설업
+page=1
+size=20
+sort=posted_at_desc
+```
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "company_id": 1,
+      "company_name": "(주)건설개발",
+      "title": "건설업 일반건설업(토목) 신규 면허 취득",
+      "industry": "건설업",
+      "job_type": "LICENSE",
+      "job_type_label": "필요 면허",
+      "business_type": "법인 사업자",
+      "classification": "신규 등록",
+      "required_license": "일반건설업(토목공사업)",
+      "asset_scale_label": "50억원",
+      "bid_count": 5,
+      "posted_at": "2026-04-01T09:00:00+09:00",
+      "is_new": true,
+      "status": "BIDDING",
+      "has_my_bid": false
+    }
+  ],
+  "page": 1,
+  "size": 20,
+  "total_count": 1,
+  "total_pages": 1,
+  "has_next": false
+}
+```
+
+### 8. Get Expert Job Detail
+
+```http
+GET /api/expert/job-posts/{job_post_id}
+```
+
+Response는 `JobPostListItemDto`의 상세 정보에 `company`, `created_at`, `my_bid`를 추가합니다.
+
+```json
+{
+  "id": 1,
+  "company_id": 1,
+  "company_name": "(주)건설개발",
+  "title": "건설업 일반건설업(토목) 신규 면허 취득",
+  "industry": "건설업",
+  "job_type": "LICENSE",
+  "job_type_label": "필요 면허",
+  "business_type": "법인 사업자",
+  "bid_count": 5,
+  "posted_at": "2026-04-01T09:00:00+09:00",
+  "created_at": "2026-04-01T09:00:00+09:00",
+  "is_new": true,
+  "status": "BIDDING",
+  "company": {
+    "id": 1,
+    "name": "(주)건설개발",
+    "representative": "김철수",
+    "location": "서울특별시 강남구"
+  },
+  "my_bid": null
+}
+```
+
+### 9. Create Bid
+
+```http
+POST /api/expert/job-posts/{job_post_id}/bids
+```
+
+Request:
+
+```json
+{
+  "bid_amount": 2500000
+}
+```
+
+Response:
+
+```json
+{
+  "bid": {
+    "id": 1,
+    "job_post_id": 1,
+    "job_post_title": "건설업 일반건설업(토목) 신규 면허 취득",
+    "bid_amount": 2500000,
+    "status": "PENDING",
+    "submitted_at": "2026-04-15T10:00:00+09:00",
+    "total_bid_count": 6,
+    "client_contact": null
+  }
+}
+```
+
+정책:
+
+- request body에 `job_post_id` 또는 `expert_profile_id`를 포함하지 않습니다.
+- 같은 전문가가 같은 공고에 중복 입찰하면 `409 DUPLICATE_BID`를 반환합니다.
+- 공고 상태가 `BIDDING`이 아니면 `409 JOB_POST_CLOSED`를 반환합니다.
+
+### 10. Get My Bids
+
+```http
+GET /api/expert/me/bids
+```
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "job_post_id": 1,
+      "job_post_title": "건설업 일반건설업(토목) 신규 면허 취득",
+      "bid_amount": 2500000,
+      "status": "SELECTED",
+      "submitted_at": "2026-04-05T10:00:00+09:00",
+      "total_bid_count": 5,
+      "client_contact": {
+        "name": "김담당",
+        "phone": "010-1111-2222",
+        "email": "client@example.com"
+      }
+    }
+  ],
+  "page": 1,
+  "size": 20,
+  "total_count": 1,
+  "total_pages": 1,
+  "has_next": false
+}
+```
+
+`client_contact`는 `SELECTED` 상태에서만 객체로 내려주고, 그 외 상태는 `null`을 권장합니다.
+
+## Frontend Migration Notes
+
+- HTTP adapter 경로는 `/api/expert/me/**` 기준입니다.
+- API의 `JobPostTypeCode`는 mapper에서 한글 라벨 ViewModel로 변환합니다.
+- 프로필 수정 payload는 `name`, `phone`, `company_name`, `expertise_areas`, `portfolio`만 보냅니다.
+- 인증 미신청 상태의 `verification_request.id === null`은 정상 케이스입니다.
+- 입찰 생성 payload는 `bid_amount`만 보냅니다.
+- 내 입찰의 `client_contact`는 문자열이 아니라 객체 또는 `null`입니다.
+

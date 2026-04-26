@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { getExpertVerificationStatus } from "../../../api/expert";
-import type { ExpertVerificationStatus } from "../../../types/expert";
+import { getExpertVerificationStatus } from "../../../api/expertVerification";
+import { useAsyncData } from "../../hooks/useAsyncData";
+import type { ExpertVerificationStatus } from "../../../types/expertVerification";
 
 const expertVerificationStatuses: ExpertVerificationStatus[] = [
   "NOT_APPLIED",
@@ -35,21 +36,11 @@ export function useMockExpertVerificationStatus() {
     () => getStatusFromSearch(location.search),
     [location.search],
   );
-  const [status, setStatus] = useState<ExpertVerificationStatus | null>(null);
+  const loadVerificationStatus = useCallback(
+    () => getExpertVerificationStatus(statusOverride),
+    [statusOverride],
+  );
+  const { data } = useAsyncData(loadVerificationStatus);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    void getExpertVerificationStatus(statusOverride).then((request) => {
-      if (isMounted) {
-        setStatus(request.status);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [statusOverride]);
-
-  return { location, status };
+  return { location, status: data?.status ?? null };
 }

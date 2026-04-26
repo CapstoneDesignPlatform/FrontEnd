@@ -1,28 +1,30 @@
 import { useState } from "react";
-import { Link, useNavigate, useOutletContext } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { toast } from "sonner";
+import { useFormFields } from "../hooks/useFormFields";
+import { useRootOutletContext } from "../hooks/useRootOutletContext";
 
-type OutletContext = {
-  setUser: (user: { type: "client" | "expert"; name: string }) => void;
+const initialLoginForm = {
+  email: "",
+  password: "",
 };
 
 export function Login() {
   const navigate = useNavigate();
-  const { setUser } = useOutletContext<OutletContext>();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { setUser } = useRootOutletContext();
+  const { handleChange, values: formData } = useFormFields(initialLoginForm);
   const [userType, setUserType] = useState<"client" | "expert">("client");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // 데모용 로그인 처리
-    if (email && password) {
-      setUser({ type: userType, name: email.split("@")[0] });
+    if (formData.email && formData.password) {
+      setUser({ type: userType, name: formData.email.split("@")[0] });
       toast.success("로그인 성공!");
       
       if (userType === "client") {
@@ -72,8 +74,9 @@ export function Login() {
                 id="email"
                 type="email"
                 placeholder="example@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -84,8 +87,9 @@ export function Login() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
                 required
               />
             </div>

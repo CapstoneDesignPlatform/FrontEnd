@@ -6,25 +6,29 @@ import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 import { Edit, Save, X } from "lucide-react";
 import { toast } from "sonner";
+import { useFormFields } from "../../hooks/useFormFields";
+
+const initialCompanyInfo = {
+  companyName: "(주)테스트건설",
+  businessNumber: "123-45-67890",
+  representative: "홍길동",
+  address: "서울특별시 강남구 테헤란로 123",
+  phoneNumber: "02-1234-5678",
+  email: "test@example.com",
+  establishDate: "2020-01-15",
+  capital: "100,000,000원",
+  website: "https://example.com",
+  description: "건설업 전문 기업으로 다양한 프로젝트 경험을 보유하고 있습니다.",
+};
 
 export function CompanyInfoView() {
   const [isEditing, setIsEditing] = useState(false);
-  
-  // 기업 정보 초기 데이터
-  const [companyInfo, setCompanyInfo] = useState({
-    companyName: "(주)테스트건설",
-    businessNumber: "123-45-67890",
-    representative: "홍길동",
-    address: "서울특별시 강남구 테헤란로 123",
-    phoneNumber: "02-1234-5678",
-    email: "test@example.com",
-    establishDate: "2020-01-15",
-    capital: "100,000,000원",
-    website: "https://example.com",
-    description: "건설업 전문 기업으로 다양한 프로젝트 경험을 보유하고 있습니다.",
-  });
-
-  const [editedInfo, setEditedInfo] = useState(companyInfo);
+  const [companyInfo, setCompanyInfo] = useState(initialCompanyInfo);
+  const {
+    handleChange,
+    setValues: setEditedInfo,
+    values: editedInfo,
+  } = useFormFields(initialCompanyInfo);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -40,13 +44,6 @@ export function CompanyInfoView() {
     setCompanyInfo(editedInfo);
     setIsEditing(false);
     toast.success("기업 정보가 성공적으로 수정되었습니다.");
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setEditedInfo({
-      ...editedInfo,
-      [e.target.name]: e.target.value,
-    });
   };
 
   return (
