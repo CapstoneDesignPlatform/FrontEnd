@@ -66,8 +66,14 @@ const expertVerificationStatusGuard = guard(
   ({ ExpertVerificationStatusGuard }) => ExpertVerificationStatusGuard,
 );
 
-const homePage = page(() => import("./pages/Home"), ({ Home }) => Home);
-const loginPage = page(() => import("./pages/Login"), ({ Login }) => Login);
+const homePage = page(
+  () => import("./pages/Home"),
+  ({ Home }) => Home,
+);
+const loginPage = page(
+  () => import("./pages/Login"),
+  ({ Login }) => Login,
+);
 const registerPage = page(
   () => import("./pages/Register"),
   ({ Register }) => Register,
@@ -76,7 +82,10 @@ const checkRequestPage = page(
   () => import("./pages/CheckRequest"),
   ({ CheckRequest }) => CheckRequest,
 );
-const paymentPage = page(() => import("./pages/Payment"), ({ Payment }) => Payment);
+const paymentPage = page(
+  () => import("./pages/Payment"),
+  ({ Payment }) => Payment,
+);
 const notFoundPage = page(
   () => import("./pages/NotFound"),
   ({ NotFound }) => NotFound,
@@ -200,6 +209,11 @@ const adminCommunityPage = page(
   ({ AdminCommunity }) => AdminCommunity,
 );
 
+const adminSettingsPage = page(
+  () => import("./pages/admin/AdminSettings"),
+  ({ AdminSettings }) => AdminSettings,
+);
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -210,19 +224,22 @@ export const router = createBrowserRouter([
       { path: "register", lazy: registerPage },
       { path: "signup/expert", lazy: expertSignupPage },
       { path: "check-request", lazy: checkRequestPage },
-      
+
       // 의뢰인 라우트
       { path: "client/start", lazy: clientStartPage },
-      { 
-        path: "client/mypage", 
+      {
+        path: "client/mypage",
         lazy: myPageLayoutPage,
         children: [
           { index: true, lazy: clientMyPage },
           { path: "company-info", lazy: companyInfoViewPage },
           { path: "other", lazy: clientOtherPage },
-        ]
+        ],
       },
-      { path: "client/guest-request-view/:projectCode", lazy: guestRequestViewPage },
+      {
+        path: "client/guest-request-view/:projectCode",
+        lazy: guestRequestViewPage,
+      },
       { path: "client/company-info", lazy: companyInfoPage },
       { path: "client/create-project", lazy: createProjectPage },
       { path: "client/create-project/:industry", lazy: createProjectPage },
@@ -230,12 +247,15 @@ export const router = createBrowserRouter([
       { path: "client/projects", lazy: projectListPage },
       { path: "client/projects/:id", lazy: projectDetailPage },
       { path: "client/projects/:id/bids", lazy: bidListPage },
-      
+
       // 전문가 라우트
       { path: "expert/dashboard", lazy: expertDashboardPage },
       { path: "expert/verification", lazy: expertVerificationPage },
       { path: "expert/verification/apply", lazy: expertVerificationPage },
-      { path: "expert/verification/status", lazy: expertVerificationStatusPage },
+      {
+        path: "expert/verification/status",
+        lazy: expertVerificationStatusPage,
+      },
       { path: "expert/pending", lazy: expertVerificationStatusPage },
       { path: "expert/projects", lazy: projectListExpertPage },
       { path: "expert/jobs", lazy: projectListExpertPage },
@@ -246,7 +266,7 @@ export const router = createBrowserRouter([
       { path: "expert/my-bids", lazy: myBidsPage },
       { path: "expert/bids", lazy: myBidsPage },
       { path: "expert/profile", lazy: expertProfilePage },
-      
+
       // 관리자 라우트
       { path: "admin", lazy: adminExpertsPage },
       { path: "admin/projects", lazy: adminProjectListPage },
@@ -256,10 +276,11 @@ export const router = createBrowserRouter([
       { path: "admin/experts/approval/:id", lazy: adminExpertApprovalPage },
       { path: "admin/experts/detail/:id", lazy: adminExpertDetailPage },
       { path: "admin/community", lazy: adminCommunityPage },
-      
+      { path: "admin/settings", lazy: adminSettingsPage },
+
       // 결제
       { path: "payment/:projectId", lazy: paymentPage },
-      
+
       { path: "*", lazy: notFoundPage },
     ],
   },

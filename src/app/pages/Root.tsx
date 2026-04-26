@@ -105,6 +105,10 @@ export function Root() {
                   </Button>
 
                   <Button variant="ghost" asChild>
+                    <Link to="/admin/settings">플랫폼 설정</Link>
+                  </Button>
+
+                  <Button variant="ghost" asChild>
                     <Link to="/admin/community">커뮤니티</Link>
                   </Button>
                 </>
@@ -138,7 +142,9 @@ export function Root() {
                       {INDUSTRIES.map((industry) => (
                         <DropdownMenuItem
                           key={industry.value}
-                          onClick={() => navigate(`/client/create-project/${industry.value}`)}
+                          onClick={() =>
+                            navigate(`/client/create-project/${industry.value}`)
+                          }
                         >
                           {industry.label}
                         </DropdownMenuItem>
