@@ -1,32 +1,36 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { toast } from "sonner";
-import { useFormFields } from "../hooks/useFormFields";
-import { useRootOutletContext } from "../hooks/useRootOutletContext";
 
-const initialLoginForm = {
-  email: "",
-  password: "",
+type OutletContext = {
+  setUser: (user: { type: "client" | "expert"; name: string }) => void;
 };
 
 export function Login() {
   const navigate = useNavigate();
-  const { setUser } = useRootOutletContext();
-  const { handleChange, values: formData } = useFormFields(initialLoginForm);
+  const { setUser } = useOutletContext<OutletContext>();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [userType, setUserType] = useState<"client" | "expert">("client");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // 데모용 로그인 처리
-    if (formData.email && formData.password) {
-      setUser({ type: userType, name: formData.email.split("@")[0] });
+
+    // 데모용 로그인 처리 - 이메일로 자동 구분
+    if (email && password) {
+      // 이메일 도메인이나 DB 조회로 사용자 유형 자동 판별 (데모용으로는 랜덤)
+      setUser({ 
+        type: userType, 
+        name: email.split("@")[0] 
+      });
+
+      setUser({ type: userType, name: email.split("@")[0] });
       toast.success("로그인 성공!");
-      
+
       if (userType === "client") {
         navigate("/client/mypage");
       } else {
@@ -46,6 +50,15 @@ export function Login() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate("/ !!!! 채워넣어야 함!!!")}
+            >
+              예약코드로 조회하기
+            </Button> */}
+
             <div className="space-y-2">
               <Label>사용자 유형</Label>
               <div className="flex gap-4">
@@ -74,9 +87,8 @@ export function Login() {
                 id="email"
                 type="email"
                 placeholder="example@email.com"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -87,9 +99,8 @@ export function Login() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
@@ -103,6 +114,47 @@ export function Login() {
               <Link to="/register" className="text-teal-600 hover:underline">
                 회원가입
               </Link>
+            </div>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">또는</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                style={{ backgroundColor: '#FEE500', borderColor: '#FEE500', color: '#000000' }}
+                onClick={() => {
+                  toast.info("카카오 로그인은 준비 중입니다.");
+                }}
+              >
+                <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 0 1-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3z"/>
+                </svg>
+                카카오로 시작하기
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                style={{ backgroundColor: '#03C75A', borderColor: '#03C75A', color: '#FFFFFF' }}
+                onClick={() => {
+                  toast.info("네이버 로그인은 준비 중입니다.");
+                }}
+              >
+                <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
+                </svg>
+                네이버로 시작하기
+              </Button>
             </div>
           </form>
         </CardContent>
