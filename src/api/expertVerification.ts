@@ -1,7 +1,11 @@
+import { shouldUseMockApi } from "./apiMode";
+import type { ExpertVerificationApi } from "./expertApiTypes";
 import { expertVerificationHttpApi } from "./expertVerificationHttpApi";
 import { expertVerificationMockApi } from "./expertVerificationMockApi";
 
-const expertVerificationApi = expertVerificationMockApi; 
+const expertVerificationApi: ExpertVerificationApi = shouldUseMockApi
+  ? expertVerificationMockApi
+  : expertVerificationHttpApi;
 
 export const {
   getExpertVerificationStatus,
