@@ -1,7 +1,8 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { getExpertVerificationStatus } from "../../../api/expertVerification";
 import { useAsyncData } from "../../hooks/useAsyncData";
+import { getDemoExpertVerificationStatus } from "../../demoAccess";
 import type { ExpertVerificationStatus } from "../../../types/expertVerification";
 
 const expertVerificationStatuses: ExpertVerificationStatus[] = [
@@ -32,10 +33,8 @@ export function buildExpertRedirectPath(
 
 export function useMockExpertVerificationStatus() {
   const location = useLocation();
-  const statusOverride = useMemo(
-    () => getStatusFromSearch(location.search),
-    [location.search],
-  );
+  const statusOverride =
+    getStatusFromSearch(location.search) ?? getDemoExpertVerificationStatus();
   const loadVerificationStatus = useCallback(
     () => getExpertVerificationStatus(statusOverride),
     [statusOverride],

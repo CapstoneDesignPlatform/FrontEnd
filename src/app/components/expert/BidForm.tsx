@@ -23,17 +23,17 @@ export function BidForm({
   onSubmit,
 }: BidFormProps) {
   return (
-    <Card className="border-teal-500 border-2">
-      <CardHeader>
-        <CardTitle>입찰 정보 입력</CardTitle>
-        <CardDescription>
+    <Card className="gap-3 border-2 border-teal-500 md:gap-6">
+      <CardHeader className="p-3 md:px-6 md:pt-6">
+        <CardTitle className="text-base md:text-lg">입찰 정보 입력</CardTitle>
+        <CardDescription className="text-[11px] md:text-sm">
           정확한 정보를 입력해주세요. 입찰가는 협상 전 가격입니다.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="space-y-2 w-full">
-            <Label htmlFor="price">
+      <CardContent className="px-3 pb-3 [&:last-child]:pb-3 md:px-6 md:pb-6 md:[&:last-child]:pb-6">
+        <form onSubmit={onSubmit} className="space-y-3 md:space-y-4">
+          <div className="w-full space-y-1.5 md:space-y-2">
+            <Label htmlFor="price" className="text-xs md:text-sm">
               입찰가 (원) <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -48,16 +48,17 @@ export function BidForm({
               onChange={onChange}
               disabled={isSubmitting}
               required
+              className="h-9 text-sm md:text-base"
             />
-            <p className="text-xs text-gray-600">
+            <p className="text-[11px] text-gray-600 md:text-xs">
               의뢰인 선택 후 최종 가격 협상이 가능합니다.
             </p>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-2 md:gap-4">
             <Button
               type="submit"
-              className="flex-1 bg-teal-600 hover:bg-teal-700"
+              className="h-9 flex-1 bg-teal-600 text-sm hover:bg-teal-700 md:h-10 md:text-base"
               disabled={isSubmitting}
             >
               {isSubmitting ? "입찰 제출 중..." : "입찰 제출하기"}
@@ -65,7 +66,7 @@ export function BidForm({
             <Button
               type="button"
               variant="outline"
-              className="flex-1"
+              className="h-9 flex-1 text-sm md:h-10 md:text-base"
               disabled={isSubmitting}
               onClick={onCancel}
             >

@@ -5,6 +5,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { toast } from "sonner";
+import { grantDemoExpertApproval } from "../demoAccess";
 
 type OutletContext = {
   setUser: (user: { type: "client" | "expert"; name: string }) => void;
@@ -22,14 +23,9 @@ export function Login() {
 
     // 데모용 로그인 처리 - 이메일로 자동 구분
     if (email && password) {
-      // 이메일 도메인이나 DB 조회로 사용자 유형 자동 판별 (데모용으로는 랜덤)
-      setUser({ 
-        type: userType, 
-        name: email.split("@")[0] 
-      });
-
       setUser({ type: userType, name: email.split("@")[0] });
-      toast.success("로그인 성공!");
+      grantDemoExpertApproval();
+      toast.success("로그인 성공! 시연용 전문가 승인 권한이 적용되었습니다.");
 
       if (userType === "client") {
         navigate("/client/mypage");

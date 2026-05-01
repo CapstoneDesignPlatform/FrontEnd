@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import useEmblaCarousel from "embla-carousel-react";
 import { toast } from "sonner";
 
 import {
@@ -128,18 +127,12 @@ export function useExpertVerificationForm({
   const { releasePreviewUrl, trackPreviewUrl } = useVerificationPreviewUrls();
   const [verificationStatus, setVerificationStatus] =
     useState<ExpertVerificationStatus>("NOT_APPLIED");
-  const [pendingScrollIndex, setPendingScrollIndex] = useState<number | null>(null);
   const [certificates, setCertificates] = useState<VerificationCertificateData[]>(() => [
     createEmptyCertificate(),
   ]);
   const [businessLicense, setBusinessLicense] =
     useState<VerificationBusinessLicenseData>(createEmptyBusinessLicense);
   const [career, setCareer] = useState<VerificationCareerData>(createEmptyCareer);
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: "start",
-    containScroll: "trimSnaps",
-    slidesToScroll: 1,
-  });
   const loadVerificationRequest = useCallback(
     () => getExpertVerificationStatus(statusOverride),
     [statusOverride],
@@ -173,7 +166,6 @@ export function useExpertVerificationForm({
       return createEmptyBusinessLicense();
     });
     setCareer(createEmptyCareer());
-    setPendingScrollIndex(null);
   }, [releasePreviewUrl]);
 
   const applyVerificationRequest = useCallback(
@@ -195,7 +187,6 @@ export function useExpertVerificationForm({
         companyName: request.companyName,
         portfolio: request.portfolio ?? "",
       });
-      setPendingScrollIndex(null);
     },
     [releasePreviewUrl],
   );
@@ -213,29 +204,11 @@ export function useExpertVerificationForm({
     applyVerificationRequest(verificationRequest);
   }, [applyVerificationRequest, resetVerificationForm, verificationRequest]);
 
-  const scrollPrev = useCallback(() => {
-    emblaApi?.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    emblaApi?.scrollNext();
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi || pendingScrollIndex === null) return;
-
-    emblaApi.reInit();
-    emblaApi.scrollTo(pendingScrollIndex);
-    setPendingScrollIndex(null);
-  }, [certificates.length, emblaApi, pendingScrollIndex]);
-
   const handleAddCertificate = useCallback(() => {
     if (isPending) return;
 
-    const nextIndex = certificates.length;
     setCertificates((current) => [...current, createEmptyCertificate()]);
-    setPendingScrollIndex(nextIndex);
-  }, [certificates.length, isPending]);
+  }, [isPending]);
 
   const handleUpdateCertificate = useCallback(
     (id: string, data: VerificationCertificateData) => {
@@ -305,7 +278,6 @@ export function useExpertVerificationForm({
     canSubmit,
     career,
     certificates,
-    emblaRef,
     handleAddCertificate,
     handleDeleteCertificate,
     handleSubmit,
@@ -314,8 +286,6 @@ export function useExpertVerificationForm({
     isApproved,
     isPending,
     isSubmitting,
-    scrollNext,
-    scrollPrev,
     setCareer,
     verificationStatus,
   };

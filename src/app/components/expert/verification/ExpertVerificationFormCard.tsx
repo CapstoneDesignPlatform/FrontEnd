@@ -1,6 +1,5 @@
 import type { FormEvent } from "react";
-import type { EmblaViewportRefType } from "embla-carousel-react";
-import { ChevronLeft, ChevronRight, FileText, Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 
 import type { ExpertVerificationStatus } from "../../../../types/expertVerification";
 import { Button } from "../../ui/button";
@@ -19,7 +18,6 @@ interface ExpertVerificationFormCardProps {
   canSubmit: boolean;
   career: VerificationCareerData;
   certificates: VerificationCertificateData[];
-  emblaRef: EmblaViewportRefType;
   isPending: boolean;
   isSubmitting: boolean;
   verificationStatus: ExpertVerificationStatus;
@@ -33,8 +31,6 @@ interface ExpertVerificationFormCardProps {
   onCertificateDelete: (id: string) => void;
   onSkip: () => void;
   onSubmit: (event: FormEvent) => void;
-  scrollNext: () => void;
-  scrollPrev: () => void;
 }
 
 export function ExpertVerificationFormCard({
@@ -42,7 +38,6 @@ export function ExpertVerificationFormCard({
   canSubmit,
   career,
   certificates,
-  emblaRef,
   isPending,
   isSubmitting,
   verificationStatus,
@@ -53,8 +48,6 @@ export function ExpertVerificationFormCard({
   onCertificateDelete,
   onSkip,
   onSubmit,
-  scrollNext,
-  scrollPrev,
 }: ExpertVerificationFormCardProps) {
   return (
     <Card className="overflow-hidden border-black/10 shadow-sm">
@@ -63,13 +56,10 @@ export function ExpertVerificationFormCard({
           <CertificateSection
             canSubmit={canSubmit}
             certificates={certificates}
-            emblaRef={emblaRef}
             isPending={isPending || isSubmitting}
             onAddCertificate={onAddCertificate}
             onCertificateChange={onCertificateChange}
             onCertificateDelete={onCertificateDelete}
-            scrollNext={scrollNext}
-            scrollPrev={scrollPrev}
           />
 
           <BusinessLicenseSection
@@ -99,7 +89,6 @@ export function ExpertVerificationFormCard({
 interface CertificateSectionProps {
   canSubmit: boolean;
   certificates: VerificationCertificateData[];
-  emblaRef: EmblaViewportRefType;
   isPending: boolean;
   onAddCertificate: () => void;
   onCertificateChange: (
@@ -107,24 +96,19 @@ interface CertificateSectionProps {
     data: VerificationCertificateData,
   ) => void;
   onCertificateDelete: (id: string) => void;
-  scrollNext: () => void;
-  scrollPrev: () => void;
 }
 
 function CertificateSection({
   canSubmit,
   certificates,
-  emblaRef,
   isPending,
   onAddCertificate,
   onCertificateChange,
   onCertificateDelete,
-  scrollNext,
-  scrollPrev,
 }: CertificateSectionProps) {
   return (
     <section className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
         <div>
           <h2 className="text-[18px] font-medium text-foreground">
             인증 정보 입력
@@ -133,67 +117,52 @@ function CertificateSection({
             대표 자격증은 첫 번째 카드 기준으로 인증 신청에 반영됩니다.
           </p>
         </div>
-
-        {canSubmit ? (
-          <Button
-            type="button"
-            onClick={onAddCertificate}
-            className="gap-2 bg-teal-600 hover:bg-teal-700"
-            disabled={isPending}
-          >
-            <Plus className="h-4 w-4" />
-            자격증 추가
-          </Button>
-        ) : null}
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <CertificateCarouselHeader
-          certificateCount={certificates.length}
-          scrollNext={scrollNext}
-          scrollPrev={scrollPrev}
-        />
+        <CertificateListHeader certificateCount={certificates.length} />
 
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex gap-4">
-            {certificates.map((certificate, index) => (
-              <div
-                key={certificate.id}
-                className="min-w-0 flex-[0_0_100%] lg:flex-[0_0_78%]"
-              >
-                <CertificateCard
-                  certificate={certificate}
-                  disabled={isPending}
-                  isPrimary={index === 0}
-                  onChange={(data) =>
-                    onCertificateChange(certificate.id, data)
-                  }
-                  onDelete={
-                    certificates.length > 1 && !isPending
-                      ? () => onCertificateDelete(certificate.id)
-                      : undefined
-                  }
-                />
-              </div>
-            ))}
-          </div>
+        <div className="space-y-4">
+          {certificates.map((certificate, index) => (
+            <CertificateCard
+              key={certificate.id}
+              certificate={certificate}
+              disabled={isPending}
+              isPrimary={index === 0}
+              onChange={(data) => onCertificateChange(certificate.id, data)}
+              onDelete={
+                certificates.length > 1 && !isPending
+                  ? () => onCertificateDelete(certificate.id)
+                  : undefined
+              }
+            />
+          ))}
+
+          {canSubmit ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onAddCertificate}
+              className="h-14 w-full gap-2 border-dashed border-teal-300 bg-white text-teal-700 hover:bg-teal-50 hover:text-teal-800"
+              disabled={isPending}
+            >
+              <Plus className="h-4 w-4" />
+              자격증 카드 추가
+            </Button>
+          ) : null}
         </div>
       </div>
     </section>
   );
 }
 
-interface CertificateCarouselHeaderProps {
+interface CertificateListHeaderProps {
   certificateCount: number;
-  scrollNext: () => void;
-  scrollPrev: () => void;
 }
 
-function CertificateCarouselHeader({
+function CertificateListHeader({
   certificateCount,
-  scrollNext,
-  scrollPrev,
-}: CertificateCarouselHeaderProps) {
+}: CertificateListHeaderProps) {
   return (
     <div className="mb-4 flex items-center justify-between">
       <div className="space-y-1">
@@ -201,30 +170,13 @@ function CertificateCarouselHeader({
           자격증 정보
         </h3>
         <p className="text-[13px] text-muted-foreground">
-          여러 자격증을 보유한 경우 슬라이드로 추가 등록할 수 있습니다.
+          여러 자격증을 보유한 경우 아래로 이어서 추가 등록할 수 있습니다.
         </p>
       </div>
 
-      {certificateCount > 1 ? (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={scrollPrev}
-            aria-label="이전 자격증 보기"
-            className="rounded-full border border-black/10 p-2 text-muted-foreground transition-colors hover:bg-white"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={scrollNext}
-            aria-label="다음 자격증 보기"
-            className="rounded-full border border-black/10 p-2 text-muted-foreground transition-colors hover:bg-white"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      ) : null}
+      <span className="rounded-full bg-white px-3 py-1 text-[12px] font-medium text-muted-foreground">
+        {certificateCount}개
+      </span>
     </div>
   );
 }
