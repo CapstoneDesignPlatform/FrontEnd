@@ -1,6 +1,13 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { Building2, LogOut, ChevronDown } from "lucide-react";
+import {
+  Building2,
+  ClipboardList,
+  FileText,
+  LogOut,
+  ChevronDown,
+  UserRound,
+} from "lucide-react";
 import { useState } from "react";
 import type { AppUser, RootOutletContext } from "../types/rootContext";
 import {
@@ -9,6 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
+import { clearDemoExpertApproval } from "../demoAccess";
 
 type LayoutVariant = "contained" | "full";
 
@@ -57,6 +65,78 @@ function FullWidthOutlet({ context }: { context: RootOutletContext }) {
   );
 }
 
+function isExpertNavActive(pathname: string, href: string) {
+  if (href === "/expert/bids") {
+    return (
+      pathname.startsWith("/expert/bids") ||
+      pathname.startsWith("/expert/my-bids")
+    );
+  }
+
+  return pathname.startsWith(href);
+}
+
+function BottomExpertNavigation({ pathname }: { pathname: string }) {
+  const navItems = [
+    {
+      href: "/expert/jobs",
+      label: "공고",
+      ariaLabel: "공고 목록",
+      icon: FileText,
+    },
+    {
+      href: "/expert/bids",
+      label: "입찰",
+      ariaLabel: "내 입찰 목록",
+      icon: ClipboardList,
+    },
+    {
+      href: "/expert/profile",
+      label: "마이",
+      ariaLabel: "마이페이지",
+      icon: UserRound,
+    },
+  ];
+
+  return (
+    <nav
+      aria-label="전문가 하단 메뉴"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-10px_30px_-24px_rgba(15,23,42,0.6)] backdrop-blur-xl md:hidden"
+    >
+      <div className="mx-auto grid max-w-md grid-cols-3 gap-1">
+        {navItems.map((item) => {
+          const isActive = isExpertNavActive(pathname, item.href);
+          const Icon = item.icon;
+
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              aria-label={item.ariaLabel}
+              className={`group flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-[22px] px-2 text-center transition-all ${
+                isActive
+                  ? "bg-gradient-to-b from-teal-500 to-teal-700 text-white shadow-[0_12px_28px_-16px_rgba(13,148,136,0.95)]"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              }`}
+            >
+              <span
+                className={`flex h-8 w-8 items-center justify-center rounded-2xl transition-colors ${
+                  isActive ? "bg-white/20" : "bg-slate-100 group-hover:bg-white"
+                }`}
+              >
+                <Icon className="h-4 w-4" strokeWidth={2.3} />
+              </span>
+              <span className="text-[11px] font-semibold leading-none tracking-[-0.01em]">
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 export function Root() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -73,14 +153,21 @@ export function Root() {
     isPendingPage,
   });
   const shouldShowExpertNavigation = user?.type === "expert" || isExpertRoute;
+  const shouldShowMobileExpertBottomNav =
+    shouldShowExpertNavigation && !isAdminRoute;
   const outletContext: RootOutletContext = { user, setUser };
 
   const handleLogout = () => {
+    clearDemoExpertApproval();
     setUser(null);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className={`min-h-screen bg-gray-50 ${
+        shouldShowMobileExpertBottomNav ? "pb-24 md:pb-0" : ""
+      }`}
+    >
       {/* 최상위 헤더 */}
       <header className="bg-white border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -189,7 +276,7 @@ export function Root() {
                       <Link to="/client/mypage">My Page</Link>
                     </Button>
                   ) : (
-                    <Button variant="ghost" asChild>
+                    <Button variant="ghost" className="hidden md:inline-flex" asChild>
                       <Link to="/expert/profile">My Page</Link>
                     </Button>
                   )}
@@ -218,6 +305,10 @@ export function Root() {
           © 2026 ProToCall. All rights reserved.
         </div>
       </footer>
+
+      {shouldShowMobileExpertBottomNav ? (
+        <BottomExpertNavigation pathname={location.pathname} />
+      ) : null}
     </div>
   );
 }

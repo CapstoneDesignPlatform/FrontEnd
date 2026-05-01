@@ -16,7 +16,6 @@ export function ExpertVerification() {
     canSubmit,
     career,
     certificates,
-    emblaRef,
     handleAddCertificate,
     handleDeleteCertificate,
     handleSubmit,
@@ -25,8 +24,6 @@ export function ExpertVerification() {
     isApproved,
     isPending,
     isSubmitting,
-    scrollNext,
-    scrollPrev,
     setCareer,
     verificationStatus,
   } = useExpertVerificationForm({
@@ -44,7 +41,6 @@ export function ExpertVerification() {
           canSubmit={canSubmit}
           career={career}
           certificates={certificates}
-          emblaRef={emblaRef}
           isPending={isPending}
           isSubmitting={isSubmitting}
           verificationStatus={verificationStatus}
@@ -55,8 +51,6 @@ export function ExpertVerification() {
           onCertificateDelete={handleDeleteCertificate}
           onSkip={() => navigate("/")}
           onSubmit={handleSubmit}
-          scrollNext={scrollNext}
-          scrollPrev={scrollPrev}
         />
       ) : null}
 

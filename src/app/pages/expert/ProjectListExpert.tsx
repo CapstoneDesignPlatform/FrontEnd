@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Search, SlidersHorizontal, Table2 } from "lucide-react";
+import { Bell, Info, Search, SlidersHorizontal, Table2 } from "lucide-react";
 
 import { getExpertJobs } from "../../../api/expert";
 import type { ExpertJobListItemVM } from "../../../types/expert";
@@ -69,10 +69,31 @@ export function ProjectListExpert() {
             많은 공고를 빠르게 비교할 수 있도록 핵심 정보만 촘촘하게 정리했습니다.
           </p>
         </div>
-        <Button variant="outline" className="w-fit gap-2">
-          <Bell className="h-4 w-4" />
-          알림 서비스
-        </Button>
+        <div className="group relative flex w-fit items-center gap-2">
+          <Button variant="outline" className="gap-2">
+            <Bell className="h-4 w-4" />
+            알림 서비스
+          </Button>
+          <button
+            type="button"
+            aria-describedby="notification-service-info"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-teal-200 bg-teal-50 text-teal-700 transition-colors hover:bg-teal-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+          >
+            <Info className="h-4 w-4" />
+            <span className="sr-only">알림 서비스 안내 보기</span>
+          </button>
+          <div
+            id="notification-service-info"
+            role="tooltip"
+            className="pointer-events-none absolute left-full top-0 z-20 ml-2 w-72 translate-y-1 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700 opacity-0 shadow-xl shadow-slate-900/10 transition-all group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100"
+          >
+            <p className="font-semibold text-slate-950">알림 서비스</p>
+            <p className="mt-1 leading-relaxed">
+              새로운 공고가 등록되면 조건에 맞는 전문가에게 빠르게 알림을 보내는
+              유료 기능입니다.
+            </p>
+          </div>
+        </div>
       </div>
 
       <Card className="border-slate-200">
@@ -128,7 +149,10 @@ export function ProjectListExpert() {
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <SlidersHorizontal className="h-4 w-4" />
-              가로 스크롤로 전체 열을 확인할 수 있습니다.
+              <span className="md:hidden">작은 화면에서는 핵심 열만 표시됩니다.</span>
+              <span className="hidden md:inline">
+                가로 스크롤로 전체 열을 확인할 수 있습니다.
+              </span>
             </div>
           </div>
         </CardHeader>
@@ -154,23 +178,6 @@ export function ProjectListExpert() {
           {!isLoading && !error && filteredProjects.length > 0 ? (
             <JobTable projects={filteredProjects} />
           ) : null}
-        </CardContent>
-      </Card>
-
-      <Card className="border-teal-200 bg-teal-50">
-        <CardContent className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-3">
-            <Bell className="mt-0.5 h-5 w-5 text-teal-600" />
-            <div>
-              <p className="font-medium text-teal-950">알림 서비스 (유료)</p>
-              <p className="text-sm text-teal-800">
-                새로운 공고가 등록되면 즉시 알림을 받을 수 있습니다.
-              </p>
-            </div>
-          </div>
-          <Button className="w-fit bg-teal-600 hover:bg-teal-700">
-            알림 서비스 신청하기
-          </Button>
         </CardContent>
       </Card>
     </div>
