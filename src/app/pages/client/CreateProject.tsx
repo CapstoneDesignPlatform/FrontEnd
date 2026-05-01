@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 import {
   Card,
@@ -27,10 +28,11 @@ import { IndustrySelection } from "./createProject/IndustrySelection";
 import { ProjectGuide } from "./createProject/ProjectGuide";
 import { useCreateProjectState } from "./createProject/useCreateProjectState";
 import type { ProjectTab } from "./createProject/types";
+import { PurposeSelection } from "./createProject/ProjectPurpose";
 
 export function CreateProject() {
   const navigate = useNavigate();
-  const { industry } = useParams<{ industry: string }>();
+  const { industry, tab } = useParams<{ industry: string; tab: string }>();
   const {
     activeTab,
     constructionLicenseData,
@@ -45,6 +47,12 @@ export function CreateProject() {
     setElectricalPeriodicData,
     setFormData,
   } = useCreateProjectState();
+
+  useEffect(() => {
+    if (tab) {
+      setActiveTab(tab as ProjectTab);
+    }
+  }, [tab, setActiveTab]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -65,6 +73,16 @@ export function CreateProject() {
         onSelectIndustry={(selectedIndustry) =>
           navigate(`/client/create-project/${selectedIndustry}`)
         }
+      />
+    );
+  }
+
+  if (!tab) {
+    return (
+      <PurposeSelection
+        onSelectPurpose={(selectedPurpose) => {
+          navigate(`/client/create-project/${industry}/${selectedPurpose}`);
+        }}
       />
     );
   }
@@ -103,7 +121,6 @@ export function CreateProject() {
 
             {visibleTabs.map((tab) => (
               <TabsContent key={tab} value={tab}>
-                <ProjectGuide tab={tab} />
                 {renderProjectForm(tab)}
               </TabsContent>
             ))}
