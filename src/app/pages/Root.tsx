@@ -10,13 +10,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { AppUser, RootOutletContext } from "../types/rootContext";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
-// ✅ 양쪽 임포트를 모두 유지합니다.
+
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -131,7 +125,7 @@ export function Root() {
   const outletContext: RootOutletContext = { user, setUser };
 
   const handleLogout = () => {
-    clearDemoExpertApproval(); // ✅ 메인의 변경사항 유지
+    clearDemoExpertApproval(); 
     setUser(null);
   };
 
@@ -139,7 +133,7 @@ export function Root() {
     <div
       className={`min-h-screen bg-gray-50 ${
         shouldShowMobileExpertBottomNav ? "pb-24 md:pb-0" : ""
-      }`} // ✅ 메인의 여백 로직 적용
+      }`} 
     >
       <header className="bg-white border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -150,7 +144,6 @@ export function Root() {
                 <span className="text-xl font-bold">ProToCall</span>
               </Link>
 
-              {/* ✅ 민주님이 수정한 중앙 네비게이션 메뉴 유지 */}
               <NavigationMenu className="hidden md:flex">
                 <NavigationMenuList className="gap-2">
                   {isAdminRoute ? (
@@ -213,7 +206,6 @@ export function Root() {
                     <span className="font-bold text-gray-900">{user.name}</span>님
                   </span>
                   
-                  {/* ✅ My Page 버튼: 전문가인 경우 모바일에서 숨기는 메인의 로직을 합쳤습니다. */}
                   <Button 
                     variant="ghost" 
                     asChild 
