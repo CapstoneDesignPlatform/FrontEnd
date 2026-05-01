@@ -9,6 +9,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "../components/ui/navigation-menu";
 
 type LayoutVariant = "contained" | "full";
 
@@ -81,98 +88,119 @@ export function Root() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 최상위 헤더 */}
       <header className="bg-white border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            {/* 로고 */}
-            <Link to="/" className="flex items-center gap-2">
-              <Building2 className="h-8 w-8 text-teal-600" />
-              <span className="text-xl font-bold">ProToCall</span>
-            </Link>
+            {/* 1. 로고 영역 */}
+            <div className="flex items-center gap-8">
+              <Link to="/" className="flex items-center gap-2">
+                <Building2 className="h-8 w-8 text-teal-600" />
+                <span className="text-xl font-bold">ProToCall</span>
+              </Link>
 
-            {/* 중앙 네비게이션 */}
-            <nav className="hidden md:flex items-center gap-6">
-              {isAdminRoute ? (
-                // 관리자용 네비게이션
-                <>
-                  <Button variant="ghost" asChild>
-                    <Link to="/admin/projects">총 공고 목록</Link>
-                  </Button>
+              {/* 2. 중앙 네비게이션 (NavigationMenu 디자인 적용) */}
+              <NavigationMenu className="hidden md:flex">
+                <NavigationMenuList className="gap-2">
+                  {isAdminRoute ? (
+                    // [관리자 모드]
+                    <>
+                      <NavigationMenuItem>
+                        <Link to="/admin/projects" className="text-sm px-4 py-2 hover:text-teal-600 transition-colors">총 공고 목록</Link>
+                      </NavigationMenuItem>
+                      <NavigationMenuItem>
+                        <Link to="/admin/experts" className="text-sm px-4 py-2 hover:text-teal-600 transition-colors">전문가 관리</Link>
+                      </NavigationMenuItem>
+                      <NavigationMenuItem>
+                        <Link to="/admin/settings" className="text-sm px-4 py-2 hover:text-teal-600 transition-colors">플랫폼 설정</Link>
+                      </NavigationMenuItem>
+                      <NavigationMenuItem>
+                        <Link to="/admin/community" className="text-sm px-4 py-2 hover:text-teal-600 transition-colors">커뮤니티</Link>
+                      </NavigationMenuItem>
+                    </>
+                  ) : shouldShowExpertNavigation ? (
+                    // [전문가 모드]
+                    <>
+                      <NavigationMenuItem>
+                        <Link to="/expert/jobs" className="text-sm px-4 py-2 hover:text-teal-600 transition-colors">공고 목록</Link>
+                      </NavigationMenuItem>
+                      <NavigationMenuItem>
+                        <Link to="/expert/bids" className="text-sm px-4 py-2 hover:text-teal-600 transition-colors">내 입찰 목록</Link>
+                      </NavigationMenuItem>
+                      <NavigationMenuItem>
+                        <Link to="/" className="text-sm px-4 py-2 hover:text-teal-600 transition-colors">커뮤니티</Link>
+                      </NavigationMenuItem>
+                    </>
+                  ) : (
+                    // [의뢰인/일반 모드]
+                    <>
+                      {/* 전문 bid */}
+                      <NavigationMenuItem>
+                        <NavigationMenuTrigger className="text-sm hover:text-teal-600">
+                          전문 bid
+                        </NavigationMenuTrigger>
+                        <NavigationMenuContent>
+                          <ul className="w-48 p-2">
+                            <li>
+                              <Link
+                                to="/bids/intro"
+                                className="block px-4 py-2 text-sm hover:bg-teal-50 hover:text-teal-600 rounded-md transition-colors"
+                              >
+                                전문 bid 소개
+                              </Link>
+                            </li>
+                            <li>
+                              <Link
+                                to="/bids/notice"
+                                className="block px-4 py-2 text-sm hover:bg-teal-50 hover:text-teal-600 rounded-md transition-colors"
+                              >
+                                공지사항
+                              </Link>
+                            </li>
+                          </ul>
+                        </NavigationMenuContent>
+                      </NavigationMenuItem>
+                      <NavigationMenuItem>
+                        <NavigationMenuTrigger className="text-sm hover:text-teal-600 bg-transparent">
+                          견적 요청
+                        </NavigationMenuTrigger>
+                        <NavigationMenuContent>
+                          <ul className="w-48 p-2">
+                            {INDUSTRIES.map((industry) => (
+                              <li key={industry.value}>
+                                <button
+                                  onClick={() => navigate(`/client/create-project/${industry.value}`)}
+                                  className="w-full text-left px-4 py-2 text-sm hover:bg-teal-50 hover:text-teal-600 rounded-md transition-colors"
+                                >
+                                  {industry.label}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </NavigationMenuContent>
+                      </NavigationMenuItem>
+                      <NavigationMenuItem>
+                        <Link to="/expert/projects" className="text-sm px-4 py-2 hover:text-teal-600 transition-colors">전문가 검색</Link>
+                      </NavigationMenuItem>
+                      <NavigationMenuItem>
+                        <Link to="/" className="text-sm px-4 py-2 hover:text-teal-600 transition-colors">커뮤니티</Link>
+                      </NavigationMenuItem>
+                    </>
+                  )}
+                </NavigationMenuList>
+              </NavigationMenu>
+            </div>
 
-                  <Button variant="ghost" asChild>
-                    <Link to="/admin/experts">전문가 관리</Link>
-                  </Button>
-
-                  <Button variant="ghost" asChild>
-                    <Link to="/admin/settings">플랫폼 설정</Link>
-                  </Button>
-
-                  <Button variant="ghost" asChild>
-                    <Link to="/admin/community">커뮤니티</Link>
-                  </Button>
-                </>
-              ) : shouldShowExpertNavigation ? (
-                // 전문가용 네비게이션
-                <>
-                  <Button variant="ghost" asChild>
-                    <Link to="/expert/jobs">공고 목록</Link>
-                  </Button>
-
-                  <Button variant="ghost" asChild>
-                    <Link to="/expert/bids">내 입찰 목록</Link>
-                  </Button>
-
-                  <Button variant="ghost" asChild>
-                    <Link to="/">커뮤니티</Link>
-                  </Button>
-                </>
-              ) : (
-                // 의뢰인용 네비게이션
-                <>
-                  {/* 견적 요청 드롭다운 */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="gap-1">
-                        견적 요청
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-48">
-                      {INDUSTRIES.map((industry) => (
-                        <DropdownMenuItem
-                          key={industry.value}
-                          onClick={() =>
-                            navigate(`/client/create-project/${industry.value}`)
-                          }
-                        >
-                          {industry.label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <Button variant="ghost" asChild>
-                    <Link to="/expert/projects">전문가 검색</Link>
-                  </Button>
-
-                  <Button variant="ghost" asChild>
-                    <Link to="/">커뮤니티</Link>
-                  </Button>
-                </>
-              )}
-            </nav>
-
-            {/* 우측 네비게이션 */}
+            {/* 3. 우측 유저 메뉴 영역 */}
             <div className="flex items-center gap-4">
               {isAdminRoute ? (
-                // 관리자 모드일 때
-                <div className="px-4 py-2 bg-teal-100 text-teal-700 rounded-md font-semibold">
+                // 관리자 뱃지 표시
+                <div className="px-4 py-2 bg-teal-100 text-teal-700 rounded-md text-xs font-bold shadow-sm">
                   관리자 모드
                 </div>
               ) : !user ? (
+                // 로그인 전
                 <>
-                  <Button asChild variant="ghost">
+                 <Button asChild variant="ghost">
                     <Link to="/login">로그인</Link>
                   </Button>
                   <Button asChild>
@@ -180,26 +208,32 @@ export function Root() {
                   </Button>
                 </>
               ) : (
-                <>
-                  <span className="text-sm text-gray-600 hidden md:inline">
-                    {user.name}
+                // 로그인 후
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 mr-2 hidden lg:inline">
+                    <span className="font-bold text-gray-900">{user.name}</span>님
                   </span>
-                  {user.type === "client" ? (
-                    <Button variant="ghost" asChild>
-                      <Link to="/client/mypage">My Page</Link>
-                    </Button>
-                  ) : (
-                    <Button variant="ghost" asChild>
-                      <Link to="/expert/profile">My Page</Link>
-                    </Button>
-                  )}
-                  <Button variant="ghost" asChild>
-                    <Link to="/">고객센터</Link>
+                  
+                  {/* My Page 이동 분기 */}
+                  <Button variant="ghost" asChild className="text-sm">
+                    <Link to={user.type === "client" ? "/client/mypage" : "/expert/profile"}>
+                      My Page
+                    </Link>
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={handleLogout}>
+                  
+                  <Button variant="ghost" asChild className="text-sm">
+                    <Link to="/support">고객센터</Link>
+                  </Button>
+
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleLogout} 
+                    className="text-gray-500 hover:text-red-500 transition-colors"
+                  >
                     <LogOut className="h-5 w-5" />
                   </Button>
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -213,8 +247,79 @@ export function Root() {
       )}
 
       {/* 푸터 */}
-      <footer className="bg-white border-t mt-12">
-        <div className="container mx-auto px-4 py-6 text-center text-sm text-gray-600">
+      <footer
+        className="mt-12"
+        style={{ backgroundColor: "#263238" }}
+      >
+        {/* 관련 기관 */}
+        <div className="border-b border-gray-700">
+          <div className="container mx-auto px-4 py-8">
+            <h3 className="text-center text-sm text-gray-400 mb-6">
+              관련 기관
+            </h3>
+            <div className="flex flex-wrap justify-center items-center gap-8">
+              <a
+                href="https://www.law.go.kr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-300 hover:text-teal-400 transition-colors"
+              >
+                국가법령정보센터
+              </a>
+              <a
+                href="https://www.molit.go.kr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-300 hover:text-teal-400 transition-colors"
+              >
+                국토교통부
+              </a>
+              <a
+                href="https://www.kicpa.or.kr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-300 hover:text-teal-400 transition-colors"
+              >
+                한국공인회계사회
+              </a>
+              <a
+                href="https://www.kacpta.or.kr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-300 hover:text-teal-400 transition-colors"
+              >
+                한국세무사회
+              </a>
+              <a
+                href="https://www.kmtca.or.kr/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-300 hover:text-teal-400 transition-colors"
+              >
+                한국경영기술지도사회
+              </a>
+              <a
+                href="https://www.cak.or.kr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-300 hover:text-teal-400 transition-colors"
+              >
+                대한건설협회
+              </a>
+              <a
+                href="https://www.kosca.or.kr/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-300 hover:text-teal-400 transition-colors"
+              >
+                전문건설협회
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* 저작권 */}
+        <div className="container mx-auto px-4 py-6 text-center text-sm text-gray-400">
           © 2026 ProToCall. All rights reserved.
         </div>
       </footer>

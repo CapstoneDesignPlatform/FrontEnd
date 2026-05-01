@@ -8,7 +8,7 @@ export type ProjectClassification = "new" | "additional";
 
 export type CurrentIndustryType = "construction" | "nonConstruction" | "none";
 
-export type DiagnosisReason = "capital" | "transfer" | "merger";
+export type DiagnosisReason = "capital" | "transfer" | "merger" | "other_manual";
 
 export interface BaseProjectFormData {
   title: string;

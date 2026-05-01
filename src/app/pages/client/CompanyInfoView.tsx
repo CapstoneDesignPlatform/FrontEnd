@@ -119,26 +119,24 @@ export function CompanyInfoView() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="companyName">
-                    기업명 <span className="text-red-500">*</span>
+                    기업명
                   </Label>
                   <Input
                     id="companyName"
                     name="companyName"
                     value={editedInfo.companyName}
                     onChange={handleChange}
-                    required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="businessNumber">
-                    사업자등록번호 <span className="text-red-500">*</span>
+                    사업자등록번호
                   </Label>
                   <Input
                     id="businessNumber"
                     name="businessNumber"
                     value={editedInfo.businessNumber}
                     onChange={handleChange}
-                    required
                   />
                 </div>
               </div>
@@ -172,14 +170,13 @@ export function CompanyInfoView() {
 
               <div className="space-y-2">
                 <Label htmlFor="address">
-                  주소 <span className="text-red-500">*</span>
+                  주소
                 </Label>
                 <Input
                   id="address"
                   name="address"
                   value={editedInfo.address}
                   onChange={handleChange}
-                  required
                 />
               </div>
 
@@ -212,7 +209,7 @@ export function CompanyInfoView() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="establishDate">
-                    설립일 <span className="text-red-500">*</span>
+                    설립일
                   </Label>
                   <Input
                     id="establishDate"
@@ -220,12 +217,11 @@ export function CompanyInfoView() {
                     type="date"
                     value={editedInfo.establishDate}
                     onChange={handleChange}
-                    required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="capital">
-                    자본금 <span className="text-red-500">*</span>
+                    자본금
                   </Label>
                   <Input
                     id="capital"
@@ -233,7 +229,6 @@ export function CompanyInfoView() {
                     placeholder="100,000,000원"
                     value={editedInfo.capital}
                     onChange={handleChange}
-                    required
                   />
                 </div>
               </div>

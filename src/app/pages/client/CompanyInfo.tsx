@@ -53,30 +53,24 @@ export function CompanyInfo() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="companyName">
-                  회사명 <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="companyName">회사명</Label>
                 <Input
                   id="companyName"
                   name="companyName"
                   placeholder="(주)홍길동"
                   value={formData.companyName}
                   onChange={handleChange}
-                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="businessNumber">
-                  사업자등록번호 <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="businessNumber">사업자등록번호</Label>
                 <Input
                   id="businessNumber"
                   name="businessNumber"
                   placeholder="123-45-67890"
                   value={formData.businessNumber}
                   onChange={handleChange}
-                  required
                 />
               </div>
             </div>
@@ -113,16 +107,13 @@ export function CompanyInfo() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">
-                사업장 주소 <span className="text-red-500">*</span>
-              </Label>
+              <Label htmlFor="address">사업장 주소</Label>
               <Input
                 id="address"
                 name="address"
                 placeholder="서울특별시 강남구..."
                 value={formData.address}
                 onChange={handleChange}
-                required
               />
             </div>
 

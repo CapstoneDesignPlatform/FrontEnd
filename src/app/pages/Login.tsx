@@ -50,14 +50,14 @@ export function Login() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* <Button
+            {<Button
               type="button"
               variant="outline"
               className="w-full"
-              onClick={() => navigate("/ !!!! 채워넣어야 함!!!")}
+              onClick={() => navigate("/check-request")}
             >
-              예약코드로 조회하기
-            </Button> */}
+              의뢰코드로 조회하기
+            </Button>}
 
             <div className="space-y-2">
               <Label>사용자 유형</Label>

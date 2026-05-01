@@ -78,6 +78,10 @@ const registerPage = page(
   () => import("./pages/Register"),
   ({ Register }) => Register,
 );
+const supportPage = page(
+  () => import("./pages/Support"),
+  ({ Support }) => Support,
+);
 const checkRequestPage = page(
   () => import("./pages/CheckRequest"),
   ({ CheckRequest }) => CheckRequest,
@@ -224,6 +228,7 @@ export const router = createBrowserRouter([
       { path: "register", lazy: registerPage },
       { path: "signup/expert", lazy: expertSignupPage },
       { path: "check-request", lazy: checkRequestPage },
+      { path: "support", lazy: supportPage },
 
       // 의뢰인 라우트
       { path: "client/start", lazy: clientStartPage },
@@ -242,7 +247,7 @@ export const router = createBrowserRouter([
       },
       { path: "client/company-info", lazy: companyInfoPage },
       { path: "client/create-project", lazy: createProjectPage },
-      { path: "client/create-project/:industry", lazy: createProjectPage },
+      { path: "client/create-project/:industry/:tab?", lazy: createProjectPage },
       { path: "client/project-success/:projectCode", lazy: projectSuccessPage },
       { path: "client/projects", lazy: projectListPage },
       { path: "client/projects/:id", lazy: projectDetailPage },
