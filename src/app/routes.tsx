@@ -212,6 +212,14 @@ const adminCommunityPage = page(
   () => import("./pages/admin/AdminCommunity"),
   ({ AdminCommunity }) => AdminCommunity,
 );
+const adminClientListPage = page(
+  () => import("./pages/admin/AdminClientList"),
+  ({ AdminClientList }) => AdminClientList,
+);
+const adminClientDetailPage = page(
+  () => import("./pages/admin/AdminClientDetail"),
+  ({ AdminClientDetail }) => AdminClientDetail,
+);
 
 const adminSettingsPage = page(
   () => import("./pages/admin/AdminSettings"),
@@ -247,7 +255,10 @@ export const router = createBrowserRouter([
       },
       { path: "client/company-info", lazy: companyInfoPage },
       { path: "client/create-project", lazy: createProjectPage },
-      { path: "client/create-project/:industry/:tab?", lazy: createProjectPage },
+      {
+        path: "client/create-project/:industry/:tab?",
+        lazy: createProjectPage,
+      },
       { path: "client/project-success/:projectCode", lazy: projectSuccessPage },
       { path: "client/projects", lazy: projectListPage },
       { path: "client/projects/:id", lazy: projectDetailPage },
@@ -281,6 +292,8 @@ export const router = createBrowserRouter([
       { path: "admin/experts/approval/:id", lazy: adminExpertApprovalPage },
       { path: "admin/experts/detail/:id", lazy: adminExpertDetailPage },
       { path: "admin/community", lazy: adminCommunityPage },
+      { path: "admin/clients", lazy: adminClientListPage },
+      { path: "admin/clients/:id", lazy: adminClientDetailPage },
       { path: "admin/settings", lazy: adminSettingsPage },
 
       // 결제
