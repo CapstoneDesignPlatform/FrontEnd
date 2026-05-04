@@ -18,6 +18,12 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "../components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
 import { clearDemoExpertApproval } from "../demoAccess";
 
 type LayoutVariant = "contained" | "full";
@@ -178,7 +184,7 @@ export function Root() {
                           to="/admin/projects"
                           className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
                         >
-                          총 공고 목록
+                          의뢰현황 조회
                         </Link>
                       </NavigationMenuItem>
                       <NavigationMenuItem>
@@ -206,6 +212,46 @@ export function Root() {
                           플랫폼 설정
                         </Link>
                       </NavigationMenuItem>
+
+                      <NavigationMenuItem>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="text-sm px-4 py-2 hover:text-teal-600 transition-colors flex items-center gap-1 outline-none">
+                            알림서비스 <ChevronDown className="h-3 w-3" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-40">
+                            <DropdownMenuItem
+                              onClick={() =>
+                                navigate("/admin/notifications/stats")
+                              }
+                            >
+                              집계표
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                navigate("/admin/notifications/manage")
+                              }
+                            >
+                              사용관리
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </NavigationMenuItem>
+
+                      <NavigationMenuItem>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="text-sm px-4 py-2 hover:text-teal-600 transition-colors flex items-center gap-1 outline-none">
+                            중개수수료 <ChevronDown className="h-3 w-3" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-40">
+                            <DropdownMenuItem
+                              onClick={() => navigate("/admin/fees/stats")}
+                            >
+                              집계
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </NavigationMenuItem>
+
                       <NavigationMenuItem>
                         <Link
                           to="/admin/community"

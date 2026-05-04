@@ -225,6 +225,26 @@ const adminSettingsPage = page(
   () => import("./pages/admin/AdminSettings"),
   ({ AdminSettings }) => AdminSettings,
 );
+const adminNotificationStatsPage = page(
+  () => import("./pages/admin/AdminNotificationStats"),
+  ({ AdminNotificationStats }) => AdminNotificationStats,
+);
+const adminNotificationManagePage = page(
+  () => import("./pages/admin/AdminNotificationManage"),
+  ({ AdminNotificationManage }) => AdminNotificationManage,
+);
+const adminNotificationMemberPage = page(
+  () => import("./pages/admin/AdminNotificationMember"),
+  ({ AdminNotificationMember }) => AdminNotificationMember,
+);
+const adminFeeStatsPage = page(
+  () => import("./pages/admin/AdminFeeStats"),
+  ({ AdminFeeStats }) => AdminFeeStats,
+);
+const adminFeeDetailPage = page(
+  () => import("./pages/admin/AdminFeeDetail"),
+  ({ AdminFeeDetail }) => AdminFeeDetail,
+);
 
 export const router = createBrowserRouter([
   {
@@ -295,6 +315,14 @@ export const router = createBrowserRouter([
       { path: "admin/clients", lazy: adminClientListPage },
       { path: "admin/clients/:id", lazy: adminClientDetailPage },
       { path: "admin/settings", lazy: adminSettingsPage },
+      { path: "admin/notifications/stats", lazy: adminNotificationStatsPage },
+      { path: "admin/notifications/manage", lazy: adminNotificationManagePage },
+      {
+        path: "admin/notifications/:memberNumber",
+        lazy: adminNotificationMemberPage,
+      },
+      { path: "admin/fees/stats", lazy: adminFeeStatsPage },
+      { path: "admin/fees/:memberNumber", lazy: adminFeeDetailPage },
 
       // 결제
       { path: "payment/:projectId", lazy: paymentPage },
