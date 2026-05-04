@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
@@ -13,7 +19,7 @@ interface Expert {
   phone: string;
   expertise: string;
   company: string;
-  status: "approved" | "pending" | "rejected";
+  status: "approved" | "pending" | "suspended" | "withdrawn";
   approvedAt?: string;
   totalBids: number;
   completedProjects: number;
@@ -21,6 +27,9 @@ interface Expert {
 
 export function AdminExpertList() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "approved" | "pending" | "suspended" | "withdrawn"
+  >("all");
 
   // 데모 데이터
   const allExperts: Expert[] = [
@@ -166,63 +175,156 @@ export function AdminExpertList() {
       totalBids: 0,
       completedProjects: 0,
     },
+    {
+      id: 201,
+      name: "김정지",
+      email: "suspended@example.com",
+      phone: "010-9999-0000",
+      expertise: "건설업 면허",
+      company: "정지법무법인",
+      status: "suspended",
+      totalBids: 5,
+      completedProjects: 2,
+    },
+    {
+      id: 202,
+      name: "박탈퇴",
+      email: "withdrawn@example.com",
+      phone: "010-8888-0000",
+      expertise: "실태 조사",
+      company: "탈퇴컨설팅",
+      status: "withdrawn",
+      totalBids: 3,
+      completedProjects: 1,
+    },
   ];
 
-  // 검색 필터링
+  // 필터링
   const filteredExperts = allExperts.filter((expert) => {
-    if (!searchQuery) return true;
-    return expert.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      !searchQuery ||
+      expert.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || expert.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   const getStatusBadge = (status: Expert["status"]) => {
     switch (status) {
       case "approved":
-        return <Badge className="bg-green-100 text-green-700">승인 완료</Badge>;
+        return <Badge className="bg-green-100 text-green-700">정상</Badge>;
       case "pending":
-        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">승인 대기</Badge>;
-      case "rejected":
-        return <Badge variant="outline" className="bg-red-100 text-red-700">거절됨</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-amber-50 text-amber-700 border-amber-200"
+          >
+            승인대기
+          </Badge>
+        );
+      case "suspended":
+        return <Badge className="bg-red-100 text-red-700">정지</Badge>;
+      case "withdrawn":
+        return (
+          <Badge variant="outline" className="bg-gray-100 text-gray-700">
+            탈퇴
+          </Badge>
+        );
       default:
         return <Badge variant="outline">알 수 없음</Badge>;
     }
   };
 
-  const approvedExperts = filteredExperts.filter((e) => e.status === "approved");
-  const pendingExperts = filteredExperts.filter((e) => e.status === "pending");
+  const approvedExperts = allExperts.filter((e) => e.status === "approved");
+  const pendingExperts = allExperts.filter((e) => e.status === "pending");
+  const suspendedExperts = allExperts.filter((e) => e.status === "suspended");
+  const withdrawnExperts = allExperts.filter((e) => e.status === "withdrawn");
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl mb-2">전체 전문가 목록</h1>
-        <p className="text-gray-600">등록된 모든 전문가를 확인하고 관리합니다.</p>
+        <p className="text-gray-600">
+          등록된 모든 전문가를 확인하고 관리합니다.
+        </p>
       </div>
 
       {/* 통계 */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">전체 전문가</CardTitle>
+            <CardTitle className="text-sm">전체</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{filteredExperts.length}명</div>
+            <div className="text-2xl font-bold">{allExperts.length}명</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">승인 완료</CardTitle>
+            <CardTitle className="text-sm">정상</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{approvedExperts.length}명</div>
+            <div className="text-2xl font-bold text-green-600">
+              {approvedExperts.length}명
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">승인 대기</CardTitle>
+            <CardTitle className="text-sm">승인대기</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600">{pendingExperts.length}명</div>
+            <div className="text-2xl font-bold text-amber-600">
+              {pendingExperts.length}명
+            </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">정지</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {suspendedExperts.length}명
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">탈퇴</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-600">
+              {withdrawnExperts.length}명
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 상태 필터 */}
+      <div className="flex flex-wrap gap-2">
+        {(
+          [
+            { value: "all", label: "전체" },
+            { value: "approved", label: "정상" },
+            { value: "pending", label: "승인대기" },
+            { value: "suspended", label: "정지" },
+            { value: "withdrawn", label: "탈퇴" },
+          ] as const
+        ).map((item) => (
+          <Button
+            key={item.value}
+            variant={statusFilter === item.value ? "default" : "outline"}
+            className={
+              statusFilter === item.value
+                ? "bg-[#009689] hover:bg-[#007d71]"
+                : ""
+            }
+            onClick={() => setStatusFilter(item.value)}
+          >
+            {item.label}
+          </Button>
+        ))}
       </div>
 
       {/* 검색 */}
@@ -281,7 +383,9 @@ export function AdminExpertList() {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-3 flex-wrap">
-                            <h3 className="font-semibold text-lg">{expert.name}</h3>
+                            <h3 className="font-semibold text-lg">
+                              {expert.name}
+                            </h3>
                             {getStatusBadge(expert.status)}
                             <Badge variant="outline">{expert.expertise}</Badge>
                             {expert.status === "approved" && (
@@ -293,24 +397,30 @@ export function AdminExpertList() {
                           </div>
                           <div className="grid md:grid-cols-4 gap-x-4 gap-y-2 text-sm text-gray-600">
                             <div>
-                              <span className="font-medium">이메일:</span> {expert.email}
+                              <span className="font-medium">이메일:</span>{" "}
+                              {expert.email}
                             </div>
                             <div>
-                              <span className="font-medium">연락처:</span> {expert.phone}
+                              <span className="font-medium">연락처:</span>{" "}
+                              {expert.phone}
                             </div>
                             <div>
-                              <span className="font-medium">소속:</span> {expert.company}
+                              <span className="font-medium">소속:</span>{" "}
+                              {expert.company}
                             </div>
                             {expert.status === "approved" && (
                               <>
                                 <div>
-                                  <span className="font-medium">승인일:</span> {expert.approvedAt}
+                                  <span className="font-medium">승인일:</span>{" "}
+                                  {expert.approvedAt}
                                 </div>
                                 <div>
-                                  <span className="font-medium">총 입찰:</span> {expert.totalBids}건
+                                  <span className="font-medium">총 입찰:</span>{" "}
+                                  {expert.totalBids}건
                                 </div>
                                 <div>
-                                  <span className="font-medium">완료:</span> {expert.completedProjects}건
+                                  <span className="font-medium">완료:</span>{" "}
+                                  {expert.completedProjects}건
                                 </div>
                               </>
                             )}

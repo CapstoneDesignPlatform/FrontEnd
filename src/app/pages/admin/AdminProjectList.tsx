@@ -1,19 +1,27 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Search, FileText, Filter } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
 
-type ProjectStatus = "all" | "unmatched" | "matched" | "paid" | "completed";
+type ProjectStatus =
+  | "all"
+  | "bidding"
+  | "closed"
+  | "paid"
+  | "in_progress"
+  | "association"
+  | "sent"
+  | "completed";
+type ClientType = "all" | "member" | "guest";
 
 interface Project {
   id: string;
@@ -22,16 +30,25 @@ interface Project {
   industry: string;
   company: string;
   clientName: string;
-  status: "unmatched" | "matched" | "paid" | "completed";
+  clientType: "member" | "guest";
+  status:
+    | "bidding"
+    | "closed"
+    | "paid"
+    | "in_progress"
+    | "association"
+    | "sent"
+    | "completed";
   bidCount: number;
   createdAt: string;
 }
 
 export function AdminProjectList() {
   const [selectedStatus, setSelectedStatus] = useState<ProjectStatus>("all");
+  const [selectedClientType, setSelectedClientType] =
+    useState<ClientType>("all");
   const [searchCode, setSearchCode] = useState("");
 
-  // 데모 데이터
   const allProjects: Project[] = [
     {
       id: "1",
@@ -40,7 +57,8 @@ export function AdminProjectList() {
       industry: "건설업",
       company: "(주)대한건설",
       clientName: "김철수",
-      status: "matched",
+      clientType: "member",
+      status: "bidding",
       bidCount: 8,
       createdAt: "2026-04-05",
     },
@@ -51,7 +69,8 @@ export function AdminProjectList() {
       industry: "실태 조사",
       company: "한국제조(주)",
       clientName: "이영희",
-      status: "paid",
+      clientType: "guest",
+      status: "closed",
       bidCount: 5,
       createdAt: "2026-04-04",
     },
@@ -62,7 +81,8 @@ export function AdminProjectList() {
       industry: "전기공사업",
       company: "전기산업(주)",
       clientName: "박민수",
-      status: "completed",
+      clientType: "member",
+      status: "paid",
       bidCount: 12,
       createdAt: "2026-04-03",
     },
@@ -73,7 +93,8 @@ export function AdminProjectList() {
       industry: "정보통신공사업",
       company: "(주)IT솔루션",
       clientName: "정수현",
-      status: "unmatched",
+      clientType: "member",
+      status: "in_progress",
       bidCount: 3,
       createdAt: "2026-04-02",
     },
@@ -84,7 +105,8 @@ export function AdminProjectList() {
       industry: "소방시설공사업",
       company: "안전소방(주)",
       clientName: "최영수",
-      status: "matched",
+      clientType: "guest",
+      status: "association",
       bidCount: 7,
       createdAt: "2026-04-01",
     },
@@ -95,7 +117,8 @@ export function AdminProjectList() {
       industry: "의약품도매상",
       company: "헬스케어(주)",
       clientName: "강민지",
-      status: "unmatched",
+      clientType: "member",
+      status: "sent",
       bidCount: 2,
       createdAt: "2026-03-31",
     },
@@ -106,7 +129,8 @@ export function AdminProjectList() {
       industry: "건설업",
       company: "인테리어건설(주)",
       clientName: "윤성호",
-      status: "paid",
+      clientType: "member",
+      status: "completed",
       bidCount: 10,
       createdAt: "2026-03-30",
     },
@@ -117,70 +141,137 @@ export function AdminProjectList() {
       industry: "기타",
       company: "(주)글로벌무역",
       clientName: "임지연",
-      status: "matched",
+      clientType: "guest",
+      status: "bidding",
       bidCount: 4,
       createdAt: "2026-03-29",
     },
   ];
 
-  // 필터링된 프로젝트
   const filteredProjects = allProjects.filter((project) => {
-    // 상태 필터
-    if (selectedStatus !== "all" && project.status !== selectedStatus) {
+    if (selectedStatus !== "all" && project.status !== selectedStatus)
       return false;
-    }
-    // 검색어 필터
-    if (searchCode && !project.code.toLowerCase().includes(searchCode.toLowerCase())) {
+    if (
+      selectedClientType !== "all" &&
+      project.clientType !== selectedClientType
+    )
       return false;
-    }
+    if (
+      searchCode &&
+      !project.code.toLowerCase().includes(searchCode.toLowerCase())
+    )
+      return false;
     return true;
   });
 
   const getStatusBadge = (status: Project["status"]) => {
     switch (status) {
-      case "unmatched":
-        return <Badge variant="outline" className="bg-gray-100 text-gray-700">매칭 대기</Badge>;
-      case "matched":
-        return <Badge variant="outline" className="bg-blue-100 text-blue-700">전문가 매칭됨</Badge>;
+      case "bidding":
+        return (
+          <Badge variant="outline" className="bg-blue-100 text-blue-700">
+            입찰 중
+          </Badge>
+        );
+      case "closed":
+        return (
+          <Badge variant="outline" className="bg-gray-100 text-gray-700">
+            마감
+          </Badge>
+        );
       case "paid":
-        return <Badge variant="outline" className="bg-green-100 text-green-700">결제 완료</Badge>;
+        return (
+          <Badge variant="outline" className="bg-green-100 text-green-700">
+            결제
+          </Badge>
+        );
+      case "in_progress":
+        return (
+          <Badge variant="outline" className="bg-yellow-100 text-yellow-700">
+            진단시작
+          </Badge>
+        );
+      case "association":
+        return (
+          <Badge variant="outline" className="bg-purple-100 text-purple-700">
+            협회경유
+          </Badge>
+        );
+      case "sent":
+        return (
+          <Badge variant="outline" className="bg-orange-100 text-orange-700">
+            발송
+          </Badge>
+        );
       case "completed":
-        return <Badge variant="outline" className="bg-purple-100 text-purple-700">의뢰 완료</Badge>;
-      default:
-        return <Badge variant="outline">알 수 없음</Badge>;
+        return (
+          <Badge variant="outline" className="bg-teal-100 text-teal-700">
+            완료
+          </Badge>
+        );
     }
   };
 
-  const getStatusLabel = (status: ProjectStatus) => {
-    switch (status) {
-      case "all":
-        return "전체";
-      case "unmatched":
-        return "매칭 대기";
-      case "matched":
-        return "전문가 매칭됨";
-      case "paid":
-        return "결제 완료";
-      case "completed":
-        return "의뢰 완료";
-      default:
-        return "전체";
-    }
+  const getClientTypeBadge = (type: Project["clientType"]) => {
+    return type === "member" ? (
+      <Badge variant="outline" className="bg-teal-50 text-teal-700">
+        회원
+      </Badge>
+    ) : (
+      <Badge variant="outline" className="bg-gray-100 text-gray-600">
+        비회원
+      </Badge>
+    );
   };
+
+  const statusOptions: { value: ProjectStatus; label: string }[] = [
+    { value: "all", label: "전체" },
+    { value: "bidding", label: "입찰 중" },
+    { value: "closed", label: "마감" },
+    { value: "paid", label: "결제" },
+    { value: "in_progress", label: "진단시작" },
+    { value: "association", label: "협회경유" },
+    { value: "sent", label: "발송" },
+    { value: "completed", label: "완료" },
+  ];
 
   const statusCounts = {
     all: allProjects.length,
-    unmatched: allProjects.filter((p) => p.status === "unmatched").length,
-    matched: allProjects.filter((p) => p.status === "matched").length,
+    bidding: allProjects.filter((p) => p.status === "bidding").length,
+    closed: allProjects.filter((p) => p.status === "closed").length,
     paid: allProjects.filter((p) => p.status === "paid").length,
+    in_progress: allProjects.filter((p) => p.status === "in_progress").length,
+    association: allProjects.filter((p) => p.status === "association").length,
+    sent: allProjects.filter((p) => p.status === "sent").length,
     completed: allProjects.filter((p) => p.status === "completed").length,
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl mb-2">총 공고 목록</h1>
+        <h1 className="text-3xl mb-2">의뢰현황 조회</h1>
         <p className="text-gray-600">모든 의뢰 공고를 확인하고 관리합니다.</p>
+      </div>
+
+      {/* 통계 요약 */}
+      <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+        {statusOptions.map((s) => (
+          <Card
+            key={s.value}
+            className="cursor-pointer"
+            onClick={() => setSelectedStatus(s.value)}
+          >
+            <CardHeader className="pb-2 pt-3 px-3">
+              <CardTitle className="text-xs text-gray-600">{s.label}</CardTitle>
+            </CardHeader>
+            <CardContent className="px-3 pb-3">
+              <div
+                className={`text-xl font-bold ${selectedStatus === s.value ? "text-teal-600" : "text-gray-800"}`}
+              >
+                {statusCounts[s.value]}건
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* 필터 및 검색 */}
@@ -190,21 +281,63 @@ export function AdminProjectList() {
             <Filter className="h-5 w-5" />
             필터 및 검색
           </CardTitle>
-          <CardDescription>진행 상태별로 공고를 필터링하거나 의뢰 코드로 검색하세요.</CardDescription>
+          <CardDescription>
+            진행 상태, 회원 구분으로 필터링하거나 의뢰 코드로 검색하세요.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* 상태 필터 버튼 */}
-          <div className="flex flex-wrap gap-2">
-            {(["all", "unmatched", "matched", "paid", "completed"] as ProjectStatus[]).map((status) => (
-              <Button
-                key={status}
-                variant={selectedStatus === status ? "default" : "outline"}
-                className={selectedStatus === status ? "bg-[#009689] hover:bg-[#007d71]" : ""}
-                onClick={() => setSelectedStatus(status)}
-              >
-                {getStatusLabel(status)} ({statusCounts[status]})
-              </Button>
-            ))}
+          {/* 진행상태 필터 */}
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">진행상태</p>
+            <div className="flex flex-wrap gap-2">
+              {statusOptions.map((s) => (
+                <Button
+                  key={s.value}
+                  size="sm"
+                  variant={selectedStatus === s.value ? "default" : "outline"}
+                  className={
+                    selectedStatus === s.value
+                      ? "bg-[#009689] hover:bg-[#007d71]"
+                      : ""
+                  }
+                  onClick={() => setSelectedStatus(s.value)}
+                >
+                  {s.label} ({statusCounts[s.value]})
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* 회원/비회원 필터 */}
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              의뢰인 구분
+            </p>
+            <div className="flex gap-2">
+              {(
+                [
+                  { value: "all", label: "전체" },
+                  { value: "member", label: "회원" },
+                  { value: "guest", label: "비회원" },
+                ] as { value: ClientType; label: string }[]
+              ).map((t) => (
+                <Button
+                  key={t.value}
+                  size="sm"
+                  variant={
+                    selectedClientType === t.value ? "default" : "outline"
+                  }
+                  className={
+                    selectedClientType === t.value
+                      ? "bg-[#009689] hover:bg-[#007d71]"
+                      : ""
+                  }
+                  onClick={() => setSelectedClientType(t.value)}
+                >
+                  {t.label}
+                </Button>
+              ))}
+            </div>
           </div>
 
           {/* 검색 */}
@@ -220,50 +353,6 @@ export function AdminProjectList() {
         </CardContent>
       </Card>
 
-      {/* 통계 요약 */}
-      <div className="grid md:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">전체</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statusCounts.all}건</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">매칭 대기</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-700">{statusCounts.unmatched}건</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">전문가 매칭됨</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-700">{statusCounts.matched}건</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">결제 완료</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-700">{statusCounts.paid}건</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">의뢰 완료</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-700">{statusCounts.completed}건</div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* 공고 목록 */}
       <Card>
         <CardHeader>
@@ -276,7 +365,7 @@ export function AdminProjectList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredProjects.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
@@ -290,31 +379,36 @@ export function AdminProjectList() {
                   className="block"
                 >
                   <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-4 pb-4">
                       <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 space-y-3">
+                        <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-3 flex-wrap">
-                            <h3 className="font-semibold text-lg">{project.title}</h3>
+                            <h3 className="font-semibold">{project.title}</h3>
                             {getStatusBadge(project.status)}
                             <Badge variant="outline">{project.industry}</Badge>
+                            {getClientTypeBadge(project.clientType)}
                           </div>
-                          <div className="grid md:grid-cols-4 gap-x-4 gap-y-2 text-sm text-gray-600">
+                          <div className="grid md:grid-cols-4 gap-x-4 gap-y-1 text-sm text-gray-600">
                             <div>
-                              <span className="font-medium">의뢰 코드:</span> {project.code}
+                              <span className="font-medium">의뢰 코드:</span>{" "}
+                              {project.code}
                             </div>
                             <div>
-                              <span className="font-medium">기업명:</span> {project.company}
+                              <span className="font-medium">기업명:</span>{" "}
+                              {project.company}
                             </div>
                             <div>
-                              <span className="font-medium">의뢰인:</span> {project.clientName}
+                              <span className="font-medium">의뢰인:</span>{" "}
+                              {project.clientName}
                             </div>
                             <div>
-                              <span className="font-medium">입찰 수:</span> {project.bidCount}명
+                              <span className="font-medium">입찰 수:</span>{" "}
+                              {project.bidCount}명
                             </div>
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <p className="text-xs text-gray-500">
                             등록일: {project.createdAt}
-                          </div>
+                          </p>
                         </div>
                       </div>
                     </CardContent>
