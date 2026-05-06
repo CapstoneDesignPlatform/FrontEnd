@@ -1,4 +1,5 @@
 import { useState } from "react";
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -216,9 +217,8 @@ export function ClientMyPage() {
 
       {/* 3. 과거 의뢰 내역 */}
       <div className="space-y-6">
-        <h2 className="text-2xl">과거 의뢰 내역</h2>
+        <h2 className="text-2xl font-bold">과거 의뢰 내역</h2>
 
-        {/* 의뢰 내역 목록 */}
         <Card>
           <CardHeader>
             <CardTitle>의뢰 내역</CardTitle>
@@ -238,101 +238,96 @@ export function ClientMyPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {pastProjects.map((project) => (
-                    <tr 
-                      key={project.id} 
-                      className={`border-b cursor-pointer hover:bg-gray-50 ${
-                        selectedPastProject === project.id ? 'bg-teal-50' : ''
-                      }`}
-                      onClick={() => setSelectedPastProject(selectedPastProject === project.id ? null : project.id)}
-                    >
-                      <td className="px-4 py-3 text-sm">{project.registrationDate}</td>
-                      <td className="px-4 py-3 text-sm">{project.industry}</td>
-                      <td className="px-4 py-3 text-sm">{project.businessType}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <Badge variant="outline">{project.category}</Badge>
-                      </td>
-                      <td className="px-4 py-3 text-sm">{project.requiredLicense}</td>
-                      <td className="px-4 py-3 text-sm">{project.assetScale}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedPastProject(selectedPastProject === project.id ? null : project.id);
-                          }}
+                  {pastProjects.length > 0 ? (
+                    pastProjects.map((project) => (
+                      <React.Fragment key={project.id}>
+                        {/* 기본 정보 행 */}
+                        <tr 
+                          className={`border-b cursor-pointer hover:bg-gray-50 transition-colors ${
+                            selectedPastProject === project.id ? 'bg-teal-50/50' : ''
+                          }`}
+                          onClick={() => setSelectedPastProject(selectedPastProject === project.id ? null : project.id)}
                         >
-                          {selectedPastProject === project.id ? '접기' : '보기'}
-                        </Button>
+                          <td className="px-4 py-3 text-sm">{project.registrationDate}</td>
+                          <td className="px-4 py-3 text-sm">{project.industry}</td>
+                          <td className="px-4 py-3 text-sm">{project.businessType}</td>
+                          <td className="px-4 py-3 text-sm">
+                            <Badge variant="outline">{project.category}</Badge>
+                          </td>
+                          <td className="px-4 py-3 text-sm">{project.requiredLicense}</td>
+                          <td className="px-4 py-3 text-sm">{project.assetScale}</td>
+                          <td className="px-4 py-3 text-sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className={selectedPastProject === project.id ? 'text-teal-600' : ''}
+                            >
+                              {selectedPastProject === project.id ? '접기' : '보기'}
+                            </Button>
+                          </td>
+                        </tr>
+
+                        {selectedPastProject === project.id && (
+                          <tr className="bg-gray-50/50">
+                            <td colSpan={7} className="px-6 py-4">
+                              <div className="bg-white border border-teal-100 rounded-lg shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="bg-teal-50 px-4 py-2 border-b border-teal-100">
+                                  <span className="text-sm font-bold text-teal-800">
+                                    {project.registrationDate} 의뢰 - 전문가 견적서 상세
+                                  </span>
+                                </div>
+                                <table className="w-full border-collapse">
+                                  <thead>
+                                    <tr className="bg-gray-50 border-b text-xs text-gray-500">
+                                      <th className="px-4 py-2 text-left">전문가</th>
+                                      <th className="px-4 py-2 text-left">상호명</th>
+                                      <th className="px-4 py-2 text-left">연락처</th>
+                                      <th className="px-4 py-2 text-left">이메일</th>
+                                      <th className="px-4 py-2 text-left">제시금액</th>
+                                      <th className="px-4 py-2 text-left text-teal-600">확정금액</th>
+                                      <th className="px-4 py-2 text-left">결과</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {project.bids.map((bid) => (
+                                      <tr key={bid.id} className={`border-b last:border-0 ${bid.isSelected ? 'bg-teal-50/30' : ''}`}>
+                                        <td className="px-4 py-2 text-sm font-medium">{bid.expertName}</td>
+                                        <td className="px-4 py-2 text-sm">{bid.companyName}</td>
+                                        <td className="px-4 py-2 text-sm">{bid.phone}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-500">{bid.email}</td>
+                                        <td className="px-4 py-2 text-sm font-semibold">{formatCurrency(bid.proposedAmount)}</td>
+                                        <td className="px-4 py-2 text-sm font-bold text-teal-600">
+                                          {bid.isSelected ? formatCurrency(bid.confirmedAmount) : "-"}
+                                        </td>
+                                        <td className="px-4 py-2 text-sm">
+                                          {bid.isSelected ? (
+                                            <Badge className="bg-teal-600">선택됨</Badge>
+                                          ) : (
+                                            <span className="text-gray-400">미선택</span>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-gray-600">
+                        과거 의뢰 내역이 없습니다.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
           </CardContent>
         </Card>
-
-        {/* 선택된 과거 의뢰의 전문가 견적서 */}
-        {selectedPastProject && (
-          <Card className="border-teal-200 bg-teal-50/30">
-            <CardHeader>
-              <CardTitle className="text-teal-900">
-                {pastProjects.find(p => p.id === selectedPastProject)?.registrationDate} 의뢰 - 전문가 견적서
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
-                  <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="px-4 py-3 text-left text-sm font-semibold">전문가</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">상호명</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">연락처</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">이메일</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">전문가 제시금액</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">의뢰인 확정금액</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">최종선택 여부</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pastProjects
-                      .find(p => p.id === selectedPastProject)
-                      ?.bids.map((bid) => (
-                        <tr key={bid.id} className={`border-b ${bid.isSelected ? 'bg-teal-50' : ''}`}>
-                          <td className="px-4 py-3 text-sm">{bid.expertName}</td>
-                          <td className="px-4 py-3 text-sm">{bid.companyName}</td>
-                          <td className="px-4 py-3 text-sm">{bid.phone}</td>
-                          <td className="px-4 py-3 text-sm">{bid.email}</td>
-                          <td className="px-4 py-3 text-sm font-semibold">{formatCurrency(bid.proposedAmount)}</td>
-                          <td className="px-4 py-3 text-sm font-semibold text-teal-600">
-                            {bid.isSelected ? formatCurrency(bid.confirmedAmount) : "-"}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            {bid.isSelected ? (
-                              <Badge className="bg-teal-600">선택됨</Badge>
-                            ) : (
-                              <span className="text-gray-400">미선택</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        
-        {pastProjects.length === 0 && (
-          <Card>
-            <CardContent className="py-12 text-center text-gray-600">
-              과거 의뢰 내역이 없습니다.
-            </CardContent>
-          </Card>
-        )}
       </div>
       
       <ExpertBidModal 

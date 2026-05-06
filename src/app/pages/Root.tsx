@@ -339,20 +339,17 @@ export function Root() {
                         </NavigationMenuContent>
                       </NavigationMenuItem>
                       <NavigationMenuItem>
-                        <Link
-                          to="/expert/projects"
-                          className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                        >
-                          전문가 검색
-                        </Link>
+                        <NavigationMenuTrigger className="text-sm hover:text-teal-600 bg-transparent">전문가 검색</NavigationMenuTrigger>
+                      <NavigationMenuContent>
+                          <ul className="w-48 p-2">
+                            <li><Link to="/archives" className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md">자료실</Link></li>
+                            <li><Link to="/jobs" className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md">구인/구직</Link></li>
+                            <li><Link to="/promotions" className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md">기업홍보</Link></li>
+                          </ul>
+                        </NavigationMenuContent>
                       </NavigationMenuItem>
                       <NavigationMenuItem>
-                        <Link
-                          to="/"
-                          className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                        >
-                          커뮤니티
-                        </Link>
+                        <Link to="/community" className="text-sm px-4 py-2 hover:text-teal-600 transition-colors">커뮤니티</Link>
                       </NavigationMenuItem>
                     </>
                   )}
