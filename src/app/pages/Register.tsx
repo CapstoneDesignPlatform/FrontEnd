@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { Link, useNavigate, useOutletContext } from "react-router";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Checkbox } from "../components/ui/checkbox";
-import { Upload, CheckCircle2, User, FileText, X } from "lucide-react";
+import { CheckCircle2, User, FileText, X } from "lucide-react";
 import { TERMS_DATA, TermType } from "../../data/terms";
 import { toast } from "sonner";
 
@@ -13,7 +13,16 @@ type OutletContext = {
   setUser: (user: { type: "client" | "expert"; name: string }) => void;
 };
 
-// 전문보기 모달 컴포넌트
+// ─── 소셜 임시 정보 타입 ───────────────────────────────────────────────────
+type PendingSocialUser = {
+  provider: string;
+  name: string;
+  email: string;
+  socialId: string;
+  storageKey: string;
+};
+
+// ─── 전문보기 모달 ────────────────────────────────────────────────────────
 function TermsModal({
   onClose,
   userType,
@@ -32,12 +41,8 @@ function TermsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* 배경 오버레이 */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-
-      {/* 모달 본체 */}
       <div className="relative bg-white rounded-xl w-full max-w-lg mx-4 flex flex-col max-h-[80vh] shadow-xl">
-        {/* 헤더: 탭 + 닫기 버튼 */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <div className="flex gap-3">
             {tabs.map((tab) => (
@@ -63,8 +68,6 @@ function TermsModal({
             <X className="h-5 w-5" />
           </button>
         </div>
-
-        {/* 약관 본문 */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <h3 className="text-base font-semibold text-gray-900 mb-3">
             {currentTerms[activeTab].title}
@@ -73,8 +76,6 @@ function TermsModal({
             {currentTerms[activeTab].content}
           </pre>
         </div>
-
-        {/* 푸터: 닫기 버튼 */}
         <div className="border-t px-6 py-4 flex justify-end">
           <Button type="button" onClick={onClose}>
             닫기
@@ -85,7 +86,7 @@ function TermsModal({
   );
 }
 
-// 약관 미리보기 박스 컴포넌트
+// ─── 약관 미리보기 박스 ───────────────────────────────────────────────────
 function TermsPreviewBox({
   content,
   onOpenModal,
@@ -113,13 +114,28 @@ function TermsPreviewBox({
   );
 }
 
+// ─── 단계 정의 ────────────────────────────────────────────────────────────
+//  자체 가입:  1(유형) → 2(약관) → 3(정보입력) → 4(완료)
+//  소셜 가입:  1(유형) → 2(약관) →               4(완료)   ← step 3 건너뜀
+const STEP_LABELS: Record<number, string> = {
+  1: "회원 유형을 선택해주세요",
+  2: "이용약관에 동의해주세요",
+  3: "정보를 입력해주세요",
+  4: "회원가입이 완료되었습니다",
+};
+
 export function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setUser } = useOutletContext<OutletContext>();
+
+  // 소셜 회원가입 여부 및 임시 정보
+  const isSocial = searchParams.get("social") === "true";
+  const [pendingSocial, setPendingSocial] = useState<PendingSocialUser | null>(null);
+
   const [step, setStep] = useState(1);
   const [userType, setUserType] = useState<"client" | "expert" | null>(null);
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const currentTerms = userType ? TERMS_DATA[userType] : null;
   const [agreements, setAgreements] = useState({
     termsOfService: false,
     privacyPolicy: false,
@@ -131,35 +147,68 @@ export function Register() {
     password: "",
     confirmPassword: "",
     phone: "",
-    expertiseArea: "",
-    licenseType: "",
-    licenseNumber: "",
   });
-  const [licenseFile, setLicenseFile] = useState<File | null>(null);
+
+  // 소셜 가입 진입 시 sessionStorage에서 임시 정보 복원
+  useEffect(() => {
+    if (isSocial) {
+      const raw = sessionStorage.getItem("pendingSocialUser");
+      if (!raw) {
+        toast.error("소셜 로그인 세션이 만료되었습니다. 다시 시도해주세요.");
+        navigate("/login");
+        return;
+      }
+      const social = JSON.parse(raw) as PendingSocialUser;
+      setPendingSocial(social);
+      // 소셜 정보로 폼 데이터 미리 채움
+      setFormData((prev) => ({
+        ...prev,
+        name: social.name,
+        email: social.email,
+      }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSocial]);
+
+  const currentTerms = userType ? TERMS_DATA[userType] : null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setLicenseFile(e.target.files[0]);
-    }
-  };
-
+  // ── 1단계: 유형 선택 ───────────────────────────────────────────────────
   const handleUserTypeSelect = (type: "client" | "expert") => {
     setUserType(type);
     setStep(2);
   };
 
+  // ── 2단계: 약관 동의 후 다음 ──────────────────────────────────────────
   const handleAgreementNext = () => {
     if (!agreements.termsOfService || !agreements.privacyPolicy) {
       toast.error("필수 약관에 동의해주세요.");
       return;
     }
-    setStep(3);
+    if (isSocial) {
+      // 소셜: 정보입력 건너뛰고 바로 완료
+      completeSocialRegistration();
+    } else {
+      // 자체: 정보입력 단계로
+      setStep(3);
+    }
   };
 
+  // ── 소셜 가입 완료 처리 ────────────────────────────────────────────────
+  const completeSocialRegistration = () => {
+    if (!pendingSocial || !userType) return;
+    const userData = { type: userType, name: pendingSocial.name };
+    // 신규 유저로 등록 (localStorage 기반 데모)
+    localStorage.setItem(pendingSocial.storageKey, JSON.stringify(userData));
+    sessionStorage.removeItem("pendingSocialUser");
+    setUser(userData);
+    setStep(4);
+  };
+
+  // ── 3단계: 자체 정보입력 제출 ─────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -170,18 +219,19 @@ export function Register() {
     setStep(4);
   };
 
+  // ── 4단계: 완료 후 이동 ───────────────────────────────────────────────
   const handleComplete = () => {
     toast.success("회원가입이 완료되었습니다!");
-    if (userType === "client") {
-      navigate("/client/company-info");
-    } else {
-      navigate("/expert/dashboard");
-    }
+    navigate(userType === "client" ? "/client/company-info" : "/expert/dashboard");
   };
+
+  // 소셜 가입은 step 3이 없으므로 진행 표시를 3단계로 축소
+  const totalSteps = isSocial ? 3 : 4;
+  // 소셜에서 step 숫자 맵핑: 1→1, 2→2, 4→3
+  const displayStep = isSocial && step === 4 ? 3 : step;
 
   return (
     <>
-      {/* 전문보기 모달 */}
       {showTermsModal && userType && (
         <TermsModal onClose={() => setShowTermsModal(false)} userType={userType} />
       )}
@@ -189,27 +239,26 @@ export function Register() {
       <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-200px)]">
         <Card className="w-full max-w-2xl">
           <CardHeader>
-            <CardTitle className="text-2xl">회원가입</CardTitle>
-            <CardDescription>
-              {step === 1 && "회원 유형을 선택해주세요"}
-              {step === 2 && "이용약관에 동의해주세요"}
-              {step === 3 && "정보를 입력해주세요"}
-              {step === 4 && "회원가입이 완료되었습니다"}
-            </CardDescription>
+            <CardTitle className="text-2xl">
+              {isSocial ? "소셜 회원가입" : "회원가입"}
+            </CardTitle>
+            <CardDescription>{STEP_LABELS[step]}</CardDescription>
 
-            {/* 진행 상태 표시 */}
+            {/* 진행 표시 */}
             <div className="flex items-center justify-center gap-2 mt-4">
-              {[1, 2, 3, 4].map((num) => (
+              {Array.from({ length: totalSteps }, (_, i) => i + 1).map((num) => (
                 <div key={num} className="flex items-center">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                      step >= num ? "bg-teal-600 text-white" : "bg-gray-200 text-gray-600"
+                      displayStep >= num ? "bg-teal-600 text-white" : "bg-gray-200 text-gray-600"
                     }`}
                   >
                     {num}
                   </div>
-                  {num < 4 && (
-                    <div className={`w-12 h-1 ${step > num ? "bg-teal-600" : "bg-gray-200"}`} />
+                  {num < totalSteps && (
+                    <div
+                      className={`w-12 h-1 ${displayStep > num ? "bg-teal-600" : "bg-gray-200"}`}
+                    />
                   )}
                 </div>
               ))}
@@ -217,7 +266,7 @@ export function Register() {
           </CardHeader>
 
           <CardContent>
-            {/* 1단계: 회원 유형 선택 */}
+            {/* ── 1단계: 유형 선택 ── */}
             {step === 1 && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
@@ -240,16 +289,18 @@ export function Register() {
                     <p className="text-sm text-gray-600">전문 서비스를 제공하고 싶어요</p>
                   </button>
                 </div>
-                <div className="text-center text-sm">
-                  <span className="text-gray-600">이미 계정이 있으신가요? </span>
-                  <Link to="/login" className="text-teal-600 hover:underline">
-                    로그인
-                  </Link>
-                </div>
+                {!isSocial && (
+                  <div className="text-center text-sm">
+                    <span className="text-gray-600">이미 계정이 있으신가요? </span>
+                    <Link to="/login" className="text-teal-600 hover:underline">
+                      로그인
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* 2단계: 약관 동의 */}
+            {/* ── 2단계: 약관 동의 ── */}
             {step === 2 && currentTerms && (
               <div className="space-y-6">
                 <div className="space-y-4">
@@ -262,13 +313,13 @@ export function Register() {
                         agreements.privacyPolicy &&
                         agreements.marketing
                       }
-                      onCheckedChange={(checked) => {
+                      onCheckedChange={(checked) =>
                         setAgreements({
                           termsOfService: !!checked,
                           privacyPolicy: !!checked,
                           marketing: !!checked,
-                        });
-                      }}
+                        })
+                      }
                     />
                     <Label htmlFor="all" className="font-bold cursor-pointer">
                       전체 동의
@@ -290,7 +341,6 @@ export function Register() {
                           <span className="text-red-500">(필수)</span> 이용약관 동의
                         </Label>
                       </div>
-                      {/* ✅ 버그 수정 1: termsContent → currentTerms */}
                       <TermsPreviewBox
                         content={currentTerms.termsOfService.content}
                         onOpenModal={() => setShowTermsModal(true)}
@@ -311,7 +361,6 @@ export function Register() {
                           <span className="text-red-500">(필수)</span> 개인정보 수집 및 이용 동의
                         </Label>
                       </div>
-                      {/* ✅ 버그 수정 1: termsContent → currentTerms */}
                       <TermsPreviewBox
                         content={currentTerms.privacyPolicy.content}
                         onOpenModal={() => setShowTermsModal(true)}
@@ -332,7 +381,6 @@ export function Register() {
                           (선택) 마케팅 정보 수신 동의
                         </Label>
                       </div>
-                      {/* ✅ 버그 수정 1: termsContent → currentTerms */}
                       <TermsPreviewBox
                         content={currentTerms.marketing.content}
                         onOpenModal={() => setShowTermsModal(true)}
@@ -351,14 +399,14 @@ export function Register() {
                     이전
                   </Button>
                   <Button type="button" onClick={handleAgreementNext} className="flex-1">
-                    다음
+                    {isSocial ? "가입 완료" : "다음"}
                   </Button>
                 </div>
               </div>
             )}
 
-            {/* 3단계: 정보 입력 */}
-            {step === 3 && (
+            {/* ── 3단계: 자체 정보 입력 (소셜은 표시 안 함) ── */}
+            {step === 3 && !isSocial && (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">이름</Label>
@@ -419,7 +467,6 @@ export function Register() {
                     required
                   />
                 </div>
-
                 <div className="flex gap-3">
                   <Button
                     type="button"
@@ -436,7 +483,7 @@ export function Register() {
               </form>
             )}
 
-            {/* 4단계: 완료 */}
+            {/* ── 4단계: 완료 ── */}
             {step === 4 && (
               <div className="text-center space-y-6 py-8">
                 <CheckCircle2 className="h-20 w-20 text-teal-600 mx-auto" />
