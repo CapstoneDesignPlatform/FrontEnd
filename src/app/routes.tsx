@@ -73,6 +73,26 @@ const homePage = page(
   () => import("./pages/Home"),
   ({ Home }) => Home,
 );
+const archivePage = page(
+  () => import("./pages/category/searchExpert/Archive"),
+  ({ Archive }) => Archive,
+);
+const noticePage = page(
+  () => import("./pages/category/bid/Notice"),
+  ({ Notice }) => Notice,
+);
+const communityPage = page(
+  () => import("./pages/category/community/Community"),
+  ({ Community }) => Community,
+);
+const communityDetailPage = page(
+  () => import("./pages/category/community/CommunityDetail"), 
+  ({ CommunityDetail }) => CommunityDetail,
+);
+const communityWritePage = page(
+  () => import("./pages/category/community/CommunityWrite"),
+  ({ CommunityWrite }) => CommunityWrite,
+);
 const loginPage = page(
   () => import("./pages/Login"),
   ({ Login }) => Login,
@@ -96,6 +116,10 @@ const paymentPage = page(
 const notFoundPage = page(
   () => import("./pages/NotFound"),
   ({ NotFound }) => NotFound,
+);
+const oauthCallbackPage = page(
+  () => import("./pages/OauthCallback"),
+  ({ OAuthCallback }) => OAuthCallback,
 );
 
 const clientStartPage = page(
@@ -274,6 +298,16 @@ export const router = createBrowserRouter([
       { path: "signup/expert", lazy: expertSignupPage },
       { path: "check-request", lazy: checkRequestPage },
       { path: "support", lazy: supportPage },
+
+      { path: "oauth/callback/kakao",  lazy: oauthCallbackPage },
+      { path: "oauth/callback/naver",  lazy: oauthCallbackPage },
+      { path: "oauth/callback/google", lazy: oauthCallbackPage },
+
+      { path: "bids/notice", lazy: noticePage },
+      { path: "archives", lazy: archivePage },
+      { path: "community", lazy: communityPage },
+      { path: "community/:id", lazy: communityDetailPage },
+      { path: "community/write", lazy: communityWritePage },
 
       // 의뢰인 라우트
       { path: "client/start", lazy: clientStartPage },
