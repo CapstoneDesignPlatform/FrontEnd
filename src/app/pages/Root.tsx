@@ -142,6 +142,7 @@ export function Root() {
   const isClientRoute = location.pathname.startsWith("/client");
   const isExpertRoute = location.pathname.startsWith("/expert");
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isAdminLoginPage = location.pathname === "/admin/login";
   const isPendingPage = location.pathname === "/expert/pending";
 
   const layoutVariant = getLayoutVariant({
@@ -166,252 +167,259 @@ export function Root() {
         shouldShowMobileExpertBottomNav ? "pb-24 md:pb-0" : ""
       }`}
     >
-      <header className="bg-white border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8">
-              <Link to="/" className="flex items-center gap-2">
-                <Building2 className="h-8 w-8 text-teal-600" />
-                <span className="text-xl font-bold">ProToCall</span>
-              </Link>
+      {!isAdminLoginPage && (
+        <header className="bg-white border-b sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-8">
+                <Link to="/" className="flex items-center gap-2">
+                  <Building2 className="h-8 w-8 text-teal-600" />
+                  <span className="text-xl font-bold">ProToCall</span>
+                </Link>
 
-              <NavigationMenu className="hidden md:flex">
-                <NavigationMenuList className="gap-2">
-                  {isAdminRoute ? (
-                    <>
-                      <NavigationMenuItem>
-                        <Link
-                          to="/admin/projects"
-                          className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                        >
-                          의뢰현황 조회
-                        </Link>
-                      </NavigationMenuItem>
-                      <NavigationMenuItem>
-                        <Link
-                          to="/admin/experts"
-                          className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                        >
-                          전문가 관리
-                        </Link>
-                      </NavigationMenuItem>
-                      <NavigationMenuItem>
-                        <Link
-                          to="/admin/clients"
-                          className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                        >
-                          의뢰인 관리
-                        </Link>
-                      </NavigationMenuItem>
+                <NavigationMenu className="hidden md:flex">
+                  <NavigationMenuList className="gap-2">
+                    {isAdminRoute ? (
+                      <>
+                        <NavigationMenuItem>
+                          <Link
+                            to="/admin/projects"
+                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                          >
+                            의뢰현황 조회
+                          </Link>
+                        </NavigationMenuItem>
+                        <NavigationMenuItem>
+                          <Link
+                            to="/admin/experts"
+                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                          >
+                            전문가 관리
+                          </Link>
+                        </NavigationMenuItem>
+                        <NavigationMenuItem>
+                          <Link
+                            to="/admin/clients"
+                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                          >
+                            의뢰인 관리
+                          </Link>
+                        </NavigationMenuItem>
 
-                      <NavigationMenuItem>
-                        <Link
-                          to="/admin/settings"
-                          className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                        >
-                          플랫폼 설정
-                        </Link>
-                      </NavigationMenuItem>
+                        <NavigationMenuItem>
+                          <Link
+                            to="/admin/settings"
+                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                          >
+                            플랫폼 설정
+                          </Link>
+                        </NavigationMenuItem>
 
-                      <NavigationMenuItem>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger className="text-sm px-4 py-2 hover:text-teal-600 transition-colors flex items-center gap-1 outline-none">
-                            알림서비스 <ChevronDown className="h-3 w-3" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" className="w-40">
-                            <DropdownMenuItem
-                              onClick={() =>
-                                navigate("/admin/notifications/stats")
-                              }
-                            >
-                              집계표
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                navigate("/admin/notifications/manage")
-                              }
-                            >
-                              사용관리
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </NavigationMenuItem>
-
-                      <NavigationMenuItem>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger className="text-sm px-4 py-2 hover:text-teal-600 transition-colors flex items-center gap-1 outline-none">
-                            중개수수료 <ChevronDown className="h-3 w-3" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" className="w-40">
-                            <DropdownMenuItem
-                              onClick={() => navigate("/admin/fees/stats")}
-                            >
-                              집계
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </NavigationMenuItem>
-
-                      <NavigationMenuItem>
-                        <Link
-                          to="/admin/community"
-                          className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                        >
-                          커뮤니티
-                        </Link>
-                      </NavigationMenuItem>
-                    </>
-                  ) : shouldShowExpertNavigation ? (
-                    <>
-                      <NavigationMenuItem>
-                        <Link
-                          to="/expert/jobs"
-                          className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                        >
-                          공고 목록
-                        </Link>
-                      </NavigationMenuItem>
-                      <NavigationMenuItem>
-                        <Link
-                          to="/expert/bids"
-                          className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                        >
-                          내 입찰 목록
-                        </Link>
-                      </NavigationMenuItem>
-                      <NavigationMenuItem>
-                        <Link
-                          to="/"
-                          className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                        >
-                          커뮤니티
-                        </Link>
-                      </NavigationMenuItem>
-                    </>
-                  ) : (
-                    <>
-                      <NavigationMenuItem>
-                        <NavigationMenuTrigger className="text-sm hover:text-teal-600 bg-transparent">
-                          전문 bid
-                        </NavigationMenuTrigger>
-                        <NavigationMenuContent>
-                          <ul className="w-48 p-2">
-                            <li>
-                              <Link
-                                to="/bids/intro"
-                                className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md"
+                        <NavigationMenuItem>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="text-sm px-4 py-2 hover:text-teal-600 transition-colors flex items-center gap-1 outline-none">
+                              알림서비스 <ChevronDown className="h-3 w-3" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-40">
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  navigate("/admin/notifications/stats")
+                                }
                               >
-                                전문 bid 소개
-                              </Link>
-                            </li>
-                            <li>
-                              <Link
-                                to="/bids/notice"
-                                className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md"
+                                집계표
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  navigate("/admin/notifications/manage")
+                                }
                               >
-                                공지사항
-                              </Link>
-                            </li>
-                          </ul>
-                        </NavigationMenuContent>
-                      </NavigationMenuItem>
-                      <NavigationMenuItem>
-                        <NavigationMenuTrigger className="text-sm hover:text-teal-600 bg-transparent">
-                          견적 요청
-                        </NavigationMenuTrigger>
-                        <NavigationMenuContent>
-                          <ul className="w-48 p-2">
-                            {INDUSTRIES.map((industry) => (
-                              <li key={industry.value}>
-                                <button
-                                  onClick={() =>
-                                    navigate(
-                                      `/client/create-project/${industry.value}`,
-                                    )
-                                  }
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-teal-50 rounded-md"
+                                사용관리
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </NavigationMenuItem>
+
+                        <NavigationMenuItem>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="text-sm px-4 py-2 hover:text-teal-600 transition-colors flex items-center gap-1 outline-none">
+                              중개수수료 <ChevronDown className="h-3 w-3" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-40">
+                              <DropdownMenuItem
+                                onClick={() => navigate("/admin/fees/stats")}
+                              >
+                                집계
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </NavigationMenuItem>
+
+                        <NavigationMenuItem>
+                          <Link
+                            to="/admin/community"
+                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                          >
+                            커뮤니티
+                          </Link>
+                        </NavigationMenuItem>
+                      </>
+                    ) : shouldShowExpertNavigation ? (
+                      <>
+                        <NavigationMenuItem>
+                          <Link
+                            to="/expert/jobs"
+                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                          >
+                            공고 목록
+                          </Link>
+                        </NavigationMenuItem>
+                        <NavigationMenuItem>
+                          <Link
+                            to="/expert/bids"
+                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                          >
+                            내 입찰 목록
+                          </Link>
+                        </NavigationMenuItem>
+                        <NavigationMenuItem>
+                          <Link
+                            to="/"
+                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                          >
+                            커뮤니티
+                          </Link>
+                        </NavigationMenuItem>
+                      </>
+                    ) : (
+                      <>
+                        <NavigationMenuItem>
+                          <NavigationMenuTrigger className="text-sm hover:text-teal-600 bg-transparent">
+                            전문 bid
+                          </NavigationMenuTrigger>
+                          <NavigationMenuContent>
+                            <ul className="w-48 p-2">
+                              <li>
+                                <Link
+                                  to="/bids/intro"
+                                  className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md"
                                 >
-                                  {industry.label}
-                                </button>
+                                  전문 bid 소개
+                                </Link>
                               </li>
-                            ))}
-                          </ul>
-                        </NavigationMenuContent>
-                      </NavigationMenuItem>
-                      <NavigationMenuItem>
-                        <NavigationMenuTrigger className="text-sm hover:text-teal-600 bg-transparent">전문가 검색</NavigationMenuTrigger>
-                      <NavigationMenuContent>
-                          <ul className="w-48 p-2">
-                            <li><Link to="/archives" className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md">자료실</Link></li>
-                            <li><Link to="/jobs" className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md">구인/구직</Link></li>
-                            <li><Link to="/promotions" className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md">기업홍보</Link></li>
-                          </ul>
-                        </NavigationMenuContent>
-                      </NavigationMenuItem>
-                      <NavigationMenuItem>
-                        <Link to="/community" className="text-sm px-4 py-2 hover:text-teal-600 transition-colors">커뮤니티</Link>
-                      </NavigationMenuItem>
-                    </>
-                  )}
-                </NavigationMenuList>
-              </NavigationMenu>
-            </div>
+                              <li>
+                                <Link
+                                  to="/bids/notice"
+                                  className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md"
+                                >
+                                  공지사항
+                                </Link>
+                              </li>
+                            </ul>
+                          </NavigationMenuContent>
+                        </NavigationMenuItem>
+                        <NavigationMenuItem>
+                          <NavigationMenuTrigger className="text-sm hover:text-teal-600 bg-transparent">
+                            견적 요청
+                          </NavigationMenuTrigger>
+                          <NavigationMenuContent>
+                            <ul className="w-48 p-2">
+                              {INDUSTRIES.map((industry) => (
+                                <li key={industry.value}>
+                                  <button
+                                    onClick={() =>
+                                      navigate(
+                                        `/client/create-project/${industry.value}`,
+                                      )
+                                    }
+                                    className="w-full text-left px-4 py-2 text-sm hover:bg-teal-50 rounded-md"
+                                  >
+                                    {industry.label}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </NavigationMenuContent>
+                        </NavigationMenuItem>
+                        <NavigationMenuItem>
+                          <Link
+                            to="/expert/projects"
+                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                          >
+                            전문가 검색
+                          </Link>
+                        </NavigationMenuItem>
+                        <NavigationMenuItem>
+                          <Link
+                            to="/"
+                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                          >
+                            커뮤니티
+                          </Link>
+                        </NavigationMenuItem>
+                      </>
+                    )}
+                  </NavigationMenuList>
+                </NavigationMenu>
+              </div>
 
-            <div className="flex items-center gap-4">
-              {isAdminRoute ? (
-                <div className="px-4 py-2 bg-teal-100 text-teal-700 rounded-md text-xs font-bold shadow-sm">
-                  관리자 모드
-                </div>
-              ) : !user ? (
-                <>
-                  <Button asChild variant="ghost">
-                    <Link to="/login">로그인</Link>
-                  </Button>
-                  <Button asChild>
-                    <Link to="/register">회원가입</Link>
-                  </Button>
-                </>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500 mr-2 hidden lg:inline">
-                    <span className="font-bold text-gray-900">{user.name}</span>
-                    님
-                  </span>
+              <div className="flex items-center gap-4">
+                {isAdminRoute ? (
+                  <div className="px-4 py-2 bg-teal-100 text-teal-700 rounded-md text-xs font-bold shadow-sm">
+                    관리자 모드
+                  </div>
+                ) : !user ? (
+                  <>
+                    <Button asChild variant="ghost">
+                      <Link to="/login">로그인</Link>
+                    </Button>
+                    <Button asChild>
+                      <Link to="/register">회원가입</Link>
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 mr-2 hidden lg:inline">
+                      <span className="font-bold text-gray-900">
+                        {user.name}
+                      </span>
+                      님
+                    </span>
 
-                  <Button
-                    variant="ghost"
-                    asChild
-                    className={`text-sm ${user.type === "expert" ? "hidden md:inline-flex" : ""}`}
-                  >
-                    <Link
-                      to={
-                        user.type === "client"
-                          ? "/client/mypage"
-                          : "/expert/profile"
-                      }
+                    <Button
+                      variant="ghost"
+                      asChild
+                      className={`text-sm ${user.type === "expert" ? "hidden md:inline-flex" : ""}`}
                     >
-                      My Page
-                    </Link>
-                  </Button>
+                      <Link
+                        to={
+                          user.type === "client"
+                            ? "/client/mypage"
+                            : "/expert/profile"
+                        }
+                      >
+                        My Page
+                      </Link>
+                    </Button>
 
-                  <Button variant="ghost" asChild className="text-sm">
-                    <Link to="/support">고객센터</Link>
-                  </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <Link to="/support">고객센터</Link>
+                    </Button>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleLogout}
-                    className="text-gray-500 hover:text-red-500"
-                  >
-                    <LogOut className="h-5 w-5" />
-                  </Button>
-                </div>
-              )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleLogout}
+                      className="text-gray-500 hover:text-red-500"
+                    >
+                      <LogOut className="h-5 w-5" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {layoutVariant === "contained" ? (
         <ContainedOutlet context={outletContext} />

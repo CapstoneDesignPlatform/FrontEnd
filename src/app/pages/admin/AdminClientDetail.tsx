@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Download } from "lucide-react";
+import { exportToExcel } from "../../utils/exportExcel";
 import {
   Card,
   CardContent,
@@ -234,29 +236,57 @@ export function AdminClientDetail() {
           <h1 className="text-3xl mb-2">{client.name}</h1>
           <p className="text-gray-600">{client.company}</p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className={
-            clientStatus === "active"
-              ? "text-red-600 border-red-200 hover:bg-red-50"
-              : "text-green-600 border-green-200 hover:bg-green-50"
-          }
-          onClick={handleStatusChange}
-          disabled={isProcessing}
-        >
-          {clientStatus === "active" ? (
-            <>
-              <Ban className="h-4 w-4 mr-1" />
-              정지
-            </>
-          ) : (
-            <>
-              <CheckCircle className="h-4 w-4 mr-1" />
-              정상 복구
-            </>
-          )}
-        </Button>
+        <div className="flex flex-col gap-2 items-end">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1 text-xs"
+            onClick={() =>
+              exportToExcel(
+                `의뢰인상세_${client.name}`,
+                ["항목", "내용"],
+                [
+                  ["이름", client.name],
+                  ["회원번호", client.memberNumber],
+                  ["업체명", client.company],
+                  ["사업자번호", client.businessNumber],
+                  ["연락처", client.phone],
+                  ["이메일", client.email],
+                  ["주소", client.address],
+                  ["가입일", client.registeredAt],
+                  ["상태", clientStatus === "active" ? "정상" : "정지"],
+                  ["총의뢰수", client.projects.length],
+                ],
+              )
+            }
+          >
+            <Download className="h-3 w-3" />
+            Excel 다운로드
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className={
+              clientStatus === "active"
+                ? "text-red-600 border-red-200 hover:bg-red-50"
+                : "text-green-600 border-green-200 hover:bg-green-50"
+            }
+            onClick={handleStatusChange}
+            disabled={isProcessing}
+          >
+            {clientStatus === "active" ? (
+              <>
+                <Ban className="h-4 w-4 mr-1" />
+                정지
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4 mr-1" />
+                정상 복구
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

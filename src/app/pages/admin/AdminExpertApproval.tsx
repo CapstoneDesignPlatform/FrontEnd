@@ -24,6 +24,7 @@ import {
   IdCard,
 } from "lucide-react";
 import { useState } from "react";
+import { exportToExcel } from "../../utils/exportExcel";
 
 interface PersonalInfo {
   name: string;
@@ -33,7 +34,6 @@ interface PersonalInfo {
   address: string;
   registeredAt: string;
 }
-
 interface VerificationInfo {
   expertise: string;
   licenseNumber: string;
@@ -49,7 +49,6 @@ interface VerificationInfo {
   description: string;
   appliedAt: string;
 }
-
 interface Document {
   id: number;
   name: string;
@@ -57,7 +56,6 @@ interface Document {
   size: string;
   uploadedAt: string;
 }
-
 interface Expert {
   id: string;
   personalInfo: PersonalInfo;
@@ -94,8 +92,7 @@ export function AdminExpertApproval() {
         companyPhone: "02-1234-5678",
         businessNumber: "123-45-67890",
         position: "대표 행정사",
-        description:
-          "건설업 관련 면허 취득 및 컨설팅 전문가입니다. 10년 이상의 경력을 바탕으로 고객님께 최상의 서비스를 제공하겠습니다.",
+        description: "건설업 관련 면허 취득 및 컨설팅 전문가입니다.",
         appliedAt: "2026-04-05 11:00",
       },
       documents: [
@@ -326,6 +323,32 @@ export function AdminExpertApproval() {
     alert(`${documentName} 파일을 다운로드합니다.`);
   };
 
+  const handleExport = () => {
+    exportToExcel(
+      `전문가승인요청_${expert.personalInfo.name}`,
+      ["항목", "내용"],
+      [
+        ["이름", expert.personalInfo.name],
+        ["생년월일", expert.personalInfo.birthDate],
+        ["이메일", expert.personalInfo.email],
+        ["연락처", expert.personalInfo.phone],
+        ["주소", expert.personalInfo.address],
+        ["가입일", expert.personalInfo.registeredAt],
+        ["전문분야", expert.verificationInfo.expertise],
+        ["경력", expert.verificationInfo.experience],
+        ["면허종류", expert.verificationInfo.licenseType],
+        ["면허번호", expert.verificationInfo.licenseNumber],
+        ["발급일", expert.verificationInfo.issueDate],
+        ["만료일", expert.verificationInfo.expiryDate],
+        ["회사명", expert.verificationInfo.companyName],
+        ["직책", expert.verificationInfo.position],
+        ["사업자번호", expert.verificationInfo.businessNumber],
+        ["신청일", expert.verificationInfo.appliedAt],
+        ["제출서류수", expert.documents.length],
+      ],
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -354,6 +377,15 @@ export function AdminExpertApproval() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1 text-xs"
+            onClick={handleExport}
+          >
+            <Download className="h-3 w-3" />
+            Excel 다운로드
+          </Button>
           <Button
             variant="outline"
             className="text-red-600 border-red-200 hover:bg-red-50"
