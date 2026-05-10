@@ -31,6 +31,8 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { useState } from "react";
+import { Download } from "lucide-react";
+import { exportToExcel } from "../../utils/exportExcel";
 
 type ProjectStatus =
   | "bidding"
@@ -634,7 +636,37 @@ export function AdminProjectDetail() {
             <span>최종 수정: {project.updatedAt}</span>
           </div>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 items-end">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1 text-xs"
+            onClick={() =>
+              exportToExcel(
+                `의뢰상세_${project.code}`,
+                ["항목", "내용"],
+                [
+                  ["의뢰코드", project.code],
+                  ["공고명", project.title],
+                  ["업종", project.industry],
+                  ["의뢰인", project.client.name],
+                  ["연락처", project.client.phone],
+                  ["이메일", project.client.email],
+                  ["회원유형", project.client.isGuest ? "비회원" : "정회원"],
+                  ["기업명", project.company.name],
+                  ["사업자번호", project.company.businessNumber],
+                  ["예산", project.budget],
+                  ["희망완료일", project.deadline],
+                  ["지역", project.location],
+                  ["상태", getStatusLabel(projectStatus)],
+                  ["등록일", project.createdAt],
+                ],
+              )
+            }
+          >
+            <Download className="h-3 w-3" />
+            Excel 다운로드
+          </Button>
           <label className="text-xs text-gray-600">진행 상태 변경</label>
           <Select value={projectStatus} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-40">

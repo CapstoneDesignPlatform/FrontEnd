@@ -1,15 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Bell, Printer } from "lucide-react";
+import { Download } from "lucide-react";
+import { exportToExcel } from "../../utils/exportExcel";
 
 interface NotificationMember {
   id: number;
@@ -108,144 +101,175 @@ export function AdminNotificationManage() {
     );
   };
 
+  const handleExport = () => {
+    exportToExcel(
+      "알림서비스_사용관리",
+      [
+        "번호",
+        "회원번호",
+        "상호",
+        "사업자등록번호",
+        "연락처",
+        "이메일",
+        "신청건수",
+        "사용건수",
+        "잔여건수",
+        "서비스상태",
+      ],
+      members.map((m, i) => [
+        i + 1,
+        m.memberNumber,
+        m.company,
+        m.businessNumber,
+        m.phone,
+        m.email,
+        m.appliedCount,
+        m.usedCount,
+        m.remainingCount,
+        m.serviceStatus === "continue" ? "계속" : "정지",
+      ]),
+    );
+  };
+
+  const continueCount = members.filter(
+    (m) => m.serviceStatus === "continue",
+  ).length;
+  const suspendedCount = members.filter(
+    (m) => m.serviceStatus === "suspended",
+  ).length;
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl mb-2">알림서비스 사용관리</h1>
-        <p className="text-gray-600">
-          회원별 알림서비스 사용 현황을 관리합니다.
-        </p>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold">알림서비스 사용관리</h1>
+          <p className="text-xs text-gray-500 mt-0.5">
+            회원별 알림서비스 사용 현황을 관리합니다.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="gap-1 text-xs"
+          onClick={handleExport}
+        >
+          <Download className="h-3 w-3" />
+          Excel 다운로드
+        </Button>
       </div>
 
-      {/* 통계 */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">전체 회원</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{members.length}명</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">서비스 계속</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-teal-600">
-              {members.filter((m) => m.serviceStatus === "continue").length}명
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">서비스 정지</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {members.filter((m) => m.serviceStatus === "suspended").length}명
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            알림서비스 관리
-          </CardTitle>
-          <CardDescription>
-            회원별 알림서비스 신청/사용/잔여 건수를 확인하고 상태를 관리합니다.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-end mb-4">
-            <Button variant="outline" className="gap-1">
-              <Printer className="h-4 w-4" />
-              출력
-            </Button>
+      {/* 통계 바 */}
+      <div className="flex gap-3">
+        {[
+          {
+            label: "전체 회원",
+            value: `${members.length}명`,
+            color: "text-gray-900",
+          },
+          {
+            label: "서비스 계속",
+            value: `${continueCount}명`,
+            color: "text-teal-600",
+          },
+          {
+            label: "서비스 정지",
+            value: `${suspendedCount}명`,
+            color: "text-red-600",
+          },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="flex-1 border border-gray-200 rounded bg-white px-4 py-2"
+          >
+            <p className="text-xs text-gray-500">{s.label}</p>
+            <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  {[
-                    "번호",
-                    "회원번호",
-                    "상호",
-                    "사업자등록번호",
-                    "연락처",
-                    "이메일",
-                    "신청건수",
-                    "사용건수",
-                    "잔여건수",
-                    "상태",
-                    "상세",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      className="text-left py-2 px-3 text-gray-600 font-medium whitespace-nowrap"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {members.map((member, index) => (
-                  <tr key={member.id} className="border-b hover:bg-gray-50">
-                    <td className="py-2 px-3">{index + 1}</td>
-                    <td className="py-2 px-3 font-mono text-xs">
-                      {member.memberNumber}
-                    </td>
-                    <td className="py-2 px-3 whitespace-nowrap">
-                      {member.company}
-                    </td>
-                    <td className="py-2 px-3 font-mono text-xs">
-                      {member.businessNumber}
-                    </td>
-                    <td className="py-2 px-3 whitespace-nowrap">
-                      {member.phone}
-                    </td>
-                    <td className="py-2 px-3 text-xs">{member.email}</td>
-                    <td className="py-2 px-3 text-center">
-                      {member.appliedCount}
-                    </td>
-                    <td className="py-2 px-3 text-center">
-                      {member.usedCount}
-                    </td>
-                    <td className="py-2 px-3 text-center font-semibold">
-                      {member.remainingCount}
-                    </td>
-                    <td className="py-2 px-3">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className={
-                          member.serviceStatus === "continue"
-                            ? "text-teal-600 border-teal-200"
-                            : "text-red-600 border-red-200"
-                        }
-                        onClick={() => handleToggleService(member.id)}
-                      >
-                        {member.serviceStatus === "continue" ? "계속" : "정지"}
-                      </Button>
-                    </td>
-                    <td className="py-2 px-3">
-                      <Link to={`/admin/notifications/${member.memberNumber}`}>
-                        <Button size="sm" variant="outline">
-                          상세
-                        </Button>
-                      </Link>
-                    </td>
-                  </tr>
+        ))}
+      </div>
+
+      {/* 테이블 */}
+      <div className="border border-gray-300 rounded overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                {[
+                  "번호",
+                  "회원번호",
+                  "상호",
+                  "사업자등록번호",
+                  "연락처",
+                  "이메일",
+                  "신청건수",
+                  "사용건수",
+                  "잔여건수",
+                  "상태",
+                  "상세",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap last:border-r-0"
+                  >
+                    {h}
+                  </th>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+              </tr>
+            </thead>
+            <tbody>
+              {members.map((m, i) => (
+                <tr
+                  key={m.id}
+                  className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                >
+                  <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
+                    {i + 1}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1 font-mono">
+                    {m.memberNumber}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                    {m.company}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1 font-mono">
+                    {m.businessNumber}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                    {m.phone}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1">
+                    {m.email}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
+                    {m.appliedCount}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
+                    {m.usedCount}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1 text-center font-semibold">
+                    {m.remainingCount}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1">
+                    <button
+                      onClick={() => handleToggleService(m.id)}
+                      className={`px-2 py-0.5 rounded border text-xs font-medium transition-colors ${m.serviceStatus === "continue" ? "text-teal-600 border-teal-300 hover:bg-teal-50" : "text-red-600 border-red-300 hover:bg-red-50"}`}
+                    >
+                      {m.serviceStatus === "continue" ? "계속" : "정지"}
+                    </button>
+                  </td>
+                  <td className="border-b border-gray-200 px-2 py-1">
+                    <Link
+                      to={`/admin/notifications/${m.memberNumber}`}
+                      className="text-teal-600 hover:underline whitespace-nowrap"
+                    >
+                      상세 →
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import { useParams, Link } from "react-router-dom";
+import { Download } from "lucide-react";
+import { exportToExcel } from "../../utils/exportExcel";
 import {
   Card,
   CardContent,
@@ -251,7 +253,33 @@ export function AdminExpertDetail() {
           <h1 className="text-3xl mb-2">{expert.personalInfo.name}</h1>
           <p className="text-gray-600">{expert.expertInfo.expertise} 전문가</p>
         </div>
-        <div>
+        <div className="flex flex-col gap-2 items-end">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1 text-xs"
+            onClick={() =>
+              exportToExcel(
+                `전문가상세_${expert.personalInfo.name}`,
+                ["항목", "내용"],
+                [
+                  ["이름", expert.personalInfo.name],
+                  ["이메일", expert.personalInfo.email],
+                  ["연락처", expert.personalInfo.phone],
+                  ["전문분야", expert.expertInfo.expertise],
+                  ["경력", expert.expertInfo.experience],
+                  ["회사명", expert.expertInfo.companyName],
+                  ["총입찰", expert.stats.totalBids],
+                  ["낙찰", expert.stats.wonBids],
+                  ["완료", expert.stats.completedProjects],
+                  ["총수익", expert.stats.totalEarnings],
+                ],
+              )
+            }
+          >
+            <Download className="h-3 w-3" />
+            Excel 다운로드
+          </Button>
           <Button
             size="sm"
             variant="outline"
