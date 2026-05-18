@@ -38,8 +38,22 @@ export function AdminExpertDetail() {
 
   // 현황 이력 데이터 (가짜 데이터)
   const [statusHistory, setStatusHistory] = useState([
-    { date: "2026-03-25 10:00", content: "전문가 승인 완료", status: "정상" },
-    { date: "2026-02-15 14:30", content: "회원 가입", status: "승인대기" },
+    {
+      date: "2026-03-25 10:00",
+      content: "전문가 승인 완료",
+      status: "정상",
+      grade: "프리미엄",
+      startDate: "2026-03-25",
+      endDate: "2027-03-24",
+    },
+    {
+      date: "2026-02-15 14:30",
+      content: "회원 가입",
+      status: "승인대기",
+      grade: "-",
+      startDate: "-",
+      endDate: "-",
+    },
   ]);
 
   // 데모 데이터
@@ -210,6 +224,9 @@ export function AdminExpertDetail() {
               ? "관리자에 의해 비활성화"
               : "관리자에 의해 활성화",
           status: newStatus === "inactive" ? "정지" : "정상",
+          grade: "-",
+          startDate: "-",
+          endDate: "-",
         },
         ...prev,
       ]);
@@ -359,245 +376,249 @@ export function AdminExpertDetail() {
             </Card>
           </div>
 
-          {/* 기본 정보 */}
+          {/* 기본 정보 - 엑셀 (관)전문가 회원카드 시트 기준 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              기본 정보
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <tbody>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
+                    이름
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {expert.personalInfo.name}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
+                    생년월일
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {expert.personalInfo.birthDate}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    이메일
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {expert.personalInfo.email}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    연락처
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {expert.personalInfo.phone}
+                  </td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    주소
+                  </td>
+                  <td
+                    colSpan={3}
+                    className="border-b border-gray-200 px-3 py-1.5"
+                  >
+                    {expert.personalInfo.address}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    가입일
+                  </td>
+                  <td className="border-r border-gray-200 px-3 py-1.5">
+                    {expert.personalInfo.registeredAt}
+                  </td>
+                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    승인일
+                  </td>
+                  <td className="px-3 py-1.5">
+                    {expert.expertInfo.approvedAt}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* 전문가 정보 - 엑셀 (관)전문가 회원카드 시트 기준 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              전문가 정보
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <tbody>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
+                    전문 분야
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {expert.expertInfo.expertise}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
+                    경력
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {expert.expertInfo.experience}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    면허 종류
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {expert.expertInfo.licenseType}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    면허 번호
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5 font-mono">
+                    {expert.expertInfo.licenseNumber}
+                  </td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    발급일
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {expert.expertInfo.issueDate}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    만료일
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {expert.expertInfo.expiryDate}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    회사명
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {expert.expertInfo.companyName}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    직책
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {expert.expertInfo.position}
+                  </td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    사업자번호
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-mono">
+                    {expert.expertInfo.businessNumber}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    회사 전화
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {expert.expertInfo.companyPhone}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    회사 주소
+                  </td>
+                  <td
+                    colSpan={3}
+                    className="border-b border-gray-200 px-3 py-1.5"
+                  >
+                    {expert.expertInfo.companyAddress}
+                  </td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    자기소개
+                  </td>
+                  <td colSpan={3} className="px-3 py-1.5">
+                    {expert.expertInfo.description}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* 현황 이력 - 엑셀 (관)전문가 회원카드 시트 기준 */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                기본 정보
-              </CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">현황 이력</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">이름</p>
-                  <p className="font-medium">{expert.personalInfo.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">생년월일</p>
-                  <p className="font-medium">{expert.personalInfo.birthDate}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">이메일</p>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-gray-500" />
-                    <p className="font-medium">{expert.personalInfo.email}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">연락처</p>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-500" />
-                    <p className="font-medium">{expert.personalInfo.phone}</p>
-                  </div>
-                </div>
-                <div className="md:col-span-2">
-                  <p className="text-sm text-gray-600 mb-1">주소</p>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    <p className="font-medium">{expert.personalInfo.address}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">가입일</p>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <p className="font-medium">
-                      {expert.personalInfo.registeredAt}
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">승인일</p>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <p className="font-medium">
-                      {expert.expertInfo.approvedAt}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 전문가 정보 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <IdCard className="h-5 w-5" />
-                전문가 정보
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">전문 분야</p>
-                    <Badge
-                      variant="outline"
-                      className="bg-[#009689]/10 text-[#009689]"
-                    >
-                      {expert.expertInfo.expertise}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">경력</p>
-                    <p className="font-medium">
-                      {expert.expertInfo.experience}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="border-t pt-4">
-                  <h4 className="font-semibold mb-3">자격 정보</h4>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">면허 종류</p>
-                      <p className="font-medium">
-                        {expert.expertInfo.licenseType}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">면허 번호</p>
-                      <p className="font-medium font-mono">
-                        {expert.expertInfo.licenseNumber}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">발급일</p>
-                      <p className="font-medium">
-                        {expert.expertInfo.issueDate}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">만료일</p>
-                      <p className="font-medium">
-                        {expert.expertInfo.expiryDate}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t pt-4">
-                  <h4 className="font-semibold mb-3">소속 정보</h4>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">회사명</p>
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-gray-500" />
-                        <p className="font-medium">
-                          {expert.expertInfo.companyName}
-                        </p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">직책</p>
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="h-4 w-4 text-gray-500" />
-                        <p className="font-medium">
-                          {expert.expertInfo.position}
-                        </p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">
-                        사업자등록번호
-                      </p>
-                      <p className="font-medium font-mono">
-                        {expert.expertInfo.businessNumber}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">회사 전화</p>
-                      <p className="font-medium">
-                        {expert.expertInfo.companyPhone}
-                      </p>
-                    </div>
-                    <div className="md:col-span-2">
-                      <p className="text-sm text-gray-600 mb-1">회사 주소</p>
-                      <p className="font-medium">
-                        {expert.expertInfo.companyAddress}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t pt-4">
-                  <h4 className="font-semibold mb-3">자기소개</h4>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-700 whitespace-pre-wrap">
-                      {expert.expertInfo.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 현황 이력 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                현황 이력
-              </CardTitle>
-              <CardDescription>상태 변경 이력을 확인합니다.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2 px-3 text-gray-600 font-medium">
-                        일시
-                      </th>
-                      <th className="text-left py-2 px-3 text-gray-600 font-medium">
-                        내용
-                      </th>
-                      <th className="text-left py-2 px-3 text-gray-600 font-medium">
-                        현재상태
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {statusHistory.map((item, index) => (
-                      <tr key={index} className="border-b hover:bg-gray-50">
-                        <td className="py-2 px-3 text-gray-600 whitespace-nowrap">
-                          {item.date}
-                        </td>
-                        <td className="py-2 px-3">{item.content}</td>
-                        <td className="py-2 px-3">
-                          {item.status === "정상" && (
-                            <Badge className="bg-green-100 text-green-700">
-                              정상
-                            </Badge>
-                          )}
-                          {item.status === "승인대기" && (
-                            <Badge
-                              variant="outline"
-                              className="bg-amber-50 text-amber-700 border-amber-200"
-                            >
-                              승인대기
-                            </Badge>
-                          )}
-                          {item.status === "정지" && (
-                            <Badge className="bg-red-100 text-red-700">
-                              정지
-                            </Badge>
-                          )}
-                          {item.status === "탈퇴" && (
-                            <Badge
-                              variant="outline"
-                              className="bg-gray-100 text-gray-700"
-                            >
-                              탈퇴
-                            </Badge>
-                          )}
-                        </td>
+              <div className="border border-gray-300 rounded overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap">
+                          일시
+                        </th>
+                        <th className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700">
+                          내용
+                        </th>
+                        <th className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap">
+                          현재상태
+                        </th>
+                        <th className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap">
+                          등급
+                        </th>
+                        <th className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap">
+                          신청 시작일
+                        </th>
+                        <th className="border-b border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap">
+                          신청 마감일
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {statusHistory.map((item, index) => (
+                        <tr
+                          key={index}
+                          className={`hover:bg-teal-50 transition-colors ${index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                        >
+                          <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                            {item.date}
+                          </td>
+                          <td className="border-b border-r border-gray-200 px-2 py-1">
+                            {item.content}
+                          </td>
+                          <td className="border-b border-r border-gray-200 px-2 py-1">
+                            {item.status === "정상" && (
+                              <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                                정상
+                              </span>
+                            )}
+                            {item.status === "승인대기" && (
+                              <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                                승인대기
+                              </span>
+                            )}
+                            {item.status === "정지" && (
+                              <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700">
+                                정지
+                              </span>
+                            )}
+                            {item.status === "탈퇴" && (
+                              <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">
+                                탈퇴
+                              </span>
+                            )}
+                          </td>
+                          <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                            {item.grade}
+                          </td>
+                          <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                            {item.startDate}
+                          </td>
+                          <td className="border-b border-gray-200 px-2 py-1 whitespace-nowrap">
+                            {item.endDate}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </CardContent>
           </Card>
