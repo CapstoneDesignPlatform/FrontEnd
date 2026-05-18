@@ -8,7 +8,8 @@ import {
 } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { ArrowLeft, DollarSign, Printer } from "lucide-react";
+import { ArrowLeft, DollarSign, Download } from "lucide-react";
+import { exportToExcel } from "../../utils/exportExcel";
 import { useState } from "react";
 
 interface FeeHistory {
@@ -49,8 +50,22 @@ export function AdminFeeDetail() {
       vat: 19091,
     },
   ];
-
   const totalBid = history.reduce((sum, h) => sum + h.bidAmount, 0);
+
+  const handleExport = () => {
+    exportToExcel(
+      `중개수수료_회원별_${memberInfo.memberNumber}`,
+      ["일시", "내역", "낙찰금액", "중개수수료", "공급가액", "부가가치세"],
+      history.map((h) => [
+        h.date,
+        h.description,
+        h.bidAmount,
+        h.feeAmount,
+        h.supplyAmount,
+        h.vat,
+      ]),
+    );
+  };
   const totalFee = history.reduce((sum, h) => sum + h.feeAmount, 0);
   const totalSupply = history.reduce((sum, h) => sum + h.supplyAmount, 0);
   const totalVat = history.reduce((sum, h) => sum + h.vat, 0);
@@ -124,9 +139,14 @@ export function AdminFeeDetail() {
               />
             </div>
             <Button className="bg-[#009689] hover:bg-[#007d71]">조회</Button>
-            <Button variant="outline" className="gap-1">
-              <Printer className="h-4 w-4" />
-              출력
+
+            <Button
+              variant="outline"
+              className="gap-1 text-xs"
+              onClick={handleExport}
+            >
+              <Download className="h-4 w-4" />
+              Excel 다운로드
             </Button>
           </div>
         </CardContent>

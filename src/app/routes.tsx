@@ -1,5 +1,8 @@
 import { createBrowserRouter } from "react-router-dom";
 import type { ComponentType, ReactNode } from "react";
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { AdminAuthGuard } from "./components/admin/AdminAuthGuard";
 
 import { Root } from "./pages/Root";
 
@@ -83,7 +86,7 @@ const communityPage = page(
   ({ Community }) => Community,
 );
 const communityDetailPage = page(
-  () => import("./pages/category/community/CommunityDetail"), 
+  () => import("./pages/category/community/CommunityDetail"),
   ({ CommunityDetail }) => CommunityDetail,
 );
 const communityWritePage = page(
@@ -208,6 +211,20 @@ const expertProfilePage = guardedPage(
   ({ ExpertProfile }) => ExpertProfile,
 );
 
+const adminLoginPage = page(
+  () => import("./pages/admin/AdminLogin"),
+  ({ AdminLogin }) => AdminLogin,
+);
+
+function withAdminAuth(Component: React.ComponentType) {
+  return function GuardedComponent() {
+    const isAuth = sessionStorage.getItem("admin-auth") === "true";
+    if (!isAuth) {
+      return <Navigate to="/admin/login" replace />;
+    }
+    return <Component />;
+  };
+}
 const adminExpertsPage = page(
   () => import("./pages/admin/AdminExperts"),
   ({ AdminExperts }) => AdminExperts,
@@ -269,6 +286,14 @@ const adminFeeDetailPage = page(
   () => import("./pages/admin/AdminFeeDetail"),
   ({ AdminFeeDetail }) => AdminFeeDetail,
 );
+const adminMembershipManagePage = page(
+  () => import("./pages/admin/AdminMembershipManage"),
+  ({ AdminMembershipManage }) => AdminMembershipManage,
+);
+const adminMembershipStatsPage = page(
+  () => import("./pages/admin/AdminMembershipStats"),
+  ({ AdminMembershipStats }) => AdminMembershipStats,
+);
 
 export const router = createBrowserRouter([
   {
@@ -282,8 +307,8 @@ export const router = createBrowserRouter([
       { path: "check-request", lazy: checkRequestPage },
       { path: "support", lazy: supportPage },
 
-      { path: "oauth/callback/kakao",  lazy: oauthCallbackPage },
-      { path: "oauth/callback/naver",  lazy: oauthCallbackPage },
+      { path: "oauth/callback/kakao", lazy: oauthCallbackPage },
+      { path: "oauth/callback/naver", lazy: oauthCallbackPage },
       { path: "oauth/callback/google", lazy: oauthCallbackPage },
 
       { path: "bids/notice", lazy: noticePage },
@@ -338,25 +363,38 @@ export const router = createBrowserRouter([
       { path: "expert/profile", lazy: expertProfilePage },
 
       // 관리자 라우트
-      { path: "admin", lazy: adminExpertsPage },
-      { path: "admin/projects", lazy: adminProjectListPage },
-      { path: "admin/projects/:id", lazy: adminProjectDetailPage },
-      { path: "admin/experts", lazy: adminExpertsPage },
-      { path: "admin/experts/list", lazy: adminExpertListPage },
-      { path: "admin/experts/approval/:id", lazy: adminExpertApprovalPage },
-      { path: "admin/experts/detail/:id", lazy: adminExpertDetailPage },
-      { path: "admin/community", lazy: adminCommunityPage },
-      { path: "admin/clients", lazy: adminClientListPage },
-      { path: "admin/clients/:id", lazy: adminClientDetailPage },
-      { path: "admin/settings", lazy: adminSettingsPage },
-      { path: "admin/notifications/stats", lazy: adminNotificationStatsPage },
-      { path: "admin/notifications/manage", lazy: adminNotificationManagePage },
+      { path: "admin/login", lazy: adminLoginPage },
       {
-        path: "admin/notifications/:memberNumber",
-        lazy: adminNotificationMemberPage,
+        path: "admin",
+        element: (
+          <AdminAuthGuard>
+            <Outlet />
+          </AdminAuthGuard>
+        ),
+        children: [
+          { index: true, lazy: adminExpertsPage },
+          { path: "projects", lazy: adminProjectListPage },
+          { path: "projects/:id", lazy: adminProjectDetailPage },
+          { path: "experts", lazy: adminExpertsPage },
+          { path: "experts/list", lazy: adminExpertListPage },
+          { path: "experts/approval/:id", lazy: adminExpertApprovalPage },
+          { path: "experts/detail/:id", lazy: adminExpertDetailPage },
+          { path: "community", lazy: adminCommunityPage },
+          { path: "clients", lazy: adminClientListPage },
+          { path: "clients/:id", lazy: adminClientDetailPage },
+          { path: "settings", lazy: adminSettingsPage },
+          { path: "notifications/stats", lazy: adminNotificationStatsPage },
+          { path: "notifications/manage", lazy: adminNotificationManagePage },
+          {
+            path: "notifications/:memberNumber",
+            lazy: adminNotificationMemberPage,
+          },
+          { path: "fees/stats", lazy: adminFeeStatsPage },
+          { path: "fees/:memberNumber", lazy: adminFeeDetailPage },
+          { path: "membership/manage", lazy: adminMembershipManagePage },
+          { path: "membership/stats", lazy: adminMembershipStatsPage },
+        ],
       },
-      { path: "admin/fees/stats", lazy: adminFeeStatsPage },
-      { path: "admin/fees/:memberNumber", lazy: adminFeeDetailPage },
 
       // 결제
       { path: "payment/:projectId", lazy: paymentPage },

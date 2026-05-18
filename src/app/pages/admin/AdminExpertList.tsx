@@ -1,441 +1,538 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
-import { Search, Users, CheckCircle, ArrowRight } from "lucide-react";
+import { Input } from "../../components/ui/input";
+import { Download } from "lucide-react";
+import { exportToExcel } from "../../utils/exportExcel";
 
 interface Expert {
   id: number;
-  name: string;
-  email: string;
-  phone: string;
-  expertise: string;
+  memberNumber: string;
   company: string;
+  rating: number;
+  representative: string;
+  phone: string;
+  email: string;
+  license: string;
+  businessNumber: string;
+  grade: "special" | "business" | "free";
   status: "approved" | "pending" | "suspended" | "withdrawn";
-  approvedAt?: string;
+  startDate?: string;
+  endDate?: string;
   totalBids: number;
   completedProjects: number;
 }
 
+const WITHDRAWN_BUSINESS_NUMBERS = new Set(["456-78-90123"]);
+
+const allExperts: Expert[] = [
+  {
+    id: 101,
+    memberNumber: "EX-2026-0101",
+    company: "케이법무법인",
+    rating: 4.8,
+    representative: "홍길동",
+    phone: "010-1111-1111",
+    email: "hong@example.com",
+    license: "행정사",
+    businessNumber: "123-45-67890",
+    grade: "special",
+    status: "approved",
+    startDate: "2026-03-25",
+    endDate: "2027-03-24",
+    totalBids: 24,
+    completedProjects: 18,
+  },
+  {
+    id: 102,
+    memberNumber: "EX-2026-0102",
+    company: "프로컨설팅",
+    rating: 4.5,
+    representative: "강전문",
+    phone: "010-2222-2222",
+    email: "kang@example.com",
+    license: "공인회계사",
+    businessNumber: "234-56-78901",
+    grade: "business",
+    status: "approved",
+    startDate: "2026-03-28",
+    endDate: "2027-03-27",
+    totalBids: 18,
+    completedProjects: 12,
+  },
+  {
+    id: 103,
+    memberNumber: "EX-2026-0103",
+    company: "IT솔루션",
+    rating: 4.9,
+    representative: "신기술",
+    phone: "010-3333-3333",
+    email: "shin@example.com",
+    license: "경영지도사",
+    businessNumber: "345-67-89012",
+    grade: "special",
+    status: "approved",
+    startDate: "2026-03-30",
+    endDate: "2027-03-29",
+    totalBids: 31,
+    completedProjects: 25,
+  },
+  {
+    id: 104,
+    memberNumber: "EX-2026-0104",
+    company: "믿음행정사사무소",
+    rating: 4.2,
+    representative: "박행정",
+    phone: "010-4444-4444",
+    email: "park@example.com",
+    license: "세무사",
+    businessNumber: "111-22-33333",
+    grade: "free",
+    status: "approved",
+    startDate: "2026-03-15",
+    endDate: "2027-03-14",
+    totalBids: 15,
+    completedProjects: 10,
+  },
+  {
+    id: 105,
+    memberNumber: "EX-2026-0105",
+    company: "글로벌컨설팅",
+    rating: 4.7,
+    representative: "이컨설",
+    phone: "010-5555-5555",
+    email: "lee@example.com",
+    license: "행정사",
+    businessNumber: "567-89-01234",
+    grade: "special",
+    status: "approved",
+    startDate: "2026-03-20",
+    endDate: "2027-03-19",
+    totalBids: 42,
+    completedProjects: 35,
+  },
+  {
+    id: 106,
+    memberNumber: "EX-2026-0106",
+    company: "안전소방",
+    rating: 4.3,
+    representative: "최면허",
+    phone: "010-6666-6666",
+    email: "choi@example.com",
+    license: "소방사",
+    businessNumber: "678-90-12345",
+    grade: "business",
+    status: "approved",
+    startDate: "2026-03-22",
+    endDate: "2027-03-21",
+    totalBids: 12,
+    completedProjects: 8,
+  },
+  {
+    id: 1,
+    memberNumber: "EX-2026-0001",
+    company: "케이법무법인",
+    rating: 0,
+    representative: "김전문",
+    phone: "010-1234-5678",
+    email: "expert1@example.com",
+    license: "행정사",
+    businessNumber: "123-45-11111",
+    grade: "free",
+    status: "pending",
+    totalBids: 0,
+    completedProjects: 0,
+  },
+  {
+    id: 2,
+    memberNumber: "EX-2026-0002",
+    company: "프로컨설팅",
+    rating: 0,
+    representative: "이기술",
+    phone: "010-2345-6789",
+    email: "expert2@example.com",
+    license: "공인회계사",
+    businessNumber: "234-56-22222",
+    grade: "free",
+    status: "pending",
+    totalBids: 0,
+    completedProjects: 0,
+  },
+  {
+    id: 201,
+    memberNumber: "EX-2026-0201",
+    company: "정지법무법인",
+    rating: 3.5,
+    representative: "김정지",
+    phone: "010-9999-0000",
+    email: "suspended@example.com",
+    license: "행정사",
+    businessNumber: "333-33-33333",
+    grade: "free",
+    status: "suspended",
+    totalBids: 5,
+    completedProjects: 2,
+  },
+  {
+    id: 202,
+    memberNumber: "EX-2026-0202",
+    company: "탈퇴컨설팅",
+    rating: 3.8,
+    representative: "박탈퇴",
+    phone: "010-8888-0000",
+    email: "withdrawn@example.com",
+    license: "세무사",
+    businessNumber: "456-78-90123",
+    grade: "free",
+    status: "withdrawn",
+    totalBids: 3,
+    completedProjects: 1,
+  },
+];
+
+const statusMap = {
+  approved: { label: "정상", className: "bg-green-100 text-green-700" },
+  pending: { label: "승인대기", className: "bg-amber-100 text-amber-700" },
+  suspended: { label: "정지", className: "bg-red-100 text-red-700" },
+  withdrawn: { label: "탈퇴", className: "bg-gray-100 text-gray-600" },
+};
+
+const gradeMap = { special: "스페셜", business: "비즈니스", free: "무료" };
+const gradeClass = {
+  special: "bg-yellow-100 text-yellow-700",
+  business: "bg-blue-100 text-blue-700",
+  free: "bg-gray-100 text-gray-600",
+};
+
+type StatusFilter = "all" | "approved" | "pending" | "suspended" | "withdrawn";
+type GradeFilter = "all" | "special" | "business" | "free";
+
 export function AdminExpertList() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "approved" | "pending" | "suspended" | "withdrawn"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [gradeFilter, setGradeFilter] = useState<GradeFilter>("all");
+  const [search, setSearch] = useState("");
+  const [searchType, setSearchType] = useState<
+    "representative" | "company" | "phone" | "businessNumber"
+  >("representative");
 
-  // 데모 데이터
-  const allExperts: Expert[] = [
-    {
-      id: 101,
-      name: "홍길동",
-      email: "hong@example.com",
-      phone: "010-1111-1111",
-      expertise: "건설업 면허",
-      company: "케이법무법인",
-      status: "approved",
-      approvedAt: "2026-03-25",
-      totalBids: 24,
-      completedProjects: 18,
-    },
-    {
-      id: 102,
-      name: "강전문",
-      email: "kang@example.com",
-      phone: "010-2222-2222",
-      expertise: "전기공사업",
-      company: "프로컨설팅",
-      status: "approved",
-      approvedAt: "2026-03-28",
-      totalBids: 18,
-      completedProjects: 12,
-    },
-    {
-      id: 103,
-      name: "신기술",
-      email: "shin@example.com",
-      phone: "010-3333-3333",
-      expertise: "정보통신공사업",
-      company: "IT솔루션",
-      status: "approved",
-      approvedAt: "2026-03-30",
-      totalBids: 31,
-      completedProjects: 25,
-    },
-    {
-      id: 104,
-      name: "박행정",
-      email: "park@example.com",
-      phone: "010-4444-4444",
-      expertise: "실태 조사",
-      company: "믿음행정사사무소",
-      status: "approved",
-      approvedAt: "2026-03-15",
-      totalBids: 15,
-      completedProjects: 10,
-    },
-    {
-      id: 105,
-      name: "이컨설",
-      email: "lee@example.com",
-      phone: "010-5555-5555",
-      expertise: "건설업 면허",
-      company: "글로벌컨설팅",
-      status: "approved",
-      approvedAt: "2026-03-20",
-      totalBids: 42,
-      completedProjects: 35,
-    },
-    {
-      id: 106,
-      name: "최면허",
-      email: "choi@example.com",
-      phone: "010-6666-6666",
-      expertise: "소방시설공사업",
-      company: "안전소방",
-      status: "approved",
-      approvedAt: "2026-03-22",
-      totalBids: 12,
-      completedProjects: 8,
-    },
-    {
-      id: 107,
-      name: "정법무",
-      email: "jung@example.com",
-      phone: "010-7777-7777",
-      expertise: "의약품도매상",
-      company: "헬스케어법무법인",
-      status: "approved",
-      approvedAt: "2026-03-18",
-      totalBids: 9,
-      completedProjects: 6,
-    },
-    {
-      id: 108,
-      name: "윤서비스",
-      email: "yoon@example.com",
-      phone: "010-8888-8888",
-      expertise: "전기공사업",
-      company: "원스톱행정사",
-      status: "approved",
-      approvedAt: "2026-03-12",
-      totalBids: 27,
-      completedProjects: 20,
-    },
-    {
-      id: 109,
-      name: "조기술",
-      email: "jo@example.com",
-      phone: "010-9999-9999",
-      expertise: "정보통신공사업",
-      company: "탑클래스컨설팅",
-      status: "approved",
-      approvedAt: "2026-03-10",
-      totalBids: 33,
-      completedProjects: 28,
-    },
-    {
-      id: 110,
-      name: "한전문",
-      email: "han@example.com",
-      phone: "010-1010-1010",
-      expertise: "건설업 면허",
-      company: "한국건설컨설팅",
-      status: "approved",
-      approvedAt: "2026-03-08",
-      totalBids: 19,
-      completedProjects: 14,
-    },
-    {
-      id: 1,
-      name: "김전문",
-      email: "expert1@example.com",
-      phone: "010-1234-5678",
-      expertise: "건설업 면허",
-      company: "케이법무법인",
-      status: "pending",
-      totalBids: 0,
-      completedProjects: 0,
-    },
-    {
-      id: 2,
-      name: "이기술",
-      email: "expert2@example.com",
-      phone: "010-2345-6789",
-      expertise: "전기공사업",
-      company: "프로컨설팅",
-      status: "pending",
-      totalBids: 0,
-      completedProjects: 0,
-    },
-    {
-      id: 201,
-      name: "김정지",
-      email: "suspended@example.com",
-      phone: "010-9999-0000",
-      expertise: "건설업 면허",
-      company: "정지법무법인",
-      status: "suspended",
-      totalBids: 5,
-      completedProjects: 2,
-    },
-    {
-      id: 202,
-      name: "박탈퇴",
-      email: "withdrawn@example.com",
-      phone: "010-8888-0000",
-      expertise: "실태 조사",
-      company: "탈퇴컨설팅",
-      status: "withdrawn",
-      totalBids: 3,
-      completedProjects: 1,
-    },
-  ];
-
-  // 필터링
-  const filteredExperts = allExperts.filter((expert) => {
-    const matchesSearch =
-      !searchQuery ||
-      expert.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || expert.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const filtered = allExperts.filter((e) => {
+    if (statusFilter !== "all" && e.status !== statusFilter) return false;
+    if (gradeFilter !== "all" && e.grade !== gradeFilter) return false;
+    if (search) {
+      const target =
+        searchType === "representative"
+          ? e.representative
+          : searchType === "company"
+            ? e.company
+            : searchType === "phone"
+              ? e.phone
+              : e.businessNumber;
+      if (!target.includes(search)) return false;
+    }
+    return true;
   });
 
-  const getStatusBadge = (status: Expert["status"]) => {
-    switch (status) {
-      case "approved":
-        return <Badge className="bg-green-100 text-green-700">정상</Badge>;
-      case "pending":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-amber-50 text-amber-700 border-amber-200"
-          >
-            승인대기
-          </Badge>
-        );
-      case "suspended":
-        return <Badge className="bg-red-100 text-red-700">정지</Badge>;
-      case "withdrawn":
-        return (
-          <Badge variant="outline" className="bg-gray-100 text-gray-700">
-            탈퇴
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">알 수 없음</Badge>;
-    }
+  const counts = {
+    all: allExperts.length,
+    approved: allExperts.filter((e) => e.status === "approved").length,
+    pending: allExperts.filter((e) => e.status === "pending").length,
+    suspended: allExperts.filter((e) => e.status === "suspended").length,
+    withdrawn: allExperts.filter((e) => e.status === "withdrawn").length,
+  };
+  const gradeCounts = {
+    all: allExperts.length,
+    special: allExperts.filter((e) => e.grade === "special").length,
+    business: allExperts.filter((e) => e.grade === "business").length,
+    free: allExperts.filter((e) => e.grade === "free").length,
   };
 
-  const approvedExperts = allExperts.filter((e) => e.status === "approved");
-  const pendingExperts = allExperts.filter((e) => e.status === "pending");
-  const suspendedExperts = allExperts.filter((e) => e.status === "suspended");
-  const withdrawnExperts = allExperts.filter((e) => e.status === "withdrawn");
+  const handleExport = () => {
+    import("xlsx").then((XLSX) => {
+      const wb = XLSX.utils.book_new();
 
+      // 시트1: 필터 적용 전문가 목록 (전체 컬럼)
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        [
+          "회원번호",
+          "업체명",
+          "평점",
+          "대표자명",
+          "연락처",
+          "이메일",
+          "자격증",
+          "사업자등록번호",
+          "등급",
+          "신청시작일",
+          "신청마감일",
+          "상태",
+          "총입찰",
+          "완료건수",
+        ],
+        ...filtered.map((e) => [
+          e.memberNumber,
+          e.company,
+          e.rating > 0 ? e.rating.toFixed(1) : "-",
+          e.representative,
+          e.phone,
+          e.email,
+          e.license,
+          e.businessNumber,
+          gradeMap[e.grade],
+          e.startDate ?? "-",
+          e.endDate ?? "-",
+          statusMap[e.status].label,
+          e.totalBids,
+          e.completedProjects,
+        ]),
+      ]);
+      ws1["!cols"] = [15, 18, 6, 10, 14, 22, 12, 16, 10, 12, 12, 8, 8, 8].map(
+        (wch) => ({ wch }),
+      );
+      XLSX.utils.book_append_sheet(wb, ws1, "전문가목록");
+
+      // 시트2: 상태별 집계
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ["상태", "인원수"],
+        ["정상", counts.approved],
+        ["승인대기", counts.pending],
+        ["정지", counts.suspended],
+        ["탈퇴", counts.withdrawn],
+        ["합계", allExperts.length],
+      ]);
+      ws2["!cols"] = [{ wch: 12 }, { wch: 10 }];
+      XLSX.utils.book_append_sheet(wb, ws2, "상태별집계");
+
+      // 시트3: 등급별 집계
+      const ws3 = XLSX.utils.aoa_to_sheet([
+        ["등급", "인원수", "평균평점"],
+        ...["special", "business", "free"].map((g) => {
+          const members = allExperts.filter(
+            (e) => e.grade === g && e.rating > 0,
+          );
+          const avg =
+            members.length > 0
+              ? (
+                  members.reduce((s, e) => s + e.rating, 0) / members.length
+                ).toFixed(1)
+              : "-";
+          return [
+            gradeMap[g as keyof typeof gradeMap],
+            gradeCounts[g as keyof typeof gradeCounts],
+            avg,
+          ];
+        }),
+      ]);
+      ws3["!cols"] = [{ wch: 12 }, { wch: 10 }, { wch: 10 }];
+      XLSX.utils.book_append_sheet(wb, ws3, "등급별집계");
+
+      XLSX.writeFile(
+        wb,
+        `전문가회원현황_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    });
+  };
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl mb-2">전체 전문가 목록</h1>
-        <p className="text-gray-600">
-          등록된 모든 전문가를 확인하고 관리합니다.
-        </p>
-      </div>
-
-      {/* 통계 */}
-      <div className="grid md:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">전체</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{allExperts.length}명</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">정상</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {approvedExperts.length}명
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">승인대기</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600">
-              {pendingExperts.length}명
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">정지</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {suspendedExperts.length}명
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">탈퇴</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-600">
-              {withdrawnExperts.length}명
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold">전문가 회원현황 조회</h1>
+          <p className="text-xs text-gray-500 mt-0.5">
+            등록된 모든 전문가를 확인하고 관리합니다.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="gap-1 text-xs"
+          onClick={handleExport}
+        >
+          <Download className="h-3 w-3" />
+          Excel 다운로드
+        </Button>
       </div>
 
       {/* 상태 필터 */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 flex-wrap">
         {(
           [
-            { value: "all", label: "전체" },
-            { value: "approved", label: "정상" },
-            { value: "pending", label: "승인대기" },
-            { value: "suspended", label: "정지" },
-            { value: "withdrawn", label: "탈퇴" },
-          ] as const
-        ).map((item) => (
-          <Button
-            key={item.value}
-            variant={statusFilter === item.value ? "default" : "outline"}
-            className={
-              statusFilter === item.value
-                ? "bg-[#009689] hover:bg-[#007d71]"
-                : ""
-            }
-            onClick={() => setStatusFilter(item.value)}
+            ["all", "전체"],
+            ["approved", "정상"],
+            ["pending", "승인대기"],
+            ["suspended", "정지"],
+            ["withdrawn", "탈퇴"],
+          ] as [StatusFilter, string][]
+        ).map(([val, label]) => (
+          <button
+            key={val}
+            onClick={() => setStatusFilter(val)}
+            className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${statusFilter === val ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"}`}
           >
-            {item.label}
-          </Button>
+            {label} ({counts[val]})
+          </button>
+        ))}
+      </div>
+
+      {/* 등급 필터 */}
+      <div className="flex gap-2 flex-wrap items-center">
+        <span className="text-xs font-medium text-gray-600">등급</span>
+        {(
+          [
+            ["all", "전체"],
+            ["special", "스페셜"],
+            ["business", "비즈니스"],
+            ["free", "무료"],
+          ] as [GradeFilter, string][]
+        ).map(([val, label]) => (
+          <button
+            key={val}
+            onClick={() => setGradeFilter(val)}
+            className={`px-2 py-0.5 rounded border text-xs font-medium transition-colors ${gradeFilter === val ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"}`}
+          >
+            {label} ({gradeCounts[val] ?? allExperts.length})
+          </button>
         ))}
       </div>
 
       {/* 검색 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            전문가 검색
-          </CardTitle>
-          <CardDescription>이름으로 전문가를 검색하세요.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="전문가 이름 검색 (예: 홍길동)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-2 flex-wrap">
+        <select
+          value={searchType}
+          onChange={(e) => setSearchType(e.target.value as typeof searchType)}
+          className="h-7 text-xs border border-gray-300 rounded px-2 bg-white"
+        >
+          <option value="representative">대표자명</option>
+          <option value="company">업체명</option>
+          <option value="phone">연락처</option>
+          <option value="businessNumber">사업자등록번호</option>
+        </select>
+        <Input
+          placeholder="검색어 입력"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-7 text-xs w-44"
+        />
+        <span className="text-xs text-gray-400 ml-auto">
+          총 {filtered.length}명
+        </span>
+      </div>
 
-      {/* 전문가 목록 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            전문가 목록
-          </CardTitle>
-          <CardDescription>
-            총 {filteredExperts.length}명의 전문가가 있습니다.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {filteredExperts.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>검색 결과가 없습니다.</p>
-              </div>
-            ) : (
-              filteredExperts.map((expert) => (
-                <Link
-                  key={expert.id}
-                  to={
-                    expert.status === "pending"
-                      ? `/admin/experts/approval/${expert.id}`
-                      : `/admin/experts/detail/${expert.id}`
-                  }
-                  className="block"
-                >
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3 flex-wrap">
-                            <h3 className="font-semibold text-lg">
-                              {expert.name}
-                            </h3>
-                            {getStatusBadge(expert.status)}
-                            <Badge variant="outline">{expert.expertise}</Badge>
-                            {expert.status === "approved" && (
-                              <Badge variant="outline" className="gap-1">
-                                <CheckCircle className="h-3 w-3" />
-                                인증됨
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="grid md:grid-cols-4 gap-x-4 gap-y-2 text-sm text-gray-600">
-                            <div>
-                              <span className="font-medium">이메일:</span>{" "}
-                              {expert.email}
-                            </div>
-                            <div>
-                              <span className="font-medium">연락처:</span>{" "}
-                              {expert.phone}
-                            </div>
-                            <div>
-                              <span className="font-medium">소속:</span>{" "}
-                              {expert.company}
-                            </div>
-                            {expert.status === "approved" && (
-                              <>
-                                <div>
-                                  <span className="font-medium">승인일:</span>{" "}
-                                  {expert.approvedAt}
-                                </div>
-                                <div>
-                                  <span className="font-medium">총 입찰:</span>{" "}
-                                  {expert.totalBids}건
-                                </div>
-                                <div>
-                                  <span className="font-medium">완료:</span>{" "}
-                                  {expert.completedProjects}건
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <ArrowRight className="h-5 w-5 text-gray-400" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* 탈퇴자 재가입 차단 안내 */}
+      <div className="bg-amber-50 border border-amber-200 rounded px-3 py-2 text-xs text-amber-700">
+        탈퇴자 재가입 차단: 사업자등록번호 기준으로 탈퇴 이력이 있는 경우
+        재가입이 제한됩니다. (차단 등록번호: {WITHDRAWN_BUSINESS_NUMBERS.size}
+        건)
+      </div>
+
+      {/* 테이블 */}
+      <div className="border border-gray-300 rounded overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                {[
+                  "회원번호",
+                  "업체명",
+                  "평점",
+                  "대표자명",
+                  "연락처",
+                  "이메일",
+                  "자격증",
+                  "사업자등록번호",
+                  "등급",
+                  "신청시작일",
+                  "신청마감일",
+                  "상태",
+                  "상세",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap last:border-r-0"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={13} className="text-center py-8 text-gray-400">
+                    검색 결과가 없습니다.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((e, i) => (
+                  <tr
+                    key={e.id}
+                    className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"} ${e.status === "withdrawn" ? "opacity-60" : ""}`}
+                  >
+                    <td className="border-b border-r border-gray-200 px-2 py-1 font-mono">
+                      {e.memberNumber}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                      {e.company}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
+                      {e.rating > 0 ? e.rating.toFixed(1) : "-"}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                      {e.representative}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                      {e.phone}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1">
+                      {e.email}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                      {e.license}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1 font-mono">
+                      {e.businessNumber}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-xs ${gradeClass[e.grade]}`}
+                      >
+                        {gradeMap[e.grade]}
+                      </span>
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                      {e.startDate ?? "-"}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                      {e.endDate ?? "-"}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-xs ${statusMap[e.status].className}`}
+                      >
+                        {statusMap[e.status].label}
+                      </span>
+                    </td>
+                    <td className="border-b border-gray-200 px-2 py-1">
+                      {e.status === "withdrawn" ? (
+                        <span className="text-gray-400 text-xs">탈퇴</span>
+                      ) : (
+                        <Link
+                          to={
+                            e.status === "pending"
+                              ? `/admin/experts/approval/${e.id}`
+                              : `/admin/experts/detail/${e.id}`
+                          }
+                          className="text-teal-600 hover:underline whitespace-nowrap"
+                        >
+                          상세 →
+                        </Link>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
