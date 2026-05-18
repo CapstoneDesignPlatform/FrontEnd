@@ -96,29 +96,52 @@ export function AdminClientList() {
   });
 
   const handleExport = () => {
-    exportToExcel(
-      "의뢰인목록",
-      [
-        "이름",
-        "업체명",
-        "사업자번호",
-        "연락처",
-        "이메일",
-        "주소",
-        "상태",
-        "가입일",
-      ],
-      filtered.map((c) => [
-        c.name,
-        c.company,
-        c.businessNumber,
-        c.phone,
-        c.email,
-        c.address,
-        statusMap[c.status].label,
-        c.registeredAt,
-      ]),
-    );
+    import("xlsx").then((XLSX) => {
+      const wb = XLSX.utils.book_new();
+
+      // 시트1: 필터 적용 의뢰인 목록
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        [
+          "이름",
+          "업체명",
+          "사업자번호",
+          "연락처",
+          "이메일",
+          "주소",
+          "상태",
+          "가입일",
+        ],
+        ...filtered.map((c) => [
+          c.name,
+          c.company,
+          c.businessNumber,
+          c.phone,
+          c.email,
+          c.address,
+          statusMap[c.status].label,
+          c.registeredAt,
+        ]),
+      ]);
+      ws1["!cols"] = [10, 18, 14, 14, 22, 30, 8, 12].map((wch) => ({ wch }));
+      XLSX.utils.book_append_sheet(wb, ws1, "의뢰인목록");
+
+      // 시트2: 상태별 집계
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ["상태", "인원수"],
+        ["정상", counts.active],
+        ["대기", counts.pending],
+        ["정지", counts.suspended],
+        ["탈퇴", counts.withdrawn],
+        ["합계", allClients.length],
+      ]);
+      ws2["!cols"] = [{ wch: 10 }, { wch: 10 }];
+      XLSX.utils.book_append_sheet(wb, ws2, "상태별집계");
+
+      XLSX.writeFile(
+        wb,
+        `의뢰인목록_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    });
   };
 
   const counts = {

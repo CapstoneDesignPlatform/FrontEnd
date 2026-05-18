@@ -108,33 +108,71 @@ export function AdminNotificationManage() {
   };
 
   const handleExport = () => {
-    exportToExcel(
-      "알림서비스_사용관리",
-      [
-        "번호",
-        "회원번호",
-        "상호",
-        "사업자등록번호",
-        "연락처",
-        "이메일",
-        "신청건수",
-        "사용건수",
-        "잔여건수",
-        "서비스상태",
-      ],
-      members.map((m, i) => [
-        i + 1,
-        m.memberNumber,
-        m.company,
-        m.businessNumber,
-        m.phone,
-        m.email,
-        m.appliedCount,
-        m.usedCount,
-        m.remainingCount,
-        m.serviceStatus === "continue" ? "계속" : "정지",
-      ]),
-    );
+    import("xlsx").then((XLSX) => {
+      const gradeLabel = (g: string) =>
+        g === "special" ? "스페셜" : g === "business" ? "비즈니스" : "무료";
+      const wb = XLSX.utils.book_new();
+
+      // 시트1: 전체 관리 목록 (모든 컬럼)
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        [
+          "번호",
+          "회원번호",
+          "대표자",
+          "연락처",
+          "사업자등록번호",
+          "이메일",
+          "등급",
+          "신청건수",
+          "사용건수",
+          "잔여건수",
+          "서비스상태",
+        ],
+        ...members.map((m, i) => [
+          i + 1,
+          m.memberNumber,
+          m.company,
+          m.phone,
+          m.businessNumber,
+          m.email,
+          gradeLabel(m.grade),
+          m.appliedCount,
+          m.usedCount,
+          m.remainingCount,
+          m.serviceStatus === "continue" ? "계속" : "정지",
+        ]),
+      ]);
+      ws1["!cols"] = [6, 16, 16, 14, 16, 22, 10, 10, 10, 10, 10].map((wch) => ({
+        wch,
+      }));
+      XLSX.utils.book_append_sheet(wb, ws1, "사용관리목록");
+
+      // 시트2: 요약 통계
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ["항목", "값"],
+        ["전체 회원", `${members.length}명`],
+        ["서비스 계속", `${continueCount}명`],
+        ["서비스 정지", `${suspendedCount}명`],
+        ["총 신청건수", members.reduce((s, m) => s + m.appliedCount, 0)],
+        ["총 사용건수", members.reduce((s, m) => s + m.usedCount, 0)],
+        ["총 잔여건수", members.reduce((s, m) => s + m.remainingCount, 0)],
+        ["", ""],
+        ["등급별 현황", ""],
+        ["스페셜", `${members.filter((m) => m.grade === "special").length}명`],
+        [
+          "비즈니스",
+          `${members.filter((m) => m.grade === "business").length}명`,
+        ],
+        ["무료", `${members.filter((m) => m.grade === "free").length}명`],
+      ]);
+      ws2["!cols"] = [{ wch: 18 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(wb, ws2, "요약통계");
+
+      XLSX.writeFile(
+        wb,
+        `알림서비스사용관리_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    });
   };
 
   const continueCount = members.filter(
