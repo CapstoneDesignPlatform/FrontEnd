@@ -275,24 +275,102 @@ export function AdminExpertDetail() {
             size="sm"
             variant="outline"
             className="gap-1 text-xs"
-            onClick={() =>
-              exportToExcel(
-                `전문가상세_${expert.personalInfo.name}`,
-                ["항목", "내용"],
-                [
+            onClick={() => {
+              import("xlsx").then((XLSX) => {
+                const wb = XLSX.utils.book_new();
+
+                // 시트1: 전문가 전체 정보
+                const ws1 = XLSX.utils.aoa_to_sheet([
+                  ["항목", "내용"],
+                  ["=== 기본 정보 ===", ""],
                   ["이름", expert.personalInfo.name],
+                  ["생년월일", expert.personalInfo.birthDate],
                   ["이메일", expert.personalInfo.email],
                   ["연락처", expert.personalInfo.phone],
+                  ["주소", expert.personalInfo.address],
+                  ["가입일", expert.personalInfo.registeredAt],
+                  ["승인일", expert.expertInfo.approvedAt],
+                  ["", ""],
+                  ["=== 전문가 정보 ===", ""],
                   ["전문분야", expert.expertInfo.expertise],
                   ["경력", expert.expertInfo.experience],
+                  ["면허 종류", expert.expertInfo.licenseType],
+                  ["면허 번호", expert.expertInfo.licenseNumber],
+                  ["발급일", expert.expertInfo.issueDate],
+                  ["만료일", expert.expertInfo.expiryDate],
                   ["회사명", expert.expertInfo.companyName],
-                  ["총입찰", expert.stats.totalBids],
-                  ["낙찰", expert.stats.wonBids],
-                  ["완료", expert.stats.completedProjects],
-                  ["총수익", expert.stats.totalEarnings],
-                ],
-              )
-            }
+                  ["직책", expert.expertInfo.position],
+                  ["사업자번호", expert.expertInfo.businessNumber],
+                  ["회사 전화", expert.expertInfo.companyPhone],
+                  ["회사 주소", expert.expertInfo.companyAddress],
+                  ["자기소개", expert.expertInfo.description],
+                  ["", ""],
+                  ["=== 활동 통계 ===", ""],
+                  ["총 입찰", `${expert.stats.totalBids}건`],
+                  ["낙찰", `${expert.stats.wonBids}건`],
+                  [
+                    "낙찰률",
+                    `${Math.round((expert.stats.wonBids / expert.stats.totalBids) * 100)}%`,
+                  ],
+                  ["완료", `${expert.stats.completedProjects}건`],
+                  [
+                    "완료율",
+                    `${Math.round((expert.stats.completedProjects / expert.stats.wonBids) * 100)}%`,
+                  ],
+                  ["진행 중", `${expert.stats.ongoingProjects}건`],
+                  ["총 수익", expert.stats.totalEarnings],
+                  ["평균 입찰가", expert.stats.averageBidPrice],
+                ]);
+                ws1["!cols"] = [{ wch: 16 }, { wch: 50 }];
+                XLSX.utils.book_append_sheet(wb, ws1, "전문가정보");
+
+                // 시트2: 현황 이력
+                const ws2 = XLSX.utils.aoa_to_sheet([
+                  [
+                    "일시",
+                    "내용",
+                    "현재상태",
+                    "등급",
+                    "신청시작일",
+                    "신청마감일",
+                  ],
+                  ...statusHistory.map((h) => [
+                    h.date,
+                    h.content,
+                    h.status,
+                    h.grade,
+                    h.startDate,
+                    h.endDate,
+                  ]),
+                ]);
+                ws2["!cols"] = [18, 25, 10, 10, 12, 12].map((wch) => ({ wch }));
+                XLSX.utils.book_append_sheet(wb, ws2, "현황이력");
+
+                // 시트3: 입찰 의뢰 목록
+                const ws3 = XLSX.utils.aoa_to_sheet([
+                  ["의뢰코드", "공고명", "기업", "입찰가", "입찰일", "상태"],
+                  ...projects.map((p) => [
+                    p.code,
+                    p.title,
+                    p.company,
+                    p.bidPrice,
+                    p.bidAt,
+                    p.status === "selected"
+                      ? "선택됨"
+                      : p.status === "completed"
+                        ? "완료"
+                        : "입찰 중",
+                  ]),
+                ]);
+                ws3["!cols"] = [14, 35, 18, 12, 18, 10].map((wch) => ({ wch }));
+                XLSX.utils.book_append_sheet(wb, ws3, "입찰의뢰목록");
+
+                XLSX.writeFile(
+                  wb,
+                  `전문가상세_${expert.personalInfo.name}_${new Date().toISOString().slice(0, 10)}.xlsx`,
+                );
+              });
+            }}
           >
             <Download className="h-3 w-3" />
             Excel 다운로드

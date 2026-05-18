@@ -68,20 +68,88 @@ export function AdminNotificationMember() {
     company: "케이법무법인",
     businessNumber: "123-45-67890",
   };
-
   const handleExport = () => {
-    exportToExcel(
-      `알림서비스_회원별_${memberInfo.memberNumber}`,
-      ["일시", "내역", "입금액", "차감액", "잔고", "비고"],
-      history.map((h) => [
-        h.date,
-        h.description,
-        h.charged || "-",
-        h.deducted || "-",
-        h.balance,
-        h.note,
-      ]),
-    );
+    import("xlsx").then((XLSX) => {
+      const wb = XLSX.utils.book_new();
+
+      // 시트1: 회원 정보
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        ["항목", "내용"],
+        ["회원번호", memberInfo.memberNumber],
+        ["상호명", memberInfo.company],
+        ["사업자등록번호", memberInfo.businessNumber],
+        ["조회 기간", `${startDate} ~ ${endDate}`],
+      ]);
+      ws1["!cols"] = [{ wch: 16 }, { wch: 25 }];
+      XLSX.utils.book_append_sheet(wb, ws1, "회원정보");
+
+      // 시트2: 알림서비스 이용 내역
+      const totalCharged = history.reduce((s, h) => s + h.charged, 0);
+      const totalDeducted = history.reduce((s, h) => s + h.deducted, 0);
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ["일시", "내역", "입금액", "차감액", "잔고", "비고"],
+        ...history.map((h) => [
+          h.date,
+          h.description,
+          h.charged > 0 ? h.charged : "-",
+          h.deducted > 0 ? h.deducted : "-",
+          h.balance,
+          h.note,
+        ]),
+        [],
+        [
+          "합계",
+          "",
+          totalCharged,
+          totalDeducted,
+          history[history.length - 1]?.balance ?? 0,
+          "",
+        ],
+      ]);
+      ws2["!cols"] = [12, 28, 12, 12, 12, 8].map((wch) => ({ wch }));
+      XLSX.utils.book_append_sheet(wb, ws2, "이용내역");
+
+      // 시트3: 거래 유형별 요약
+      const ws3 = XLSX.utils.aoa_to_sheet([
+        ["거래 유형", "건수", "금액"],
+        [
+          "입금",
+          history.filter((h) => h.note === "입금").length,
+          history
+            .filter((h) => h.note === "입금")
+            .reduce((s, h) => s + h.charged, 0),
+        ],
+        [
+          "무상",
+          history.filter((h) => h.note === "무상").length,
+          history
+            .filter((h) => h.note === "무상")
+            .reduce((s, h) => s + h.charged, 0),
+        ],
+        [
+          "환급",
+          history.filter((h) => h.note === "환급").length,
+          history
+            .filter((h) => h.note === "환급")
+            .reduce((s, h) => s + h.charged, 0),
+        ],
+        [
+          "차감(발송)",
+          history.filter((h) => h.deducted > 0).length,
+          history
+            .filter((h) => h.deducted > 0)
+            .reduce((s, h) => s + h.deducted, 0),
+        ],
+        ["현재 잔고", "", history[history.length - 1]?.balance ?? 0],
+      ]);
+      ws3["!cols"] = [{ wch: 14 }, { wch: 8 }, { wch: 14 }];
+      XLSX.utils.book_append_sheet(wb, ws3, "거래유형요약");
+
+      XLSX.writeFile(
+        wb,
+        `알림서비스_${memberInfo.memberNumber}_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    });
   };
 
   return (

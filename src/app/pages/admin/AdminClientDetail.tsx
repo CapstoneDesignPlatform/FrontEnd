@@ -241,24 +241,67 @@ export function AdminClientDetail() {
             size="sm"
             variant="outline"
             className="gap-1 text-xs"
-            onClick={() =>
-              exportToExcel(
-                `의뢰인상세_${client.name}`,
-                ["항목", "내용"],
-                [
+            onClick={() => {
+              import("xlsx").then((XLSX) => {
+                const wb = XLSX.utils.book_new();
+
+                // 시트1: 기본 정보 + 현황
+                const ws1 = XLSX.utils.aoa_to_sheet([
+                  ["항목", "내용"],
                   ["이름", client.name],
                   ["회원번호", client.memberNumber],
                   ["업체명", client.company],
-                  ["사업자번호", client.businessNumber],
+                  ["사업자등록번호", client.businessNumber],
                   ["연락처", client.phone],
                   ["이메일", client.email],
                   ["주소", client.address],
                   ["가입일", client.registeredAt],
                   ["상태", clientStatus === "active" ? "정상" : "정지"],
-                  ["총의뢰수", client.projects.length],
-                ],
-              )
-            }
+                  ["총 의뢰 수", `${client.projects.length}건`],
+                ]);
+                ws1["!cols"] = [{ wch: 16 }, { wch: 40 }];
+                XLSX.utils.book_append_sheet(wb, ws1, "기본정보");
+
+                // 시트2: 현황 이력
+                const ws2 = XLSX.utils.aoa_to_sheet([
+                  ["일시", "내용", "현재상태"],
+                  ...statusHistory.map((h) => [h.date, h.content, h.status]),
+                ]);
+                ws2["!cols"] = [{ wch: 20 }, { wch: 30 }, { wch: 10 }];
+                XLSX.utils.book_append_sheet(wb, ws2, "현황이력");
+
+                // 시트3: 의뢰 목록
+                if (client.projects.length > 0) {
+                  const statusLabel = (s: string) =>
+                    s === "matched"
+                      ? "전문가 매칭됨"
+                      : s === "completed"
+                        ? "완료"
+                        : "매칭 대기";
+                  const ws3 = XLSX.utils.aoa_to_sheet([
+                    ["의뢰코드", "공고명", "상태", "등록일"],
+                    ...client.projects.map((p) => [
+                      p.code,
+                      p.title,
+                      statusLabel(p.status),
+                      p.createdAt,
+                    ]),
+                  ]);
+                  ws3["!cols"] = [
+                    { wch: 16 },
+                    { wch: 40 },
+                    { wch: 14 },
+                    { wch: 12 },
+                  ];
+                  XLSX.utils.book_append_sheet(wb, ws3, "의뢰목록");
+                }
+
+                XLSX.writeFile(
+                  wb,
+                  `의뢰인상세_${client.name}_${new Date().toISOString().slice(0, 10)}.xlsx`,
+                );
+              });
+            }}
           >
             <Download className="h-3 w-3" />
             Excel 다운로드

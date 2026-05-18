@@ -247,39 +247,90 @@ export function AdminExpertList() {
   };
 
   const handleExport = () => {
-    exportToExcel(
-      "전문가목록",
-      [
-        "회원번호",
-        "업체명",
-        "평점",
-        "대표자명",
-        "연락처",
-        "이메일",
-        "자격증",
-        "사업자등록번호",
-        "등급",
-        "신청시작일",
-        "신청마감일",
-        "상태",
-      ],
-      filtered.map((e) => [
-        e.memberNumber,
-        e.company,
-        e.rating > 0 ? e.rating.toFixed(1) : "-",
-        e.representative,
-        e.phone,
-        e.email,
-        e.license,
-        e.businessNumber,
-        gradeMap[e.grade],
-        e.startDate ?? "-",
-        e.endDate ?? "-",
-        statusMap[e.status].label,
-      ]),
-    );
-  };
+    import("xlsx").then((XLSX) => {
+      const wb = XLSX.utils.book_new();
 
+      // 시트1: 필터 적용 전문가 목록 (전체 컬럼)
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        [
+          "회원번호",
+          "업체명",
+          "평점",
+          "대표자명",
+          "연락처",
+          "이메일",
+          "자격증",
+          "사업자등록번호",
+          "등급",
+          "신청시작일",
+          "신청마감일",
+          "상태",
+          "총입찰",
+          "완료건수",
+        ],
+        ...filtered.map((e) => [
+          e.memberNumber,
+          e.company,
+          e.rating > 0 ? e.rating.toFixed(1) : "-",
+          e.representative,
+          e.phone,
+          e.email,
+          e.license,
+          e.businessNumber,
+          gradeMap[e.grade],
+          e.startDate ?? "-",
+          e.endDate ?? "-",
+          statusMap[e.status].label,
+          e.totalBids,
+          e.completedProjects,
+        ]),
+      ]);
+      ws1["!cols"] = [15, 18, 6, 10, 14, 22, 12, 16, 10, 12, 12, 8, 8, 8].map(
+        (wch) => ({ wch }),
+      );
+      XLSX.utils.book_append_sheet(wb, ws1, "전문가목록");
+
+      // 시트2: 상태별 집계
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ["상태", "인원수"],
+        ["정상", counts.approved],
+        ["승인대기", counts.pending],
+        ["정지", counts.suspended],
+        ["탈퇴", counts.withdrawn],
+        ["합계", allExperts.length],
+      ]);
+      ws2["!cols"] = [{ wch: 12 }, { wch: 10 }];
+      XLSX.utils.book_append_sheet(wb, ws2, "상태별집계");
+
+      // 시트3: 등급별 집계
+      const ws3 = XLSX.utils.aoa_to_sheet([
+        ["등급", "인원수", "평균평점"],
+        ...["special", "business", "free"].map((g) => {
+          const members = allExperts.filter(
+            (e) => e.grade === g && e.rating > 0,
+          );
+          const avg =
+            members.length > 0
+              ? (
+                  members.reduce((s, e) => s + e.rating, 0) / members.length
+                ).toFixed(1)
+              : "-";
+          return [
+            gradeMap[g as keyof typeof gradeMap],
+            gradeCounts[g as keyof typeof gradeCounts],
+            avg,
+          ];
+        }),
+      ]);
+      ws3["!cols"] = [{ wch: 12 }, { wch: 10 }, { wch: 10 }];
+      XLSX.utils.book_append_sheet(wb, ws3, "등급별집계");
+
+      XLSX.writeFile(
+        wb,
+        `전문가회원현황_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    });
+  };
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">

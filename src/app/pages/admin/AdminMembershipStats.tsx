@@ -90,37 +90,83 @@ export function AdminMembershipStats() {
   const totalVat = records.reduce((sum, r) => sum + r.vat, 0);
 
   const handleExport = () => {
-    exportToExcel(
-      "회원비납입현황",
-      [
-        "번호",
-        "회원번호",
-        "대표자",
-        "사업자",
-        "연락처",
-        "이메일",
-        "사업자등록번호",
-        "주소",
-        "입금일시",
-        "입금액",
-        "공급가액",
-        "부가가치세",
-      ],
-      records.map((r, i) => [
-        i + 1,
-        r.memberNumber,
-        r.representative,
-        r.company,
-        r.phone,
-        r.email,
-        r.businessNumber,
-        r.address,
-        r.paidAt,
-        r.paidAmount,
-        r.supplyAmount,
-        r.vat,
-      ]),
-    );
+    import("xlsx").then((XLSX) => {
+      const wb = XLSX.utils.book_new();
+
+      // 시트1: 납입 현황 상세 (합계 행 포함)
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        [
+          "번호",
+          "회원번호",
+          "대표자",
+          "사업자",
+          "연락처",
+          "이메일",
+          "사업자등록번호",
+          "주소",
+          "입금일시",
+          "입금액",
+          "공급가액",
+          "부가가치세",
+        ],
+        ...records.map((r, i) => [
+          i + 1,
+          r.memberNumber,
+          r.representative,
+          r.company,
+          r.phone,
+          r.email,
+          r.businessNumber,
+          r.address,
+          r.paidAt,
+          r.paidAmount,
+          r.supplyAmount,
+          r.vat,
+        ]),
+        [],
+        [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "합계",
+          totalPaid,
+          totalSupply,
+          totalVat,
+        ],
+      ]);
+      ws1["!cols"] = [6, 16, 12, 16, 14, 22, 16, 30, 12, 12, 12, 12].map(
+        (wch) => ({ wch }),
+      );
+      XLSX.utils.book_append_sheet(wb, ws1, "납입현황");
+
+      // 시트2: 요약 통계
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ["항목", "값"],
+        ["조회 기간", `${startDate} ~ ${endDate}`],
+        ["구분", viewType === "individual" ? "회원별(개별)" : "회원별(합계)"],
+        ["납입 건수", `${records.length}건`],
+        ["입금액 합계", `₩${totalPaid.toLocaleString()}`],
+        ["공급가액 합계", `₩${totalSupply.toLocaleString()}`],
+        ["부가가치세 합계", `₩${totalVat.toLocaleString()}`],
+        ["총액(공급가액+VAT)", `₩${(totalSupply + totalVat).toLocaleString()}`],
+        [
+          "평균 입금액",
+          `₩${Math.round(totalPaid / records.length).toLocaleString()}`,
+        ],
+      ]);
+      ws2["!cols"] = [{ wch: 20 }, { wch: 25 }];
+      XLSX.utils.book_append_sheet(wb, ws2, "요약통계");
+
+      XLSX.writeFile(
+        wb,
+        `회원비납입현황_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    });
   };
 
   return (

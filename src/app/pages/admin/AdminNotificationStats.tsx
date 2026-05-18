@@ -98,39 +98,67 @@ export function AdminNotificationStats() {
   const totalCount = records.reduce((sum, r) => sum + r.count, 0);
   const totalSupply = records.reduce((sum, r) => sum + r.supplyAmount, 0);
   const totalVat = records.reduce((sum, r) => sum + r.vat, 0);
-
   const handleExport = () => {
-    exportToExcel(
-      "알림서비스_집계",
-      [
-        "번호",
-        "회원번호",
-        "상호",
-        "사업자등록번호",
-        "연락처",
-        "이메일",
-        "일시",
-        "건수",
-        "공급가액",
-        "부가가치세",
-        "비고",
-      ],
-      records.map((r, i) => [
-        i + 1,
-        r.memberNumber,
-        r.company,
-        r.businessNumber,
-        r.phone,
-        r.email,
-        r.date,
-        r.count,
-        r.supplyAmount,
-        r.vat,
-        r.note,
-      ]),
-    );
-  };
+    import("xlsx").then((XLSX) => {
+      const wb = XLSX.utils.book_new();
 
+      // 시트1: 상세 내역
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        [
+          "번호",
+          "회원번호",
+          "상호",
+          "사업자등록번호",
+          "연락처",
+          "이메일",
+          "일시",
+          "건수",
+          "공급가액",
+          "부가가치세",
+          "비고",
+        ],
+        ...records.map((r, i) => [
+          i + 1,
+          r.memberNumber,
+          r.company,
+          r.businessNumber,
+          r.phone,
+          r.email,
+          r.date,
+          r.count,
+          r.supplyAmount,
+          r.vat,
+          r.note,
+        ]),
+        [],
+        ["", "", "", "", "", "", "합계", totalCount, totalSupply, totalVat, ""],
+      ]);
+      ws1["!cols"] = [6, 16, 16, 16, 14, 22, 12, 8, 12, 12, 8].map((wch) => ({
+        wch,
+      }));
+      XLSX.utils.book_append_sheet(wb, ws1, "알림서비스집계");
+
+      // 시트2: 요약 통계
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ["항목", "값"],
+        ["조회 기간", `${startDate} ~ ${endDate}`],
+        ["구분", viewType === "individual" ? "회원별(개별)" : "회원별(합계)"],
+        ["총 발송 건수", `${totalCount}건`],
+        ["공급가액 합계", `₩${totalSupply.toLocaleString()}`],
+        ["부가가치세 합계", `₩${totalVat.toLocaleString()}`],
+        ["총액(공급가액+VAT)", `₩${(totalSupply + totalVat).toLocaleString()}`],
+        ["회원 수", records.length],
+        ["건당 평균 발송", (totalCount / records.length).toFixed(1)],
+      ]);
+      ws2["!cols"] = [{ wch: 20 }, { wch: 25 }];
+      XLSX.utils.book_append_sheet(wb, ws2, "요약통계");
+
+      XLSX.writeFile(
+        wb,
+        `알림서비스집계_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    });
+  };
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">

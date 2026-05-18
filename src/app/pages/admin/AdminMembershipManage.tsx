@@ -103,35 +103,88 @@ export function AdminMembershipManage() {
   const [inputDate, setInputDate] = useState("");
 
   const handleExport = () => {
-    exportToExcel(
-      "회원비납입관리",
-      [
-        "번호",
-        "회원번호",
-        "대표자",
-        "사업자",
-        "연락처",
-        "이메일",
-        "사업자등록번호",
-        "입금액",
-        "공급가액",
-        "부가가치세",
-        "회원등급",
-      ],
-      records.map((r, i) => [
-        i + 1,
-        r.memberNumber,
-        r.representative,
-        r.company,
-        r.phone,
-        r.email,
-        r.businessNumber,
-        r.paidAmount || "-",
-        r.supplyAmount || "-",
-        r.vat || "-",
-        gradeMap[r.grade],
-      ]),
-    );
+    import("xlsx").then((XLSX) => {
+      const wb = XLSX.utils.book_new();
+
+      // 시트1: 납입 관리 목록 전체
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        [
+          "번호",
+          "회원번호",
+          "대표자",
+          "사업자",
+          "연락처",
+          "이메일",
+          "사업자등록번호",
+          "입금일",
+          "입금액",
+          "공급가액",
+          "부가가치세",
+          "회원등급",
+        ],
+        ...records.map((r, i) => [
+          i + 1,
+          r.memberNumber,
+          r.representative,
+          r.company,
+          r.phone,
+          r.email,
+          r.businessNumber,
+          r.paidAt,
+          r.paidAmount || "-",
+          r.supplyAmount || "-",
+          r.vat || "-",
+          gradeMap[r.grade],
+        ]),
+      ]);
+      ws1["!cols"] = [6, 16, 12, 16, 14, 22, 16, 12, 12, 12, 12, 10].map(
+        (wch) => ({ wch }),
+      );
+      XLSX.utils.book_append_sheet(wb, ws1, "회원비납입관리");
+
+      // 시트2: 등급별 납입 현황
+      const paidRecords = records.filter((r) => r.paidAmount > 0);
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        [
+          "등급",
+          "인원수",
+          "납입인원",
+          "미납인원",
+          "입금액 합계",
+          "공급가액 합계",
+          "부가가치세 합계",
+        ],
+        ...["special", "business", "free"].map((g) => {
+          const gr = records.filter((r) => r.grade === g);
+          const paid = gr.filter((r) => r.paidAmount > 0);
+          return [
+            gradeMap[g as keyof typeof gradeMap],
+            gr.length,
+            paid.length,
+            gr.length - paid.length,
+            paid.reduce((s, r) => s + r.paidAmount, 0),
+            paid.reduce((s, r) => s + r.supplyAmount, 0),
+            paid.reduce((s, r) => s + r.vat, 0),
+          ];
+        }),
+        [
+          "합계",
+          records.length,
+          paidRecords.length,
+          records.length - paidRecords.length,
+          paidRecords.reduce((s, r) => s + r.paidAmount, 0),
+          paidRecords.reduce((s, r) => s + r.supplyAmount, 0),
+          paidRecords.reduce((s, r) => s + r.vat, 0),
+        ],
+      ]);
+      ws2["!cols"] = [12, 10, 10, 10, 14, 14, 14].map((wch) => ({ wch }));
+      XLSX.utils.book_append_sheet(wb, ws2, "등급별현황");
+
+      XLSX.writeFile(
+        wb,
+        `회원비납입관리_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    });
   };
 
   return (

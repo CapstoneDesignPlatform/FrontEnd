@@ -99,35 +99,96 @@ export function AdminFeeStats() {
   const totalVat = records.reduce((sum, r) => sum + r.vat, 0);
 
   const handleExport = () => {
-    exportToExcel(
-      "중개수수료_집계",
-      [
-        "번호",
-        "처리일",
-        "회원번호",
-        "상호",
-        "사업자등록번호",
-        "연락처",
-        "이메일",
-        "내용",
-        "건수",
-        "공급가액",
-        "부가가치세",
-      ],
-      records.map((r, i) => [
-        i + 1,
-        r.processedAt,
-        r.memberNumber,
-        r.company,
-        r.businessNumber,
-        r.phone,
-        r.email,
-        r.description,
-        r.count,
-        r.supplyAmount,
-        r.vat,
-      ]),
-    );
+    import("xlsx").then((XLSX) => {
+      const wb = XLSX.utils.book_new();
+
+      // 시트1: 상세 내역 (합계 행 포함)
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        [
+          "번호",
+          "처리일",
+          "회원번호",
+          "상호",
+          "사업자등록번호",
+          "연락처",
+          "이메일",
+          "내용",
+          "건수",
+          "공급가액",
+          "부가가치세",
+        ],
+        ...records.map((r, i) => [
+          i + 1,
+          r.processedAt,
+          r.memberNumber,
+          r.company,
+          r.businessNumber,
+          r.phone,
+          r.email,
+          r.description,
+          r.count,
+          r.supplyAmount,
+          r.vat,
+        ]),
+        [],
+        ["", "", "", "", "", "", "", "합계", totalCount, totalSupply, totalVat],
+      ]);
+      ws1["!cols"] = [6, 12, 16, 16, 16, 14, 22, 24, 8, 14, 14].map((wch) => ({
+        wch,
+      }));
+      XLSX.utils.book_append_sheet(wb, ws1, "중개수수료집계");
+
+      // 시트2: 요약 통계
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ["항목", "값"],
+        ["조회 기간", `${startDate} ~ ${endDate}`],
+        ["구분", viewType === "individual" ? "회원별(개별)" : "회원별(합계)"],
+        ["총 건수", `${totalCount}건`],
+        ["공급가액 합계", `₩${totalSupply.toLocaleString()}`],
+        ["부가가치세 합계", `₩${totalVat.toLocaleString()}`],
+        ["총액(공급가액+VAT)", `₩${(totalSupply + totalVat).toLocaleString()}`],
+      ]);
+      ws2["!cols"] = [{ wch: 20 }, { wch: 25 }];
+      XLSX.utils.book_append_sheet(wb, ws2, "요약통계");
+
+      // 시트3: 회원별 집계
+      const byMember = records.reduce(
+        (acc, r) => {
+          if (!acc[r.memberNumber])
+            acc[r.memberNumber] = {
+              company: r.company,
+              count: 0,
+              supply: 0,
+              vat: 0,
+            };
+          acc[r.memberNumber].count += r.count;
+          acc[r.memberNumber].supply += r.supplyAmount;
+          acc[r.memberNumber].vat += r.vat;
+          return acc;
+        },
+        {} as Record<
+          string,
+          { company: string; count: number; supply: number; vat: number }
+        >,
+      );
+      const ws3 = XLSX.utils.aoa_to_sheet([
+        ["회원번호", "상호", "건수", "공급가액", "부가가치세"],
+        ...Object.entries(byMember).map(([mn, v]) => [
+          mn,
+          v.company,
+          v.count,
+          v.supply,
+          v.vat,
+        ]),
+      ]);
+      ws3["!cols"] = [16, 18, 8, 14, 14].map((wch) => ({ wch }));
+      XLSX.utils.book_append_sheet(wb, ws3, "회원별집계");
+
+      XLSX.writeFile(
+        wb,
+        `중개수수료집계_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    });
   };
 
   return (

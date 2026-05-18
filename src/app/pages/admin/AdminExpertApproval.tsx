@@ -324,29 +324,61 @@ export function AdminExpertApproval() {
   };
 
   const handleExport = () => {
-    exportToExcel(
-      `전문가승인요청_${expert.personalInfo.name}`,
-      ["항목", "내용"],
-      [
+    import("xlsx").then((XLSX) => {
+      const wb = XLSX.utils.book_new();
+
+      // 시트1: 기본 정보 + 인증 정보
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        ["항목", "내용"],
+        ["=== 기본 정보 ===", ""],
         ["이름", expert.personalInfo.name],
         ["생년월일", expert.personalInfo.birthDate],
         ["이메일", expert.personalInfo.email],
         ["연락처", expert.personalInfo.phone],
         ["주소", expert.personalInfo.address],
         ["가입일", expert.personalInfo.registeredAt],
+        ["", ""],
+        ["=== 인증 정보 ===", ""],
         ["전문분야", expert.verificationInfo.expertise],
         ["경력", expert.verificationInfo.experience],
-        ["면허종류", expert.verificationInfo.licenseType],
-        ["면허번호", expert.verificationInfo.licenseNumber],
+        ["면허 종류", expert.verificationInfo.licenseType],
+        ["면허 번호", expert.verificationInfo.licenseNumber],
         ["발급일", expert.verificationInfo.issueDate],
         ["만료일", expert.verificationInfo.expiryDate],
+        ["", ""],
+        ["=== 소속 정보 ===", ""],
         ["회사명", expert.verificationInfo.companyName],
         ["직책", expert.verificationInfo.position],
         ["사업자번호", expert.verificationInfo.businessNumber],
+        ["회사 전화", expert.verificationInfo.companyPhone],
+        ["회사 주소", expert.verificationInfo.companyAddress],
         ["신청일", expert.verificationInfo.appliedAt],
-        ["제출서류수", expert.documents.length],
-      ],
-    );
+        ["", ""],
+        ["=== 자기소개 ===", ""],
+        ["내용", expert.verificationInfo.description],
+      ]);
+      ws1["!cols"] = [{ wch: 16 }, { wch: 50 }];
+      XLSX.utils.book_append_sheet(wb, ws1, "전문가정보");
+
+      // 시트2: 첨부서류 목록
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ["번호", "파일명", "종류", "크기", "업로드일시"],
+        ...expert.documents.map((doc, i) => [
+          i + 1,
+          doc.name,
+          doc.type,
+          doc.size,
+          doc.uploadedAt,
+        ]),
+      ]);
+      ws2["!cols"] = [6, 25, 15, 10, 18].map((wch) => ({ wch }));
+      XLSX.utils.book_append_sheet(wb, ws2, "첨부서류");
+
+      XLSX.writeFile(
+        wb,
+        `전문가승인요청_${expert.personalInfo.name}_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    });
   };
 
   return (
