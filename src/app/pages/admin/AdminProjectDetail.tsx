@@ -685,365 +685,386 @@ export function AdminProjectDetail() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                의뢰 내용
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-2">설명</p>
-                <p className="text-gray-700 whitespace-pre-wrap">
-                  {project.description}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-2">필수 요구사항</p>
-                <p className="text-gray-700 whitespace-pre-wrap">
-                  {project.requirements}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          {/* 의뢰 내용 - 엑셀 스타일 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              의뢰 내용
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <tbody>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
+                    설명
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5 whitespace-pre-wrap">
+                    {project.description}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                    필수 요구사항
+                  </td>
+                  <td className="px-3 py-1.5 whitespace-pre-wrap">
+                    {project.requirements}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                기업 정보
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                {[
-                  ["기업명", project.company.name],
-                  ["사업자 유형", project.company.businessType],
-                  ["사업자등록번호", project.company.businessNumber],
-                  ["대표자명", project.company.representative],
-                  ["대표 전화", project.company.phone],
-                  ["설립일", project.company.establishedDate],
-                  ["자본금", project.company.capital],
-                  ["직원 수", `${project.company.employees}명`],
-                ].map(([label, value]) => (
-                  <div key={label}>
-                    <p className="text-sm text-gray-600">{label}</p>
-                    <p className="font-medium">{value}</p>
-                  </div>
-                ))}
-                <div className="md:col-span-2">
-                  <p className="text-sm text-gray-600">주소</p>
-                  <p className="font-medium">{project.company.address}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* 기업 정보 - 엑셀 스타일 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              기업 정보
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <tbody>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
+                    기업명
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {project.company.name}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
+                    사업자 유형
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {project.company.businessType}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    사업자등록번호
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-mono">
+                    {project.company.businessNumber}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    대표자명
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {project.company.representative}
+                  </td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    대표 전화
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {project.company.phone}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    설립일
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {project.company.establishedDate}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    자본금
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {project.company.capital}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    직원 수
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {project.company.employees}명
+                  </td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    주소
+                  </td>
+                  <td colSpan={3} className="px-3 py-1.5">
+                    {project.company.address}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                의뢰인 정보
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">이름</p>
-                  <p className="font-medium">{project.client.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">회원 유형</p>
-                  <Badge variant="outline">
-                    {project.client.isGuest ? "비회원" : "정회원"}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">이메일</p>
-                  <p className="font-medium">{project.client.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">연락처</p>
-                  <p className="font-medium">{project.client.phone}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* 의뢰인 정보 - 엑셀 스타일 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              의뢰인 정보
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <tbody>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
+                    이름
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {project.client.name}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
+                    회원 유형
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-xs ${project.client.isGuest ? "bg-gray-100 text-gray-600" : "bg-teal-50 text-teal-700"}`}
+                    >
+                      {project.client.isGuest ? "비회원" : "정회원"}
+                    </span>
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    이메일
+                  </td>
+                  <td className="border-r border-gray-200 px-3 py-1.5">
+                    {project.client.email}
+                  </td>
+                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    연락처
+                  </td>
+                  <td className="px-3 py-1.5">{project.client.phone}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
+          {/* 선택된 전문가 - 엑셀 스타일 */}
           {project.selectedExpert && (
-            <Card className="border-blue-200 bg-blue-50/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-blue-700">
-                  <CheckCircle2 className="h-5 w-5" />
-                  선택된 전문가
-                </CardTitle>
-                <CardDescription>의뢰인이 선택한 전문가입니다.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-white rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-blue-600 text-white">
-                        {project.selectedExpert.name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold text-lg">
-                          {project.selectedExpert.name}
-                        </h3>
-                        <Badge className="bg-blue-600">선택됨</Badge>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-3">
-                        {project.selectedExpert.company}
-                      </p>
-                      <div className="grid md:grid-cols-2 gap-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-gray-500" />
-                          {project.selectedExpert.phone}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-gray-500" />
-                          {project.selectedExpert.email}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-gray-500" />
-                          <span className="font-semibold text-blue-700">
-                            {project.selectedExpert.price}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-gray-500" />
-                          선택일: {project.selectedExpert.selectedAt}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="border border-blue-300 rounded overflow-hidden">
+              <div className="bg-blue-50 border-b border-blue-300 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                ✓ 선택된 전문가
+              </div>
+              <table className="w-full text-xs border-collapse">
+                <tbody>
+                  <tr className="bg-white">
+                    <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-24">
+                      전문가명
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-blue-700">
+                      {project.selectedExpert.name}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-24">
+                      소속
+                    </td>
+                    <td className="border-b border-gray-200 px-3 py-1.5">
+                      {project.selectedExpert.company}
+                    </td>
+                  </tr>
+                  <tr className="bg-gray-50">
+                    <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                      연락처
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                      {project.selectedExpert.phone}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                      이메일
+                    </td>
+                    <td className="border-b border-gray-200 px-3 py-1.5">
+                      {project.selectedExpert.email}
+                    </td>
+                  </tr>
+                  <tr className="bg-white">
+                    <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                      확정금액
+                    </td>
+                    <td className="border-r border-gray-200 px-3 py-1.5 font-bold text-blue-700">
+                      {project.selectedExpert.price}
+                    </td>
+                    <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                      선택일
+                    </td>
+                    <td className="px-3 py-1.5">
+                      {project.selectedExpert.selectedAt}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                입찰 전문가 목록
-              </CardTitle>
-              <CardDescription>
-                총 {project.bids.length}명의 전문가가 입찰했습니다. (최저가
-                순으로 정렬)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {sortedBids.map((bid, index) => (
-                  <Card
-                    key={bid.id}
-                    className={
-                      bid.isSelected
-                        ? "border-blue-500 bg-blue-50/50"
-                        : index < 3
-                          ? "border-green-200 bg-green-50/30"
-                          : ""
-                    }
-                  >
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-4">
-                        <Avatar className="h-12 w-12">
-                          <AvatarFallback
-                            className={
-                              bid.isSelected ? "bg-blue-600 text-white" : ""
-                            }
-                          >
-                            {bid.expertName[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <h3 className="font-semibold text-lg">
-                              {bid.expertName}
-                            </h3>
-                            {bid.isSelected && (
-                              <Badge className="bg-blue-600">선택됨</Badge>
-                            )}
-                            {index < 3 && !bid.isSelected && (
-                              <Badge
-                                variant="outline"
-                                className="bg-green-100 text-green-700"
-                              >
-                                최저가 TOP {index + 1}
-                              </Badge>
-                            )}
-                            {bid.verified && (
-                              <Badge variant="outline" className="gap-1">
-                                <CheckCircle2 className="h-3 w-3" />
-                                인증
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600 mb-3">
-                            {bid.company}
-                          </p>
-                          <div className="grid md:grid-cols-2 gap-x-4 gap-y-2 text-sm mb-3">
-                            <div className="flex items-center gap-2">
-                              <DollarSign className="h-4 w-4 text-gray-500" />
-                              <span className="font-semibold text-[#009689]">
-                                {bid.price}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-gray-500" />
-                              예상 기간: {bid.estimatedDays}일
-                            </div>
-                            <div className="flex items-center gap-2 text-gray-500">
-                              입찰일시: {bid.bidAt}
-                            </div>
-                          </div>
-                          <div className="grid md:grid-cols-2 gap-2 text-sm mb-3">
-                            <div className="flex items-center gap-2 text-gray-600">
-                              <Phone className="h-4 w-4" />
-                              {bid.phone}
-                            </div>
-                            <div className="flex items-center gap-2 text-gray-600">
-                              <Mail className="h-4 w-4" />
-                              {bid.email}
-                            </div>
-                          </div>
-                          <div className="bg-gray-50 rounded p-3">
-                            <p className="text-sm text-gray-700">
-                              {bid.message}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* 입찰 전문가 목록 - 엑셀 스타일 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              입찰 전문가 목록 (총 {project.bids.length}명 · 최저가순)
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="bg-gray-50">
+                    {[
+                      "전문가명",
+                      "소속",
+                      "연락처",
+                      "이메일",
+                      "입찰가",
+                      "예상기간",
+                      "입찰일시",
+                      "인증",
+                      "상태",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap last:border-r-0"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedBids.map((bid, index) => (
+                    <tr
+                      key={bid.id}
+                      className={`hover:bg-teal-50 transition-colors ${bid.isSelected ? "bg-blue-50" : index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                    >
+                      <td className="border-b border-r border-gray-200 px-2 py-1 font-medium whitespace-nowrap">
+                        {bid.expertName}
+                      </td>
+                      <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                        {bid.company}
+                      </td>
+                      <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                        {bid.phone}
+                      </td>
+                      <td className="border-b border-r border-gray-200 px-2 py-1">
+                        {bid.email}
+                      </td>
+                      <td className="border-b border-r border-gray-200 px-2 py-1 font-semibold text-teal-700 whitespace-nowrap">
+                        {bid.price}
+                      </td>
+                      <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
+                        {bid.estimatedDays}일
+                      </td>
+                      <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                        {bid.bidAt}
+                      </td>
+                      <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
+                        {bid.verified ? "✓" : "-"}
+                      </td>
+                      <td className="border-b border-gray-200 px-2 py-1">
+                        {bid.isSelected ? (
+                          <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-xs">
+                            선택됨
+                          </span>
+                        ) : index < 3 ? (
+                          <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 text-xs">
+                            TOP{index + 1}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>의뢰 정보</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-3">
-                <DollarSign className="h-5 w-5 text-gray-600 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-600">예상 예산</p>
-                  <p className="font-semibold text-lg">{project.budget}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Calendar className="h-5 w-5 text-gray-600 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-600">희망 완료일</p>
-                  <p className="font-medium">{project.deadline}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-gray-600 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-600">지역</p>
-                  <p className="font-medium">{project.location}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Users className="h-5 w-5 text-gray-600 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-600">입찰 전문가</p>
-                  <p className="font-semibold text-lg">
-                    {project.bids.length}명
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* 의뢰 정보 - 엑셀 스타일 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              의뢰 정보
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <tbody>
+                {[
+                  ["예상 예산", project.budget],
+                  ["희망 완료일", project.deadline],
+                  ["지역", project.location],
+                  ["입찰 전문가", `${project.bids.length}명`],
+                  ["등록일", project.createdAt],
+                  ["최종 수정", project.updatedAt],
+                ].map(([label, value], i) => (
+                  <tr
+                    key={label}
+                    className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap last:border-b-0">
+                      {label}
+                    </td>
+                    <td className="border-b border-gray-200 px-3 py-1.5 font-medium last:border-b-0">
+                      {value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>입찰 통계</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">최저 입찰가</span>
-                <span className="font-semibold text-green-600">
-                  {sortedBids[0]?.price}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">최고 입찰가</span>
-                <span className="font-semibold text-gray-700">
-                  {sortedBids[sortedBids.length - 1]?.price}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">평균 입찰가</span>
-                <span className="font-semibold">
-                  ₩
-                  {Math.round(
-                    sortedBids.reduce(
-                      (sum, bid) =>
-                        sum + parseInt(bid.price.replace(/[^0-9]/g, "")),
-                      0,
-                    ) / sortedBids.length,
-                  ).toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">인증 전문가</span>
-                <span className="font-semibold">
-                  {project.bids.filter((b) => b.verified).length}명 /{" "}
-                  {project.bids.length}명
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+          {/* 입찰 통계 - 엑셀 스타일 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              입찰 통계
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <tbody>
+                {[
+                  ["최저 입찰가", sortedBids[0]?.price ?? "-"],
+                  [
+                    "최고 입찰가",
+                    sortedBids[sortedBids.length - 1]?.price ?? "-",
+                  ],
+                  [
+                    "평균 입찰가",
+                    `₩${Math.round(sortedBids.reduce((s, b) => s + parseInt(b.price.replace(/[^0-9]/g, "")), 0) / sortedBids.length).toLocaleString()}`,
+                  ],
+                  [
+                    "인증 전문가",
+                    `${project.bids.filter((b) => b.verified).length}명 / ${project.bids.length}명`,
+                  ],
+                ].map(([label, value], i) => (
+                  <tr
+                    key={label}
+                    className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap last:border-b-0">
+                      {label}
+                    </td>
+                    <td className="border-b border-gray-200 px-3 py-1.5 font-medium last:border-b-0">
+                      {value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>진행 타임라인</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+          {/* 진행 타임라인 - 엑셀 스타일 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              진행 타임라인
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <tbody>
                 {[
                   ["의뢰 등록", project.createdAt],
-                  ["전문가 입찰 시작", `${project.createdAt} 14:30`],
-                ].map(([label, date]) => (
-                  <div key={label} className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div className="w-2 h-2 rounded-full bg-[#009689]" />
-                      <div className="w-0.5 h-full bg-gray-200" />
-                    </div>
-                    <div className="pb-4">
-                      <p className="text-sm font-medium">{label}</p>
-                      <p className="text-xs text-gray-500">{date}</p>
-                    </div>
-                  </div>
+                  ["입찰 시작", `${project.createdAt} 14:30`],
+                  ...(project.selectedExpert
+                    ? [["전문가 선택", project.selectedExpert.selectedAt]]
+                    : []),
+                ].map(([label, date], i) => (
+                  <tr
+                    key={label}
+                    className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap last:border-b-0">
+                      <span className="inline-block w-2 h-2 rounded-full bg-teal-500 mr-1.5" />
+                      {label}
+                    </td>
+                    <td className="border-b border-gray-200 px-3 py-1.5 last:border-b-0">
+                      {date}
+                    </td>
+                  </tr>
                 ))}
-                {project.selectedExpert && (
-                  <div className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div className="w-2 h-2 rounded-full bg-[#009689]" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">전문가 선택</p>
-                      <p className="text-xs text-gray-500">
-                        {project.selectedExpert.selectedAt}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

@@ -11,6 +11,7 @@ interface NotificationMember {
   businessNumber: string;
   phone: string;
   email: string;
+  grade: "special" | "business" | "free";
   memberStatus: "active" | "suspended";
   appliedCount: number;
   usedCount: number;
@@ -27,6 +28,7 @@ export function AdminNotificationManage() {
       businessNumber: "123-45-67890",
       phone: "010-1234-5678",
       email: "expert1@example.com",
+      grade: "special",
       memberStatus: "active",
       appliedCount: 10,
       usedCount: 7,
@@ -40,6 +42,7 @@ export function AdminNotificationManage() {
       businessNumber: "234-56-78901",
       phone: "010-2345-6789",
       email: "expert2@example.com",
+      grade: "business",
       memberStatus: "active",
       appliedCount: 20,
       usedCount: 15,
@@ -53,6 +56,7 @@ export function AdminNotificationManage() {
       businessNumber: "345-67-89012",
       phone: "010-3456-7890",
       email: "expert3@example.com",
+      grade: "free",
       memberStatus: "active",
       appliedCount: 5,
       usedCount: 5,
@@ -66,6 +70,7 @@ export function AdminNotificationManage() {
       businessNumber: "456-78-90123",
       phone: "010-4567-8901",
       email: "expert4@example.com",
+      grade: "business",
       memberStatus: "suspended",
       appliedCount: 8,
       usedCount: 3,
@@ -79,6 +84,7 @@ export function AdminNotificationManage() {
       businessNumber: "567-89-01234",
       phone: "010-5678-9012",
       email: "expert5@example.com",
+      grade: "special",
       memberStatus: "active",
       appliedCount: 15,
       usedCount: 10,
@@ -196,10 +202,11 @@ export function AdminNotificationManage() {
                 {[
                   "번호",
                   "회원번호",
-                  "상호",
-                  "사업자등록번호",
+                  "대표자",
                   "연락처",
+                  "사업자등록번호",
                   "이메일",
+                  "등급",
                   "신청건수",
                   "사용건수",
                   "잔여건수",
@@ -230,18 +237,30 @@ export function AdminNotificationManage() {
                   <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
                     {m.company}
                   </td>
-                  <td className="border-b border-r border-gray-200 px-2 py-1 font-mono">
-                    {m.businessNumber}
-                  </td>
                   <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
                     {m.phone}
                   </td>
-                  <td className="border-b border-r border-gray-200 px-2 py-1">
+                  <td className="border-b border-r border-gray-200 px-2 py-1 font-mono">
+                    {m.businessNumber}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1 text-xs">
                     {m.email}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1">
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-xs ${m.grade === "special" ? "bg-yellow-100 text-yellow-700" : m.grade === "business" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}
+                    >
+                      {m.grade === "special"
+                        ? "스페셜"
+                        : m.grade === "business"
+                          ? "비즈니스"
+                          : "무료"}
+                    </span>
                   </td>
                   <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
                     {m.appliedCount}
                   </td>
+
                   <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
                     {m.usedCount}
                   </td>
