@@ -15,11 +15,6 @@ export function MyPageLayout() {
       path: "/client/mypage/company-info",
       icon: Building2,
     },
-    {
-      label: "기타페이지",
-      path: "/client/mypage/other",
-      icon: MoreHorizontal,
-    },
   ];
 
   return (

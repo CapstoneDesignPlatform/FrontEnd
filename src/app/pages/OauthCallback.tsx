@@ -77,7 +77,6 @@ export function OAuthCallback() {
       }
 
       try {
-        // ── 1단계: 인가 코드 → 액세스 토큰 교환 ──────────────────────────
         const tokenBody = new URLSearchParams({
           grant_type: "authorization_code",
           client_id: CLIENT_IDS[provider],
@@ -112,9 +111,6 @@ export function OAuthCallback() {
         const rawUserInfo = await userinfoRes.json();
         const userInfo = normalizeUserInfo(provider, rawUserInfo);
 
-        // ── 3단계: 신규 / 기존 유저 분기 ────────────────────────────────
-        //   실제 서비스에서는 백엔드 API로 socialId 존재 여부 확인
-        //   여기서는 localStorage 기반 데모 구현
         const existingKey = `social_${provider}_${userInfo.socialId}`;
         const existing = localStorage.getItem(existingKey);
 
