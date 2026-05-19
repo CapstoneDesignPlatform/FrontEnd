@@ -23,8 +23,3 @@ export interface VerificationBusinessLicenseData {
   previewKind: VerificationPreviewKind | null;
   previewUrl: string;
 }
-
-export interface VerificationCareerData {
-  companyName: string;
-  portfolio: string;
-}

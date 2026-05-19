@@ -16,7 +16,6 @@ import type {
 } from "../../../../types/expertVerification";
 import type {
   VerificationBusinessLicenseData,
-  VerificationCareerData,
   VerificationCertificateData,
 } from "./types";
 import { useVerificationPreviewUrls } from "./useVerificationPreviewUrls";
@@ -24,6 +23,7 @@ import {
   buildSubmitVerificationPayload,
   validateExpertVerificationForm,
 } from "./verificationSubmit";
+import { CERTIFICATE_TYPE_OPTIONS } from "./verificationConstants";
 
 interface UseExpertVerificationFormOptions {
   onSubmitted: () => void;
@@ -66,9 +66,15 @@ function createCertificateFromVerification(
 function createPrimaryCertificateFromRequest(
   verificationRequest: ExpertVerificationStatusVM,
 ): VerificationCertificateData {
+  const certificateType = CERTIFICATE_TYPE_OPTIONS.includes(
+    verificationRequest.licenseType,
+  )
+    ? verificationRequest.licenseType
+    : "";
+
   return {
     ...createEmptyCertificate(),
-    type: verificationRequest.licenseType,
+    type: certificateType,
     number: verificationRequest.licenseNumber,
     issueDate: verificationRequest.issueDate,
   };
@@ -104,13 +110,6 @@ function createBusinessLicenseFromVerification(
   };
 }
 
-function createEmptyCareer(): VerificationCareerData {
-  return {
-    companyName: "",
-    portfolio: "",
-  };
-}
-
 function releaseCertificatePreviewUrls(
   certificates: VerificationCertificateData[],
   releasePreviewUrl: (previewUrl: string) => void,
@@ -132,7 +131,7 @@ export function useExpertVerificationForm({
   ]);
   const [businessLicense, setBusinessLicense] =
     useState<VerificationBusinessLicenseData>(createEmptyBusinessLicense);
-  const [career, setCareer] = useState<VerificationCareerData>(createEmptyCareer);
+  const [qualificationType, setQualificationType] = useState("");
   const loadVerificationRequest = useCallback(
     () => getExpertVerificationStatus(statusOverride),
     [statusOverride],
@@ -165,11 +164,12 @@ export function useExpertVerificationForm({
       releasePreviewUrl(current.previewUrl);
       return createEmptyBusinessLicense();
     });
-    setCareer(createEmptyCareer());
+    setQualificationType("");
   }, [releasePreviewUrl]);
 
   const applyVerificationRequest = useCallback(
     (request: ExpertVerificationStatusVM) => {
+      setQualificationType(request.licenseType);
       setCertificates((current) => {
         releaseCertificatePreviewUrls(current, releasePreviewUrl);
 
@@ -181,11 +181,13 @@ export function useExpertVerificationForm({
       });
       setBusinessLicense((current) => {
         releasePreviewUrl(current.previewUrl);
-        return createBusinessLicenseFromVerification(request.businessLicense);
-      });
-      setCareer({
-        companyName: request.companyName,
-        portfolio: request.portfolio ?? "",
+        const nextBusinessLicense = createBusinessLicenseFromVerification(
+          request.businessLicense,
+        );
+        return {
+          ...nextBusinessLicense,
+          companyName: nextBusinessLicense.companyName || request.companyName,
+        };
       });
     },
     [releasePreviewUrl],
@@ -259,8 +261,8 @@ export function useExpertVerificationForm({
 
       const formValues = {
         businessLicense,
-        career,
         certificates,
+        qualificationType,
       };
       const validationError = validateExpertVerificationForm(formValues);
       if (validationError) {
@@ -270,13 +272,12 @@ export function useExpertVerificationForm({
 
       void submitVerification(buildSubmitVerificationPayload(formValues));
     },
-    [businessLicense, career, certificates, submitVerification],
+    [businessLicense, certificates, qualificationType, submitVerification],
   );
 
   return {
     businessLicense,
     canSubmit,
-    career,
     certificates,
     handleAddCertificate,
     handleDeleteCertificate,
@@ -286,7 +287,8 @@ export function useExpertVerificationForm({
     isApproved,
     isPending,
     isSubmitting,
-    setCareer,
+    qualificationType,
+    setQualificationType,
     verificationStatus,
   };
 }

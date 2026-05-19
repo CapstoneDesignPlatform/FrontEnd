@@ -5,8 +5,12 @@ import type {
   ClientContactVM,
   CreateBidRequest,
   CreateBidRequestDto,
+  ExpertJobMyBidVM,
+  ExpertSignupRequest,
+  ExpertSignupRequestDto,
   ExpertJobDetailVM,
   ExpertJobListItemVM,
+  ExpertJobListResultVM,
   ExpertProfileFormVM,
   ExpertProfileResponseDto,
   JobPostDetailResponseDto,
@@ -17,6 +21,7 @@ import type {
   JobPostTypeLabel,
   MyBidItemDto,
   MyBidItemVM,
+  MyBidSummaryDto,
   UpdateExpertProfileRequestDto,
 } from "../types/expert";
 
@@ -28,10 +33,10 @@ const jobPostTypeLabels: Record<JobPostTypeCode, JobPostTypeLabel> = {
 };
 
 const jobPostStatusLabels: Record<JobPostStatusCode, string> = {
-  BIDDING: "입찰 중",
-  IN_PROGRESS: "진행 중",
-  COMPLETED: "완료",
-  CLOSED: "마감",
+  BIDDING: "입찰 가능",
+  IN_PROGRESS: "입찰 마감",
+  COMPLETED: "입찰 마감",
+  CLOSED: "입찰 마감",
 };
 
 const bidStatusLabels: Record<BidStatusCode, BidStatusLabel> = {
@@ -44,8 +49,20 @@ function formatCurrency(value: number) {
   return `₩${value.toLocaleString("ko-KR")}`;
 }
 
+function formatAssetScale(value: number | string | null | undefined) {
+  if (value === null || value === undefined || value === "") {
+    return undefined;
+  }
+
+  return typeof value === "number" ? formatCurrency(value) : value;
+}
+
 function formatDate(value: string) {
   return value.slice(0, 10);
+}
+
+function formatOptionalDate(value: string | null | undefined) {
+  return value ? formatDate(value) : undefined;
 }
 
 function normalizeNullable(value: string | null | undefined) {
@@ -72,6 +89,15 @@ function mapClientContactDtoToVM(
   };
 }
 
+function mapMyBidSummaryDtoToVM(dto: MyBidSummaryDto): ExpertJobMyBidVM {
+  return {
+    amount: dto.bid_amount,
+    id: dto.id,
+    status: bidStatusLabels[dto.status],
+    submittedAt: formatDate(dto.submitted_at),
+  };
+}
+
 export function mapJobPostListItemDtoToVM(dto: JobPostListItemDto): ExpertJobListItemVM {
   return {
     id: dto.id,
@@ -86,23 +112,37 @@ export function mapJobPostListItemDtoToVM(dto: JobPostListItemDto): ExpertJobLis
     currentIndustry: normalizeNullable(dto.current_industry),
     currentLicense: normalizeNullable(dto.current_license),
     reason: normalizeNullable(dto.reason),
-    assetScale: normalizeNullable(dto.asset_scale_label),
+    assetScale: formatAssetScale(dto.asset_scale_label),
     bids: dto.bid_count,
     postedDate: formatDate(dto.posted_at),
+    deadline: formatOptionalDate(
+      dto.job_post_deadline ?? dto.deadline ?? dto.due_date,
+    ),
     isNew: dto.is_new,
-    status: jobPostStatusLabels[dto.status],
+    status: dto.status ? jobPostStatusLabels[dto.status] : undefined,
     hasMyBid: dto.has_my_bid,
   };
 }
 
-export function mapJobPostListDtoToVM(dto: JobPostListResponseDto): ExpertJobListItemVM[] {
-  return dto.items.map(mapJobPostListItemDtoToVM);
+export function mapJobPostListDtoToVM(dto: JobPostListResponseDto): ExpertJobListResultVM {
+  const items = dto.items.map(mapJobPostListItemDtoToVM);
+
+  return {
+    hasNext: dto.has_next ?? false,
+    items,
+    page: dto.page ?? 1,
+    size: dto.size ?? items.length,
+    totalCount: dto.total_count ?? items.length,
+    totalPages: dto.total_pages ?? 1,
+  };
 }
 
 export function mapJobPostDetailDtoToVM(dto: JobPostDetailResponseDto): ExpertJobDetailVM {
   return {
     ...mapJobPostListItemDtoToVM(dto),
     createdAt: formatDate(dto.created_at),
+    hasMyBid: dto.has_my_bid === true || Boolean(dto.my_bid),
+    myBid: dto.my_bid ? mapMyBidSummaryDtoToVM(dto.my_bid) : undefined,
     company: {
       id: dto.company.id,
       name: dto.company.name,
@@ -120,6 +160,9 @@ export function mapBidDtoToVM(dto: MyBidItemDto): MyBidItemVM {
     myBid: formatCurrency(dto.bid_amount),
     status: bidStatusLabels[dto.status],
     bidDate: formatDate(dto.submitted_at),
+    deadline: formatOptionalDate(
+      dto.job_post_deadline ?? dto.deadline ?? dto.due_date,
+    ),
     totalBids: dto.total_bid_count,
     clientContact: mapClientContactDtoToVM(dto.client_contact),
   };
@@ -163,5 +206,17 @@ export function mapExpertProfileVMToUpdateDto(
 export function mapCreateBidRequestToDto(payload: CreateBidRequest): CreateBidRequestDto {
   return {
     bid_amount: payload.price,
+  };
+}
+
+export function mapExpertSignupRequestToDto(
+  payload: ExpertSignupRequest,
+): ExpertSignupRequestDto {
+  return {
+    company_name: payload.companyName,
+    email: payload.email,
+    name: payload.name,
+    password: payload.password,
+    phone: payload.phone,
   };
 }

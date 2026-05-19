@@ -1,5 +1,13 @@
 import type { ChangeEvent, HTMLInputTypeAttribute, ReactNode } from "react";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../ui/select";
+
 const labelClassName =
   "flex items-center gap-1 text-[13px] font-medium text-foreground";
 const inputClassName =
@@ -22,6 +30,11 @@ interface VerificationTextFieldProps extends BaseVerificationFieldProps {
 
 interface VerificationTextareaFieldProps extends BaseVerificationFieldProps {
   rows?: number;
+  onChange: (value: string) => void;
+}
+
+interface VerificationSelectFieldProps extends BaseVerificationFieldProps {
+  options: string[];
   onChange: (value: string) => void;
 }
 
@@ -48,6 +61,38 @@ export function VerificationTextField({
         disabled={disabled}
         className={inputClassName}
       />
+    </VerificationFieldShell>
+  );
+}
+
+export function VerificationSelectField({
+  disabled = false,
+  id,
+  label,
+  onChange,
+  options,
+  placeholder,
+  required = false,
+  value,
+}: VerificationSelectFieldProps) {
+  return (
+    <VerificationFieldShell id={id} label={label} required={required}>
+      <Select
+        disabled={disabled}
+        value={value || undefined}
+        onValueChange={onChange}
+      >
+        <SelectTrigger id={id} className="bg-input-background">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </VerificationFieldShell>
   );
 }

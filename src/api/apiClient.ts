@@ -40,6 +40,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function isApiEnvelope(value: unknown): value is {
+  data?: unknown;
+  message?: string;
+  success: boolean;
+} {
+  return isRecord(value) && typeof value.success === "boolean";
+}
+
 function getErrorMessage(payload: unknown, status: number) {
   if (isRecord(payload) && typeof payload.message === "string") {
     return payload.message;
@@ -141,6 +149,14 @@ export class ApiClient {
 
     if (!response.ok) {
       throw new ApiError(response.status, payload);
+    }
+
+    if (isApiEnvelope(payload)) {
+      if (!payload.success) {
+        throw new ApiError(response.ok ? 400 : response.status, payload);
+      }
+
+      return payload.data as T;
     }
 
     return payload as T;
