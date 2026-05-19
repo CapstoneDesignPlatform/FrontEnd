@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Bell, Info, Search, SlidersHorizontal, Table2 } from "lucide-react";
 
 import { getExpertJobs } from "../../../api/expert";
-import type { ExpertJobListItemVM } from "../../../types/expert";
+import type { ExpertJobListItemVM, ExpertJobListResultVM } from "../../../types/expert";
 import { AsyncStateCard } from "../../components/common/AsyncStateCard";
 import { JobTable } from "../../components/expert/JobTable";
 import { Badge } from "../../components/ui/badge";
@@ -13,38 +13,69 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useAsyncData } from "../../hooks/useAsyncData";
 
 const emptyProjects: ExpertJobListItemVM[] = [];
+const emptyProjectResult: ExpertJobListResultVM = {
+  hasNext: false,
+  items: emptyProjects,
+  page: 1,
+  size: 20,
+  totalCount: 0,
+  totalPages: 1,
+};
+type ProjectSortKey =
+  | "postedDateDesc"
+  | "postedDateAsc"
+  | "bidsDesc"
+  | "bidsAsc";
+
+const projectSortOptions: Array<{ label: string; value: ProjectSortKey }> = [
+  { value: "postedDateDesc", label: "등록일 최신순" },
+  { value: "postedDateAsc", label: "등록일 오래된순" },
+  { value: "bidsDesc", label: "입찰 인원 많은순" },
+  { value: "bidsAsc", label: "입찰 인원 적은순" },
+];
 
 export function ProjectListExpert() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const { data, error, isLoading } = useAsyncData(getExpertJobs, {
-    initialData: emptyProjects,
+  const [sortKey, setSortKey] = useState<ProjectSortKey>("postedDateDesc");
+  const loadProjects = useCallback(
+    () => getExpertJobs({ page: 1, size: 20, sort: "posted_at_desc" }),
+    [],
+  );
+  const { data, error, isLoading } = useAsyncData(loadProjects, {
+    initialData: emptyProjectResult,
   });
-  const projects = data ?? [];
+  const projects = data?.items ?? [];
   const normalizedSearchTerm = searchTerm.trim().toLowerCase();
 
-  const filteredProjects = projects.filter((project) => {
-    const searchableText = [
-      project.title,
-      project.companyName,
-      project.industry,
-      project.type,
-      project.businessType,
-      project.requiredLicense,
-      project.currentLicense,
-      project.currentIndustry,
-      project.reason,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-    const matchesSearch =
-      normalizedSearchTerm.length === 0 ||
-      searchableText.includes(normalizedSearchTerm);
-    const matchesType = filterType === "all" || project.type === filterType;
+  const filteredProjects = useMemo(
+    () =>
+      projects.filter((project) => {
+        const searchableText = [
+          project.industry,
+          project.type,
+          project.businessType,
+          project.requiredLicense,
+          project.currentLicense,
+          project.currentIndustry,
+          project.reason,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        const matchesSearch =
+          normalizedSearchTerm.length === 0 ||
+          searchableText.includes(normalizedSearchTerm);
+        const matchesType = filterType === "all" || project.type === filterType;
 
-    return matchesSearch && matchesType;
-  });
+        return matchesSearch && matchesType;
+      }),
+    [filterType, normalizedSearchTerm, projects],
+  );
+  const sortedProjects = useMemo(
+    () => sortProjects(filteredProjects, sortKey),
+    [filteredProjects, sortKey],
+  );
   const newProjectCount = filteredProjects.filter((project) => project.isNew).length;
   const averageBidCount =
     filteredProjects.length > 0
@@ -65,9 +96,6 @@ export function ProjectListExpert() {
             <span className="text-sm text-gray-500">스프레드시트형 공고 탐색</span>
           </div>
           <h1 className="text-3xl">공고 목록</h1>
-          <p className="mt-2 text-gray-600">
-            많은 공고를 빠르게 비교할 수 있도록 핵심 정보만 촘촘하게 정리했습니다.
-          </p>
         </div>
         <div className="group relative flex w-fit items-center gap-2">
           <Button variant="outline" className="gap-2">
@@ -102,7 +130,7 @@ export function ProjectListExpert() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
-                placeholder="공고명, 기업명, 업종, 면허 조건 검색"
+                placeholder="업종, 유형, 면허 조건 검색"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -122,7 +150,10 @@ export function ProjectListExpert() {
             </Select>
             <div className="flex flex-wrap gap-2 text-sm text-slate-600 xl:ml-auto">
               <span className="rounded-md border bg-slate-50 px-3 py-2">
-                표시 {filteredProjects.length}건
+                표시 {sortedProjects.length}건
+              </span>
+              <span className="rounded-md border bg-slate-50 px-3 py-2">
+                전체 {data?.totalCount ?? 0}건
               </span>
               <span className="rounded-md border bg-slate-50 px-3 py-2">
                 신규 {newProjectCount}건
@@ -141,18 +172,35 @@ export function ProjectListExpert() {
             <div>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Table2 className="h-4 w-4 text-teal-600" />
-                실시간 공고 보드
+                실시간 공고 목록
               </CardTitle>
               <CardDescription>
-                행을 훑으면서 조건을 비교하고, 필요한 공고만 상세로 들어가세요.
+                "입찰 가능" 상태에서만 입찰이 가능하며, 이미 입찰한 경우 수정이 가능합니다.
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <SlidersHorizontal className="h-4 w-4" />
-              <span className="md:hidden">작은 화면에서는 핵심 열만 표시됩니다.</span>
-              <span className="hidden md:inline">
-                가로 스크롤로 전체 열을 확인할 수 있습니다.
-              </span>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="md:hidden">핵심 열만 표시됩니다.</span>
+                <span className="hidden md:inline">
+                  원하는 기준으로 공고를 정렬할 수 있습니다.
+                </span>
+              </div>
+              <Select
+                value={sortKey}
+                onValueChange={(value) => setSortKey(value as ProjectSortKey)}
+              >
+                <SelectTrigger className="h-9 w-full bg-white sm:w-[180px]">
+                  <SelectValue placeholder="정렬 기준" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projectSortOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -169,17 +217,56 @@ export function ProjectListExpert() {
             </div>
           ) : null}
 
-          {!isLoading && !error && filteredProjects.length === 0 ? (
+          {!isLoading && !error && sortedProjects.length === 0 ? (
             <div className="p-4">
               <AsyncStateCard message="검색 결과가 없습니다." />
             </div>
           ) : null}
 
-          {!isLoading && !error && filteredProjects.length > 0 ? (
-            <JobTable projects={filteredProjects} />
+          {!isLoading && !error && sortedProjects.length > 0 ? (
+            <JobTable projects={sortedProjects} />
           ) : null}
         </CardContent>
       </Card>
     </div>
   );
+}
+
+function sortProjects(
+  projects: ExpertJobListItemVM[],
+  sortKey: ProjectSortKey,
+) {
+  return [...projects].sort((left, right) => {
+    if (sortKey === "postedDateAsc") {
+      return compareDateAsc(left.postedDate, right.postedDate);
+    }
+
+    if (sortKey === "bidsDesc") {
+      return right.bids - left.bids || compareDateDesc(left.postedDate, right.postedDate);
+    }
+
+    if (sortKey === "bidsAsc") {
+      return left.bids - right.bids || compareDateDesc(left.postedDate, right.postedDate);
+    }
+
+    return compareDateDesc(left.postedDate, right.postedDate);
+  });
+}
+
+function compareDateAsc(left?: string, right?: string) {
+  return (parseDateToTime(left) ?? 0) - (parseDateToTime(right) ?? 0);
+}
+
+function compareDateDesc(left?: string, right?: string) {
+  return (parseDateToTime(right) ?? 0) - (parseDateToTime(left) ?? 0);
+}
+
+function parseDateToTime(value?: string) {
+  if (!value) return null;
+
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+
+  if (!year || !month || !day) return null;
+
+  return new Date(year, month - 1, day).getTime();
 }

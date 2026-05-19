@@ -79,6 +79,14 @@ function isExpertNavActive(pathname: string, href: string) {
       pathname.startsWith("/expert/my-bids")
     );
   }
+
+  if (href === "/expert/dashboard") {
+    return (
+      pathname.startsWith("/expert/dashboard") ||
+      pathname.startsWith("/expert/profile")
+    );
+  }
+
   return pathname.startsWith(href);
 }
 
@@ -97,7 +105,7 @@ function BottomExpertNavigation({ pathname }: { pathname: string }) {
       icon: ClipboardList,
     },
     {
-      href: "/expert/profile",
+      href: "/expert/dashboard",
       label: "마이",
       ariaLabel: "마이페이지",
       icon: UserRound,
@@ -394,7 +402,7 @@ export function Root() {
                         to={
                           user.type === "client"
                             ? "/client/mypage"
-                            : "/expert/profile"
+                            : "/expert/dashboard"
                         }
                       >
                         My Page

@@ -27,8 +27,14 @@ export const expertHttpApi: ExpertApi = {
     return mapExpertProfileDtoToVM(response);
   },
 
-  async getExpertJobs() {
-    const response = await apiClient.get<JobPostListResponseDto>("/expert/job-posts");
+  async getExpertJobs(query = { page: 1, size: 20, sort: "posted_at_desc" as const }) {
+    const response = await apiClient.get<JobPostListResponseDto>("/expert/job-posts", {
+      query: {
+        page: query.page,
+        size: query.size,
+        sort: query.sort,
+      },
+    });
 
     return mapJobPostListDtoToVM(response);
   },

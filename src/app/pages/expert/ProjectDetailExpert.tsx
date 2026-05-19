@@ -1,23 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
+import { useCallback } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
-import { Building2, Users } from "lucide-react";
-import { toast } from "sonner";
+import { Users } from "lucide-react";
 import { AsyncStateCard } from "../../components/common/AsyncStateCard";
-import { BidForm, type BidFormData } from "../../components/expert/BidForm";
-import { createBid, getExpertJobDetail } from "../../../api/expert";
-import { useAsyncAction } from "../../hooks/useAsyncAction";
+import { getExpertJobDetail } from "../../../api/expert";
 import { useAsyncData } from "../../hooks/useAsyncData";
 
 export function ProjectDetailExpert() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const shouldOpenBidForm = location.pathname.endsWith("/bid");
-  const [showBidForm, setShowBidForm] = useState(shouldOpenBidForm);
   const loadProject = useCallback(() => getExpertJobDetail(id ?? 1), [id]);
   const {
     data: project,
@@ -26,68 +19,6 @@ export function ProjectDetailExpert() {
   } = useAsyncData(loadProject, {
     keepPreviousData: true,
   });
-  const [bidData, setBidData] = useState<BidFormData>({
-    price: "",
-  });
-  const { isPending: isSubmittingBid, run: submitBid } = useAsyncAction(
-    createBid,
-    {
-      onError: () => {
-        toast.error("입찰 제출에 실패했습니다.");
-      },
-      onSuccess: () => {
-        toast.success("입찰이 완료되었습니다!");
-        if (redirectTimeoutRef.current) {
-          clearTimeout(redirectTimeoutRef.current);
-        }
-        redirectTimeoutRef.current = setTimeout(() => {
-          redirectTimeoutRef.current = null;
-          navigate("/expert/bids");
-        }, 1500);
-      },
-    },
-  );
-
-  useEffect(() => {
-    setShowBidForm(shouldOpenBidForm);
-  }, [shouldOpenBidForm]);
-
-  useEffect(() => {
-    return () => {
-      if (redirectTimeoutRef.current) {
-        clearTimeout(redirectTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const handleBidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBidData({
-      ...bidData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmitBid = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const bidPrice = Number(bidData.price.trim());
-    if (!Number.isFinite(bidPrice) || bidPrice <= 0) {
-      toast.error("입찰가는 1원 이상 숫자로 입력해주세요.");
-      return;
-    }
-
-    void submitBid({
-      jobPostId: Number(id ?? project?.id ?? 1),
-      price: bidPrice,
-    });
-  };
-
-  const handleCancelBid = () => {
-    setShowBidForm(false);
-    if (project && location.pathname.endsWith("/bid")) {
-      navigate(`/expert/jobs/${project.id}`);
-    }
-  };
 
   if (error) {
     return (
@@ -107,6 +38,8 @@ export function ProjectDetailExpert() {
 
   if (!project) return null;
 
+  const hasMyBid = project.hasMyBid === true;
+
   return (
     <div className="space-y-4 md:space-y-6">
       {/* 헤더 */}
@@ -122,9 +55,11 @@ export function ProjectDetailExpert() {
             <Badge variant="outline" className="text-[11px] md:text-xs">
               {project.type}
             </Badge>
-            <Badge className="bg-green-100 text-[11px] text-green-700 md:text-xs">
-              {project.status}
-            </Badge>
+            {project.status ? (
+              <Badge className="bg-green-100 text-[11px] text-green-700 md:text-xs">
+                {project.status}
+              </Badge>
+            ) : null}
           </div>
           <h1 className="mb-1.5 break-keep text-xl font-semibold leading-snug text-slate-950 md:mb-2 md:text-3xl md:font-normal">
             {project.title}
@@ -137,14 +72,12 @@ export function ProjectDetailExpert() {
           <Button asChild variant="outline" className="h-8 px-3 text-xs md:h-9 md:text-sm">
             <Link to="/expert/jobs">목록으로</Link>
           </Button>
-          {!showBidForm && (
-            <Button
-              className="h-8 bg-teal-600 px-3 text-xs hover:bg-teal-700 md:h-9 md:text-sm"
-              onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
-            >
-              입찰하기
-            </Button>
-          )}
+          <Button
+            className="h-8 bg-teal-600 px-3 text-xs hover:bg-teal-700 md:h-9 md:text-sm"
+            onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
+          >
+            {hasMyBid ? "입찰 수정" : "입찰 시작"}
+          </Button>
         </div>
       </div>
 
@@ -253,27 +186,6 @@ export function ProjectDetailExpert() {
             </CardContent>
           </Card>
 
-          <Card className="gap-2 md:gap-6">
-            <CardHeader className="p-3 md:px-6 md:pt-6">
-              <CardTitle className="text-base md:text-lg">의뢰 기업 정보</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 px-3 pb-3 text-sm [&:last-child]:pb-3 md:space-y-3 md:px-6 md:pb-6 md:text-base md:[&:last-child]:pb-6">
-              <div className="flex items-start gap-2">
-                <Building2 className="mt-0.5 h-4 w-4 text-teal-600 md:h-5 md:w-5" />
-                <div className="flex-1">
-                  <p className="text-xs text-gray-600 md:text-sm">회사명</p>
-                  <p className="font-medium">{project.company.name}</p>
-                </div>
-              </div>
-              <div className="pl-6 md:pl-7">
-                <p className="text-xs text-gray-600 md:text-sm">대표자</p>
-                <p className="font-medium">
-                  {project.company.representative || "미공개"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
           <Card className="gap-0 border-teal-200 bg-teal-50">
             <CardContent className="px-3 py-3 [&:last-child]:pb-3 md:px-6 md:pt-6 md:[&:last-child]:pb-6">
               <h4 className="mb-1.5 text-sm font-medium text-teal-900 md:mb-2 md:text-base">
@@ -287,29 +199,14 @@ export function ProjectDetailExpert() {
             </CardContent>
           </Card>
 
-          {!showBidForm && (
-            <Button
-              className="h-9 w-full bg-teal-600 text-sm hover:bg-teal-700 md:h-10 md:text-base"
-              size="lg"
-              onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
-            >
-              지금 입찰하기
-            </Button>
-          )}
+          <Button
+            className="h-9 w-full bg-teal-600 text-sm hover:bg-teal-700 md:h-10 md:text-base"
+            size="lg"
+            onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
+          >
+            {hasMyBid ? "입찰 수정하기" : "지금 입찰하기"}
+          </Button>
         </div>
-
-        {/* 모바일에서는 입찰/기업 정보를 먼저 확인한 뒤 마지막에 입력합니다. */}
-        {showBidForm && (
-          <div className="lg:col-span-2 lg:row-start-2">
-            <BidForm
-              bidData={bidData}
-              isSubmitting={isSubmittingBid}
-              onChange={handleBidChange}
-              onSubmit={handleSubmitBid}
-              onCancel={handleCancelBid}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

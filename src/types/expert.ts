@@ -14,6 +14,8 @@ export type BidStatusCode = "PENDING" | "SELECTED" | "REJECTED";
 
 export type BidStatusLabel = "대기 중" | "선정됨" | "거절됨";
 
+export type JobPostSort = "posted_at_desc" | "posted_at_asc";
+
 export interface User {
   id: number;
   name: string;
@@ -123,11 +125,14 @@ export interface JobPostListItemDto {
   current_industry?: string | null;
   current_license?: string | null;
   reason?: string | null;
-  asset_scale_label?: string | null;
+  asset_scale_label?: number | string | null;
   bid_count: number;
   posted_at: string;
+  deadline?: string | null;
+  due_date?: string | null;
+  job_post_deadline?: string | null;
   is_new: boolean;
-  status: JobPostStatusCode;
+  status?: JobPostStatusCode | null;
   has_my_bid?: boolean;
 }
 
@@ -177,6 +182,9 @@ export interface MyBidItemDto {
   bid_amount: number;
   status: BidStatusCode;
   submitted_at: string;
+  deadline?: string | null;
+  due_date?: string | null;
+  job_post_deadline?: string | null;
   total_bid_count: number;
   client_contact: ClientContactDto | null;
 }
@@ -229,9 +237,25 @@ export interface ExpertJobListItemVM {
   assetScale?: string;
   bids: number;
   postedDate: string;
+  deadline?: string;
   isNew: boolean;
   status?: string;
   hasMyBid?: boolean;
+}
+
+export interface ExpertJobListQuery {
+  page?: number;
+  size?: number;
+  sort?: JobPostSort;
+}
+
+export interface ExpertJobListResultVM {
+  hasNext: boolean;
+  items: ExpertJobListItemVM[];
+  page: number;
+  size: number;
+  totalCount: number;
+  totalPages: number;
 }
 
 export interface ExpertJobDetailVM extends ExpertJobListItemVM {
@@ -246,6 +270,7 @@ export interface MyBidItemVM {
   myBid: string;
   status: BidStatusLabel;
   bidDate: string;
+  deadline?: string;
   totalBids: number;
   clientContact?: ClientContactVM;
 }

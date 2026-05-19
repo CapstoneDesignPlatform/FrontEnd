@@ -13,12 +13,12 @@ function mapVerificationCertificateDtoToVM(
   certificate: VerificationCertificateDto,
 ): VerificationCertificateVM {
   return {
-    licenseType: certificate.license_type,
-    licenseNumber: certificate.license_number,
+    licenseType: certificate.license_type ?? certificate.certificate_name ?? "",
+    licenseNumber: certificate.license_number ?? certificate.certificate_number ?? "",
     issueDate: certificate.issue_date,
     fileId: certificate.file_id,
-    holderName: certificate.holder_name,
-    fileName: certificate.file_name,
+    holderName: certificate.holder_name ?? certificate.owner_name,
+    fileName: certificate.file_name ?? certificate.original_name,
   };
 }
 
@@ -27,35 +27,10 @@ function mapVerificationBusinessLicenseDtoToVM(
 ): VerificationBusinessLicenseVM {
   return {
     businessNumber: businessLicense.business_number,
-    ownerName: businessLicense.owner_name,
+    ownerName: businessLicense.owner_name ?? businessLicense.representative_name,
     companyName: businessLicense.company_name,
     fileId: businessLicense.file_id,
-    fileName: businessLicense.file_name,
-  };
-}
-
-function mapSubmitCertificateToDto(
-  certificate: NonNullable<SubmitExpertVerificationRequest["certificates"]>[number],
-): VerificationCertificateDto {
-  return {
-    license_type: certificate.licenseType,
-    license_number: certificate.licenseNumber,
-    issue_date: certificate.issueDate,
-    file_id: certificate.fileId,
-    holder_name: certificate.holderName,
-    file_name: certificate.fileName,
-  };
-}
-
-function mapSubmitBusinessLicenseToDto(
-  businessLicense: NonNullable<SubmitExpertVerificationRequest["businessLicense"]>,
-): VerificationBusinessLicenseDto {
-  return {
-    business_number: businessLicense.businessNumber,
-    owner_name: businessLicense.ownerName,
-    company_name: businessLicense.companyName,
-    file_id: businessLicense.fileId,
-    file_name: businessLicense.fileName,
+    fileName: businessLicense.file_name ?? businessLicense.original_name,
   };
 }
 
@@ -92,9 +67,5 @@ export function mapSubmitVerificationRequestToDto(
     issue_date: payload.issueDate,
     company_name: payload.companyName,
     portfolio: payload.portfolio,
-    certificates: payload.certificates?.map(mapSubmitCertificateToDto),
-    business_license: payload.businessLicense
-      ? mapSubmitBusinessLicenseToDto(payload.businessLicense)
-      : undefined,
   };
 }
