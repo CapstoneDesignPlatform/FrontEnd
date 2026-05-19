@@ -86,7 +86,7 @@ const communityPage = page(
   ({ Community }) => Community,
 );
 const communityDetailPage = page(
-  () => import("./pages/category/community/CommunityDetail"), 
+  () => import("./pages/category/community/CommunityDetail"),
   ({ CommunityDetail }) => CommunityDetail,
 );
 const communityWritePage = page(
@@ -291,6 +291,14 @@ const adminFeeDetailPage = page(
   () => import("./pages/admin/AdminFeeDetail"),
   ({ AdminFeeDetail }) => AdminFeeDetail,
 );
+const adminMembershipManagePage = page(
+  () => import("./pages/admin/AdminMembershipManage"),
+  ({ AdminMembershipManage }) => AdminMembershipManage,
+);
+const adminMembershipStatsPage = page(
+  () => import("./pages/admin/AdminMembershipStats"),
+  ({ AdminMembershipStats }) => AdminMembershipStats,
+);
 
 export const router = createBrowserRouter([
   {
@@ -304,8 +312,8 @@ export const router = createBrowserRouter([
       { path: "check-request", lazy: checkRequestPage },
       { path: "support", lazy: supportPage },
 
-      { path: "oauth/callback/kakao",  lazy: oauthCallbackPage },
-      { path: "oauth/callback/naver",  lazy: oauthCallbackPage },
+      { path: "oauth/callback/kakao", lazy: oauthCallbackPage },
+      { path: "oauth/callback/naver", lazy: oauthCallbackPage },
       { path: "oauth/callback/google", lazy: oauthCallbackPage },
 
       { path: "bids/notice", lazy: noticePage },
@@ -388,6 +396,8 @@ export const router = createBrowserRouter([
           },
           { path: "fees/stats", lazy: adminFeeStatsPage },
           { path: "fees/:memberNumber", lazy: adminFeeDetailPage },
+          { path: "membership/manage", lazy: adminMembershipManagePage },
+          { path: "membership/stats", lazy: adminMembershipStatsPage },
         ],
       },
 

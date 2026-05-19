@@ -76,18 +76,48 @@ const recentApproved = [
 
 export function AdminExperts() {
   const handleExportPending = () => {
-    exportToExcel(
-      "승인대기_전문가",
-      ["이름", "이메일", "연락처", "전문분야", "신청일", "서류첨부"],
-      pendingExperts.map((e) => [
-        e.name,
-        e.email,
-        e.phone,
-        e.expertise,
-        e.appliedDate,
-        e.hasDocuments ? "O" : "X",
-      ]),
-    );
+    import("xlsx").then((XLSX) => {
+      const wb = XLSX.utils.book_new();
+
+      // 시트1: 전체 통계 요약
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        ["항목", "수치"],
+        ["총 전문가", `${stats.totalExperts}명`],
+        ["승인 대기", `${stats.pendingExperts}명`],
+        ["승인 완료", `${stats.approvedExperts}명`],
+      ]);
+      ws1["!cols"] = [{ wch: 15 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(wb, ws1, "통계요약");
+
+      // 시트2: 승인 대기 전문가
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ["번호", "이름", "이메일", "연락처", "전문분야", "신청일", "서류첨부"],
+        ...pendingExperts.map((e, i) => [
+          i + 1,
+          e.name,
+          e.email,
+          e.phone,
+          e.expertise,
+          e.appliedDate,
+          e.hasDocuments ? "O" : "X",
+        ]),
+      ]);
+      ws2["!cols"] = [6, 10, 25, 15, 15, 12, 8].map((wch) => ({ wch }));
+      XLSX.utils.book_append_sheet(wb, ws2, "승인대기전문가");
+
+      // 시트3: 최근 승인된 전문가
+      const ws3 = XLSX.utils.aoa_to_sheet([
+        ["이름", "전문분야", "승인일"],
+        ...recentApproved.map((e) => [e.name, e.expertise, e.approvedAt]),
+      ]);
+      ws3["!cols"] = [{ wch: 12 }, { wch: 20 }, { wch: 12 }];
+      XLSX.utils.book_append_sheet(wb, ws3, "최근승인전문가");
+
+      XLSX.writeFile(
+        wb,
+        `전문가관리_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    });
   };
 
   return (

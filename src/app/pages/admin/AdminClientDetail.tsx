@@ -241,24 +241,67 @@ export function AdminClientDetail() {
             size="sm"
             variant="outline"
             className="gap-1 text-xs"
-            onClick={() =>
-              exportToExcel(
-                `의뢰인상세_${client.name}`,
-                ["항목", "내용"],
-                [
+            onClick={() => {
+              import("xlsx").then((XLSX) => {
+                const wb = XLSX.utils.book_new();
+
+                // 시트1: 기본 정보 + 현황
+                const ws1 = XLSX.utils.aoa_to_sheet([
+                  ["항목", "내용"],
                   ["이름", client.name],
                   ["회원번호", client.memberNumber],
                   ["업체명", client.company],
-                  ["사업자번호", client.businessNumber],
+                  ["사업자등록번호", client.businessNumber],
                   ["연락처", client.phone],
                   ["이메일", client.email],
                   ["주소", client.address],
                   ["가입일", client.registeredAt],
                   ["상태", clientStatus === "active" ? "정상" : "정지"],
-                  ["총의뢰수", client.projects.length],
-                ],
-              )
-            }
+                  ["총 의뢰 수", `${client.projects.length}건`],
+                ]);
+                ws1["!cols"] = [{ wch: 16 }, { wch: 40 }];
+                XLSX.utils.book_append_sheet(wb, ws1, "기본정보");
+
+                // 시트2: 현황 이력
+                const ws2 = XLSX.utils.aoa_to_sheet([
+                  ["일시", "내용", "현재상태"],
+                  ...statusHistory.map((h) => [h.date, h.content, h.status]),
+                ]);
+                ws2["!cols"] = [{ wch: 20 }, { wch: 30 }, { wch: 10 }];
+                XLSX.utils.book_append_sheet(wb, ws2, "현황이력");
+
+                // 시트3: 의뢰 목록
+                if (client.projects.length > 0) {
+                  const statusLabel = (s: string) =>
+                    s === "matched"
+                      ? "전문가 매칭됨"
+                      : s === "completed"
+                        ? "완료"
+                        : "매칭 대기";
+                  const ws3 = XLSX.utils.aoa_to_sheet([
+                    ["의뢰코드", "공고명", "상태", "등록일"],
+                    ...client.projects.map((p) => [
+                      p.code,
+                      p.title,
+                      statusLabel(p.status),
+                      p.createdAt,
+                    ]),
+                  ]);
+                  ws3["!cols"] = [
+                    { wch: 16 },
+                    { wch: 40 },
+                    { wch: 14 },
+                    { wch: 12 },
+                  ];
+                  XLSX.utils.book_append_sheet(wb, ws3, "의뢰목록");
+                }
+
+                XLSX.writeFile(
+                  wb,
+                  `의뢰인상세_${client.name}_${new Date().toISOString().slice(0, 10)}.xlsx`,
+                );
+              });
+            }}
           >
             <Download className="h-3 w-3" />
             Excel 다운로드
@@ -289,202 +332,240 @@ export function AdminClientDetail() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                기본 정보
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">이름</p>
-                  <p className="font-medium">{client.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">회원번호</p>
-                  <p className="font-medium font-mono">{client.memberNumber}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">업체명</p>
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-gray-500" />
-                    <p className="font-medium">{client.company}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">사업자등록번호</p>
-                  <p className="font-medium font-mono">
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          {/* 기본 정보 - 엑셀 (관)의뢰인 회원카드 시트 기준 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              기본 정보
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <tbody>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
+                    이름
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {client.name}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
+                    회원번호
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5 font-mono">
+                    {client.memberNumber}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    업체명
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {client.company}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    사업자등록번호
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5 font-mono">
                     {client.businessNumber}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">연락처</p>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-500" />
-                    <p className="font-medium">{client.phone}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">이메일</p>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-gray-500" />
-                    <p className="font-medium">{client.email}</p>
-                  </div>
-                </div>
-                <div className="md:col-span-2">
-                  <p className="text-sm text-gray-600 mb-1">주소</p>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    <p className="font-medium">{client.address}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">가입일</p>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <p className="font-medium">{client.registeredAt}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    연락처
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {client.phone}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    이메일
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {client.email}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    주소
+                  </td>
+                  <td
+                    colSpan={3}
+                    className="border-b border-gray-200 px-3 py-1.5"
+                  >
+                    {client.address}
+                  </td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    가입일
+                  </td>
+                  <td colSpan={3} className="px-3 py-1.5">
+                    {client.registeredAt}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                현황 이력
-              </CardTitle>
-              <CardDescription>상태 변경 이력을 확인합니다.</CardDescription>
-            </CardHeader>
-            <CardContent>
+          {/* 현황 이력 - 엑셀 (관)의뢰인 회원카드 시트 기준 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              현황 이력
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="bg-gray-50">
+                    {["일시", "내용", "현재상태"].map((h) => (
+                      <th
+                        key={h}
+                        className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap last:border-r-0"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {statusHistory.map((item, index) => (
+                    <tr
+                      key={index}
+                      className={`hover:bg-teal-50 transition-colors ${index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                    >
+                      <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                        {item.date}
+                      </td>
+                      <td className="border-b border-r border-gray-200 px-2 py-1">
+                        {item.content}
+                      </td>
+                      <td className="border-b border-gray-200 px-2 py-1">
+                        {item.status === "정상" && (
+                          <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                            정상
+                          </span>
+                        )}
+                        {item.status === "정지" && (
+                          <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700">
+                            정지
+                          </span>
+                        )}
+                        {item.status === "탈퇴" && (
+                          <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">
+                            탈퇴
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 의뢰 목록 - 엑셀 스타일 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              의뢰 목록 (총 {client.projects.length}건)
+            </div>
+            {client.projects.length === 0 ? (
+              <div className="text-center py-6 text-xs text-gray-400">
+                등록된 의뢰가 없습니다.
+              </div>
+            ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs border-collapse">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2 px-3 text-gray-600 font-medium">
-                        일시
-                      </th>
-                      <th className="text-left py-2 px-3 text-gray-600 font-medium">
-                        내용
-                      </th>
-                      <th className="text-left py-2 px-3 text-gray-600 font-medium">
-                        현재상태
-                      </th>
+                    <tr className="bg-gray-50">
+                      {["의뢰코드", "공고명", "상태", "등록일", "상세"].map(
+                        (h) => (
+                          <th
+                            key={h}
+                            className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap last:border-r-0"
+                          >
+                            {h}
+                          </th>
+                        ),
+                      )}
                     </tr>
                   </thead>
                   <tbody>
-                    {statusHistory.map((item, index) => (
-                      <tr key={index} className="border-b hover:bg-gray-50">
-                        <td className="py-2 px-3 text-gray-600 whitespace-nowrap">
-                          {item.date}
+                    {client.projects.map((project, i) => (
+                      <tr
+                        key={project.id}
+                        className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                      >
+                        <td className="border-b border-r border-gray-200 px-2 py-1 font-mono whitespace-nowrap">
+                          {project.code}
                         </td>
-                        <td className="py-2 px-3">{item.content}</td>
-                        <td className="py-2 px-3">
-                          {item.status === "정상" && (
-                            <Badge className="bg-green-100 text-green-700">
-                              정상
-                            </Badge>
+                        <td className="border-b border-r border-gray-200 px-2 py-1">
+                          {project.title}
+                        </td>
+                        <td className="border-b border-r border-gray-200 px-2 py-1">
+                          {project.status === "matched" && (
+                            <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                              전문가 매칭됨
+                            </span>
                           )}
-                          {item.status === "정지" && (
-                            <Badge className="bg-red-100 text-red-700">
-                              정지
-                            </Badge>
+                          {project.status === "completed" && (
+                            <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                              완료
+                            </span>
                           )}
-                          {item.status === "탈퇴" && (
-                            <Badge
-                              variant="outline"
-                              className="bg-gray-100 text-gray-700"
-                            >
-                              탈퇴
-                            </Badge>
+                          {project.status === "unmatched" && (
+                            <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">
+                              매칭 대기
+                            </span>
                           )}
+                        </td>
+                        <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                          {project.createdAt}
+                        </td>
+                        <td className="border-b border-gray-200 px-2 py-1">
+                          <Link
+                            to={`/admin/projects/${project.id}`}
+                            className="text-teal-600 hover:underline whitespace-nowrap"
+                          >
+                            상세 →
+                          </Link>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                의뢰 목록
-              </CardTitle>
-              <CardDescription>
-                총 {client.projects.length}건의 의뢰가 있습니다.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {client.projects.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  등록된 의뢰가 없습니다.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {client.projects.map((project) => (
-                    <Link
-                      key={project.id}
-                      to={`/admin/projects/${project.id}`}
-                      className="block"
-                    >
-                      <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                        <CardContent className="pt-4 pb-4">
-                          <div className="flex items-center justify-between gap-4">
-                            <div>
-                              <div className="flex items-center gap-3 mb-1 flex-wrap">
-                                <h3 className="font-semibold">
-                                  {project.title}
-                                </h3>
-                                {getProjectStatusBadge(project.status)}
-                              </div>
-                              <p className="text-sm text-gray-500">
-                                의뢰 코드: {project.code} · 등록일:{" "}
-                                {project.createdAt}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </div>
 
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>가입 정보</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div>
-                <p className="text-gray-600 mb-1">가입일</p>
-                <p className="font-semibold">{client.registeredAt}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 mb-1">총 의뢰 수</p>
-                <p className="font-semibold">{client.projects.length}건</p>
-              </div>
-              <div>
-                <p className="text-gray-600 mb-1">상태</p>
-                {clientStatus === "active" ? (
-                  <Badge className="bg-green-100 text-green-700">정상</Badge>
-                ) : (
-                  <Badge className="bg-red-100 text-red-700">정지</Badge>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {/* 가입 정보 - 엑셀 스타일 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+              가입 정보
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <tbody>
+                {[
+                  ["가입일", client.registeredAt],
+                  ["총 의뢰 수", `${client.projects.length}건`],
+                  ["상태", clientStatus === "active" ? "정상" : "정지"],
+                ].map(([label, value], i) => (
+                  <tr
+                    key={label}
+                    className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap last:border-b-0">
+                      {label}
+                    </td>
+                    <td
+                      className={`border-b border-gray-200 px-3 py-1.5 last:border-b-0 ${label === "상태" ? (clientStatus === "active" ? "text-green-700 font-semibold" : "text-red-700 font-semibold") : ""}`}
+                    >
+                      {value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

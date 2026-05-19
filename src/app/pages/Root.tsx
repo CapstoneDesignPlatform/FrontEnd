@@ -189,39 +189,21 @@ export function Root() {
                   <NavigationMenuList className="gap-2">
                     {isAdminRoute ? (
                       <>
-                        <NavigationMenuItem>
-                          <Link
-                            to="/admin/projects"
-                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                          >
-                            의뢰현황 조회
-                          </Link>
-                        </NavigationMenuItem>
-                        <NavigationMenuItem>
-                          <Link
-                            to="/admin/experts"
-                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                          >
-                            전문가 관리
-                          </Link>
-                        </NavigationMenuItem>
-                        <NavigationMenuItem>
-                          <Link
-                            to="/admin/clients"
-                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                          >
-                            의뢰인 관리
-                          </Link>
-                        </NavigationMenuItem>
-
-                        <NavigationMenuItem>
-                          <Link
-                            to="/admin/settings"
-                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                          >
-                            플랫폼 설정
-                          </Link>
-                        </NavigationMenuItem>
+                        {[
+                          { to: "/admin/projects", label: "의뢰현황 조회" },
+                          { to: "/admin/experts", label: "전문가 관리" },
+                          { to: "/admin/clients", label: "의뢰인 관리" },
+                          { to: "/admin/settings", label: "플랫폼 설정" },
+                        ].map(({ to, label }) => (
+                          <NavigationMenuItem key={to}>
+                            <Link
+                              to={to}
+                              className={`text-sm px-4 py-2 rounded transition-colors ${location.pathname.startsWith(to) ? "bg-teal-50 text-teal-600 font-semibold" : "hover:bg-teal-50 hover:text-teal-600"}`}
+                            >
+                              {label}
+                            </Link>
+                          </NavigationMenuItem>
+                        ))}
 
                         <NavigationMenuItem>
                           <DropdownMenu>
@@ -252,11 +234,25 @@ export function Root() {
                             <DropdownMenuTrigger className="text-sm px-4 py-2 hover:text-teal-600 transition-colors flex items-center gap-1 outline-none">
                               중개수수료 <ChevronDown className="h-3 w-3" />
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-40">
+                            <DropdownMenuContent align="start" className="w-44">
                               <DropdownMenuItem
                                 onClick={() => navigate("/admin/fees/stats")}
                               >
-                                집계
+                                중개수수료 현황
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  navigate("/admin/membership/manage")
+                                }
+                              >
+                                회원비 납입 관리
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  navigate("/admin/membership/stats")
+                                }
+                              >
+                                회원비 납입 현황
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
