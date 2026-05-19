@@ -12,6 +12,7 @@ import {
   mapCreateBidRequestToDto,
   mapExpertProfileDtoToVM,
   mapExpertProfileVMToUpdateDto,
+  mapExpertSignupRequestToDto,
   mapJobPostDetailDtoToVM,
   mapJobPostListDtoToVM,
 } from "./expertMappers";
@@ -19,16 +20,23 @@ import type { ExpertApi } from "./expertApiTypes";
 
 export const expertHttpApi: ExpertApi = {
   async registerExpert(payload) {
+    const dto = mapExpertSignupRequestToDto(payload);
     const response = await apiClient.post<ExpertSignupResponseDto>(
       "/auth/signup/expert",
-      { body: payload },
+      { body: dto },
     );
 
     return mapExpertProfileDtoToVM(response);
   },
 
-  async getExpertJobs() {
-    const response = await apiClient.get<JobPostListResponseDto>("/expert/job-posts");
+  async getExpertJobs(query = { page: 1, size: 20, sort: "posted_at_desc" as const }) {
+    const response = await apiClient.get<JobPostListResponseDto>("/expert/job-posts", {
+      query: {
+        page: query.page,
+        size: query.size,
+        sort: query.sort,
+      },
+    });
 
     return mapJobPostListDtoToVM(response);
   },
@@ -44,6 +52,16 @@ export const expertHttpApi: ExpertApi = {
   async createBid(payload) {
     const dto = mapCreateBidRequestToDto(payload);
     const response = await apiClient.post<CreateBidResponseDto>(
+      `/expert/job-posts/${payload.jobPostId}/bids`,
+      { body: { bid_amount: dto.bid_amount } },
+    );
+
+    return mapBidDtoToVM(response.bid);
+  },
+
+  async updateBid(payload) {
+    const dto = mapCreateBidRequestToDto(payload);
+    const response = await apiClient.patch<CreateBidResponseDto>(
       `/expert/job-posts/${payload.jobPostId}/bids`,
       { body: { bid_amount: dto.bid_amount } },
     );
