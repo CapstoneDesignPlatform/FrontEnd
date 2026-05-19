@@ -1,7 +1,6 @@
-import type { FormEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useEffect } from "react";
 
 import {
   Card,
@@ -10,165 +9,179 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import {
-  getVisibleTabs,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
+
+import { IndustrySelection } from "./createProject/IndustrySelection";
+import { PurposeSelection } from "./createProject/ProjectPurpose";
+import {
   industryLabels,
-  isSupportedDetailIndustry,
   projectTabLabels,
 } from "./createProject/createProjectConfig";
 import {
-  BaseProjectForm,
   LicenseRequestForm,
-  OtherRequestForm,
   PeriodicReportForm,
   SurveyRequestForm,
+  OtherRequestForm,
+  BaseProjectForm,
 } from "./createProject/CreateProjectForms";
-import { IndustrySelection } from "./createProject/IndustrySelection";
-import { ProjectGuide } from "./createProject/ProjectGuide";
-import { useCreateProjectState } from "./createProject/useCreateProjectState";
-import type { ProjectTab } from "./createProject/types";
-import { PurposeSelection } from "./createProject/ProjectPurpose";
+
+import type {
+  BaseProjectFormData,
+  ConstructionLicenseData,
+  ConstructionSurveyData,
+  ConstructionOtherData,
+  ElectricalPeriodicData,
+  ProjectTab,
+} from "./createProject/types";
+
+// --- 초기 데이터 ---
+const initialLicenseData: ConstructionLicenseData = {
+  businessType: "corporation", classification: "new", requiredLicense: "",
+  currentIndustryType: "none", currentIndustryDetail: "", assetScale: "",
+};
+const initialPeriodicData: ElectricalPeriodicData = { businessType: "corporation", assetScale: "" };
+const initialSurveyData: ConstructionSurveyData = { businessType: "corporation", currentLicense: "", assetScale: "" };
+const initialOtherData: ConstructionOtherData = { businessType: "corporation", reason: "capital", assetScale: "" };
+const initialBaseData: BaseProjectFormData = { title: "", description: "", budget: "", deadline: "", requirements: "", location: "" };
+
+type Step = "industry" | "purpose" | "detail" | "base";
 
 export function CreateProject() {
   const navigate = useNavigate();
-  const { industry, tab } = useParams<{ industry: string; tab: string }>();
-  const {
-    activeTab,
-    constructionLicenseData,
-    constructionOtherData,
-    constructionSurveyData,
-    electricalPeriodicData,
-    formData,
-    setActiveTab,
-    setConstructionLicenseData,
-    setConstructionOtherData,
-    setConstructionSurveyData,
-    setElectricalPeriodicData,
-    setFormData,
-  } = useCreateProjectState();
+  const [step, setStep] = useState<Step>("industry");
+  const [selectedIndustry, setSelectedIndustry] = useState("");
+  const [activeTab, setActiveTab] = useState<ProjectTab>("license");
 
-  useEffect(() => {
-    if (tab) {
-      setActiveTab(tab as ProjectTab);
-    }
-  }, [tab, setActiveTab]);
+  // 데이터 상태
+  const [constructionLicenseData, setConstructionLicenseData] = useState(initialLicenseData);
+  const [electricalPeriodicData, setElectricalPeriodicData] = useState(initialPeriodicData);
+  const [constructionSurveyData, setConstructionSurveyData] = useState(initialSurveyData);
+  const [constructionOtherData, setConstructionOtherData] = useState(initialOtherData);
+  const [formData, setFormData] = useState(initialBaseData);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  // ✅ [수정] 산업군에 따른 탭 필터링 로직
+  // 건설업(construction)일 때는 periodic(주기적 신고)을 제외합니다.
+  const visibleTabs: ProjectTab[] = selectedIndustry === "construction" 
+    ? ["license", "survey", "other"] 
+    : ["license", "periodic", "survey", "other"];
 
-    const projectCode = `REQ-${Date.now().toString(36).toUpperCase()}`;
+  const handleDetailSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStep("base");
+  };
 
-    toast.success("공고가 등록되었습니다!");
+  const handleBaseSubmit = (projectCode: string) => {
     navigate(`/client/project-success/${projectCode}`);
   };
 
   const handleCancel = () => {
-    navigate("/client/dashboard");
+    setStep("detail");
   };
 
-  if (!industry) {
-    return (
-      <IndustrySelection
-        onSelectIndustry={(selectedIndustry) =>
-          navigate(`/client/create-project/${selectedIndustry}`)
-        }
-      />
-    );
-  }
+  const isSupportedDetailIndustry = (industry: string) => {
+    return industry === "construction" || industry === "electrical";
+  };
 
-  if (!tab) {
-    return (
-      <PurposeSelection
-        onSelectPurpose={(selectedPurpose) => {
-          navigate(`/client/create-project/${industry}/${selectedPurpose}`);
-        }}
-      />
-    );
-  }
-
-  const selectedIndustry = industry;
-  const visibleTabs = getVisibleTabs(selectedIndustry);
+  const getDetailData = () => {
+    switch (activeTab) {
+      case "license": return constructionLicenseData;
+      case "periodic": return electricalPeriodicData;
+      case "survey": return constructionSurveyData;
+      case "other": return constructionOtherData;
+      default: return constructionLicenseData;
+    }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">
-            의뢰 공고 작성 - {industryLabels[selectedIndustry] ?? selectedIndustry}
-          </CardTitle>
-          <CardDescription>
-            전문가에게 의뢰할 프로젝트 정보를 상세히 작성해주세요.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            value={activeTab}
-            onValueChange={(tab) => setActiveTab(tab as ProjectTab)}
-            className="w-full"
-          >
-            <TabsList
-              className={`grid w-full mb-6 ${
-                visibleTabs.length === 4 ? "grid-cols-4" : "grid-cols-3"
-              }`}
-            >
-              {visibleTabs.map((tab) => (
-                <TabsTrigger key={tab} value={tab}>
-                  {projectTabLabels[tab]}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+    <div className="max-w-4xl mx-auto py-10 px-4">
+      {step === "industry" && (
+        <IndustrySelection onSelectIndustry={(ind) => { setSelectedIndustry(ind); setStep("purpose"); }} />
+      )}
 
-            {visibleTabs.map((tab) => (
-              <TabsContent key={tab} value={tab}>
-                {renderProjectForm(tab)}
-              </TabsContent>
-            ))}
-          </Tabs>
-        </CardContent>
-      </Card>
+      {step === "purpose" && (
+        <PurposeSelection onSelectPurpose={(purp) => { 
+          setActiveTab(purp as ProjectTab); 
+          setStep("detail"); 
+        }} />
+      )}
+
+      {(step === "detail" || step === "base") && (
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold">
+                의뢰 공고 작성 - {industryLabels[selectedIndustry] ?? selectedIndustry}
+              </CardTitle>
+              <CardDescription>
+                전문가에게 의뢰할 프로젝트 정보를 상세히 작성해주세요.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs
+                value={activeTab}
+                onValueChange={(tab) => {
+                  setActiveTab(tab as ProjectTab);
+                  setStep("detail");
+                }}
+                className="w-full"
+              >
+                <TabsList
+                  className={`grid w-full mb-6 ${
+                    visibleTabs.length === 4 ? "grid-cols-4" : "grid-cols-3"
+                  }`}
+                >
+                  {visibleTabs.map((tab) => (
+                    <TabsTrigger key={tab} value={tab}>
+                      {projectTabLabels[tab]}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                {visibleTabs.map((tab) => (
+                  <TabsContent key={tab} value={tab}>
+                    {renderProjectForm(tab)}
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 
   function renderProjectForm(tab: ProjectTab) {
+    if (step === "base") {
+      return (
+        <BaseProjectForm
+          activeTab={tab}
+          industry={selectedIndustry}
+          detailData={getDetailData()}
+          onCancel={handleCancel}
+          onSubmit={handleBaseSubmit}
+        />
+      );
+    }
+
     if (isSupportedDetailIndustry(selectedIndustry)) {
       switch (tab) {
         case "license":
-          return (
-            <LicenseRequestForm
-              data={constructionLicenseData}
-              onChange={setConstructionLicenseData}
-              onSubmit={handleSubmit}
-            />
-          );
+          return <LicenseRequestForm data={constructionLicenseData} onChange={setConstructionLicenseData} onSubmit={handleDetailSubmit} />;
         case "periodic":
+          // ✅ 건설업일 때는 주기적 신고 폼을 아예 렌더링하지 않음
           if (selectedIndustry === "electrical") {
-            return (
-              <PeriodicReportForm
-                data={electricalPeriodicData}
-                onChange={setElectricalPeriodicData}
-                onSubmit={handleSubmit}
-              />
-            );
+            return <PeriodicReportForm data={electricalPeriodicData} onChange={setElectricalPeriodicData} onSubmit={handleDetailSubmit} />;
           }
           break;
         case "survey":
-          return (
-            <SurveyRequestForm
-              data={constructionSurveyData}
-              onChange={setConstructionSurveyData}
-              onSubmit={handleSubmit}
-            />
-          );
+          return <SurveyRequestForm data={constructionSurveyData} onChange={setConstructionSurveyData} onSubmit={handleDetailSubmit} />;
         case "other":
-          return (
-            <OtherRequestForm
-              data={constructionOtherData}
-              industry={selectedIndustry}
-              onChange={setConstructionOtherData}
-              onSubmit={handleSubmit}
-            />
-          );
+          return <OtherRequestForm data={constructionOtherData} industry={selectedIndustry} onChange={setConstructionOtherData} onSubmit={handleDetailSubmit} />;
       }
     }
 
@@ -179,7 +192,7 @@ export function CreateProject() {
         industry={selectedIndustry}
         onCancel={handleCancel}
         onChange={setFormData}
-        onSubmit={handleSubmit}
+        onSubmit={handleDetailSubmit}
       />
     );
   }

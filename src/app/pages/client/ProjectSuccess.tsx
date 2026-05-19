@@ -10,8 +10,7 @@ export function ProjectSuccess() {
   const { projectCode } = useParams<{ projectCode: string }>();
   const [copied, setCopied] = useState(false);
 
-  // 프로젝트 코드가 없으면 랜덤으로 생성 (실제로는 서버에서 받아와야 함)
-  const code = projectCode || `REQ-${Date.now().toString(36).toUpperCase()}`;
+  const code = projectCode || "코드 확인 불가";
 
   const handleCopyCode = async () => {
     try {
