@@ -7,6 +7,10 @@ import { Users } from "lucide-react";
 import { AsyncStateCard } from "../../components/common/AsyncStateCard";
 import { getExpertJobDetail } from "../../../api/expert";
 import { useAsyncData } from "../../hooks/useAsyncData";
+import {
+  canBidOnExpertJob,
+  getExpertBidAvailability,
+} from "../../components/expert/jobStatus";
 
 export function ProjectDetailExpert() {
   const { id } = useParams();
@@ -39,6 +43,8 @@ export function ProjectDetailExpert() {
   if (!project) return null;
 
   const hasMyBid = project.hasMyBid === true;
+  const bidStatus = getExpertBidAvailability(project);
+  const canBid = canBidOnExpertJob(project);
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -55,11 +61,15 @@ export function ProjectDetailExpert() {
             <Badge variant="outline" className="text-[11px] md:text-xs">
               {project.type}
             </Badge>
-            {project.status ? (
-              <Badge className="bg-green-100 text-[11px] text-green-700 md:text-xs">
-                {project.status}
-              </Badge>
-            ) : null}
+            <Badge
+              className={
+                bidStatus === "입찰 가능"
+                  ? "bg-green-100 text-[11px] text-green-700 md:text-xs"
+                  : "bg-slate-100 text-[11px] text-slate-600 md:text-xs"
+              }
+            >
+              {bidStatus}
+            </Badge>
           </div>
           <h1 className="mb-1.5 break-keep text-xl font-semibold leading-snug text-slate-950 md:mb-2 md:text-3xl md:font-normal">
             {project.title}
@@ -72,12 +82,23 @@ export function ProjectDetailExpert() {
           <Button asChild variant="outline" className="h-8 px-3 text-xs md:h-9 md:text-sm">
             <Link to="/expert/jobs">목록으로</Link>
           </Button>
-          <Button
-            className="h-8 bg-teal-600 px-3 text-xs hover:bg-teal-700 md:h-9 md:text-sm"
-            onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
-          >
-            {hasMyBid ? "입찰 수정" : "입찰 시작"}
-          </Button>
+          {canBid ? (
+            <Button
+              className="h-8 bg-teal-600 px-3 text-xs hover:bg-teal-700 md:h-9 md:text-sm"
+              onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
+            >
+              {hasMyBid ? "입찰 수정" : "입찰 시작"}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-8 px-3 text-xs md:h-9 md:text-sm"
+              disabled
+            >
+              입찰 마감
+            </Button>
+          )}
         </div>
       </div>
 
@@ -191,21 +212,39 @@ export function ProjectDetailExpert() {
               <h4 className="mb-1.5 text-sm font-medium text-teal-900 md:mb-2 md:text-base">
                 입찰 안내
               </h4>
-              <ul className="space-y-0.5 text-xs leading-snug text-teal-800 md:space-y-1 md:text-sm">
-                <li>• 입찰가는 협상 전 가격입니다</li>
-                <li>• 의뢰인이 선택하면 연락처가 공개됩니다</li>
-                <li>• 최종 가격은 직접 협상으로 결정됩니다</li>
-              </ul>
+              {canBid ? (
+                <ul className="space-y-0.5 text-xs leading-snug text-teal-800 md:space-y-1 md:text-sm">
+                  <li>• 입찰가는 협상 전 가격입니다</li>
+                  <li>• 의뢰인이 선택하면 연락처가 공개됩니다</li>
+                  <li>• 최종 가격은 직접 협상으로 결정됩니다</li>
+                </ul>
+              ) : (
+                <p className="text-xs leading-snug text-teal-800 md:text-sm">
+                  마감된 공고는 입찰을 시작하거나 수정할 수 없습니다.
+                </p>
+              )}
             </CardContent>
           </Card>
 
-          <Button
-            className="h-9 w-full bg-teal-600 text-sm hover:bg-teal-700 md:h-10 md:text-base"
-            size="lg"
-            onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
-          >
-            {hasMyBid ? "입찰 수정하기" : "지금 입찰하기"}
-          </Button>
+          {canBid ? (
+            <Button
+              className="h-9 w-full bg-teal-600 text-sm hover:bg-teal-700 md:h-10 md:text-base"
+              size="lg"
+              onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
+            >
+              {hasMyBid ? "입찰 수정하기" : "지금 입찰하기"}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              className="h-9 w-full text-sm md:h-10 md:text-base"
+              size="lg"
+              variant="outline"
+              disabled
+            >
+              입찰 마감
+            </Button>
+          )}
         </div>
       </div>
     </div>

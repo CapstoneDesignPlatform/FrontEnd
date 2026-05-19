@@ -194,6 +194,7 @@ export function ExpertSignup() {
     }
 
     void submitRegistration({
+      companyName: formData.companyName,
       name: formData.name,
       email: formData.email,
       password: formData.password,

@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
 
 import type { ExpertJobListItemVM } from "../../../types/expert";
+import {
+  canBidOnExpertJob,
+  getExpertBidAvailability,
+} from "./jobStatus";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 
@@ -45,10 +49,6 @@ function formatTableDate(date: string) {
   const [, month, day] = date.split("-");
 
   return month && day ? `${month}-${day}` : date;
-}
-
-function getProjectBidStatus(project: ExpertJobListItemVM) {
-  return project.status === "입찰 마감" ? "입찰 마감" : "입찰 가능";
 }
 
 function getBidActionButtonClassName(hasMyBid?: boolean) {
@@ -137,8 +137,9 @@ export function JobTable({ projects }: JobTableProps) {
         </thead>
         <tbody className="divide-y divide-slate-100 bg-white">
           {projects.map((project) => {
-            const bidStatus = getProjectBidStatus(project);
+            const bidStatus = getExpertBidAvailability(project);
             const bidActionLabel = project.hasMyBid ? "입찰 수정" : "입찰 시작";
+            const canBid = canBidOnExpertJob(project);
 
             return (
               <tr
@@ -196,15 +197,27 @@ export function JobTable({ projects }: JobTableProps) {
                       <Button asChild variant="outline" size="sm" className="h-7 px-2 text-xs">
                         <Link to={`/expert/jobs/${project.id}`}>상세</Link>
                       </Button>
-                      <Button
-                        asChild
-                        size="sm"
-                        className={getBidActionButtonClassName(project.hasMyBid)}
-                      >
-                        <Link to={`/expert/jobs/${project.id}/bid`}>
-                          {bidActionLabel}
-                        </Link>
-                      </Button>
+                      {canBid ? (
+                        <Button
+                          asChild
+                          size="sm"
+                          className={getBidActionButtonClassName(project.hasMyBid)}
+                        >
+                          <Link to={`/expert/jobs/${project.id}/bid`}>
+                            {bidActionLabel}
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          disabled
+                        >
+                          입찰 마감
+                        </Button>
+                      )}
                     </div>
                   </td>
               </tr>

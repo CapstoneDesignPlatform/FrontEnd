@@ -1,8 +1,20 @@
 import { useCallback, useMemo, useState } from "react";
-import { Bell, Info, Search, SlidersHorizontal, Table2 } from "lucide-react";
+import {
+  Bell,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Search,
+  SlidersHorizontal,
+  Table2,
+} from "lucide-react";
 
 import { getExpertJobs } from "../../../api/expert";
-import type { ExpertJobListItemVM, ExpertJobListResultVM } from "../../../types/expert";
+import type {
+  ExpertJobListItemVM,
+  ExpertJobListResultVM,
+  JobPostSort,
+} from "../../../types/expert";
 import { AsyncStateCard } from "../../components/common/AsyncStateCard";
 import { JobTable } from "../../components/expert/JobTable";
 import { Badge } from "../../components/ui/badge";
@@ -33,17 +45,26 @@ const projectSortOptions: Array<{ label: string; value: ProjectSortKey }> = [
   { value: "bidsDesc", label: "입찰 인원 많은순" },
   { value: "bidsAsc", label: "입찰 인원 적은순" },
 ];
+const pageSizeOptions = [20, 50, 100];
 
 export function ProjectListExpert() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [sortKey, setSortKey] = useState<ProjectSortKey>("postedDateDesc");
   const loadProjects = useCallback(
-    () => getExpertJobs({ page: 1, size: 20, sort: "posted_at_desc" }),
-    [],
+    () =>
+      getExpertJobs({
+        page,
+        size: pageSize,
+        sort: getApiSort(sortKey),
+      }),
+    [page, pageSize, sortKey],
   );
   const { data, error, isLoading } = useAsyncData(loadProjects, {
     initialData: emptyProjectResult,
+    keepPreviousData: true,
   });
   const projects = data?.items ?? [];
   const normalizedSearchTerm = searchTerm.trim().toLowerCase();
@@ -84,6 +105,29 @@ export function ProjectListExpert() {
             filteredProjects.length,
         )
       : 0;
+  const currentPage = page;
+  const totalPages = Math.max(data?.totalPages ?? 1, 1);
+  const totalCount = data?.totalCount ?? 0;
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setPage(1);
+  };
+
+  const handleFilterTypeChange = (value: string) => {
+    setFilterType(value);
+    setPage(1);
+  };
+
+  const handleSortKeyChange = (value: string) => {
+    setSortKey(value as ProjectSortKey);
+    setPage(1);
+  };
+
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(Number(value));
+    setPage(1);
+  };
 
   return (
     <div className="space-y-5">
@@ -132,11 +176,11 @@ export function ProjectListExpert() {
               <Input
                 placeholder="업종, 유형, 면허 조건 검색"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType} onValueChange={handleFilterTypeChange}>
               <SelectTrigger className="w-full xl:w-48">
                 <SelectValue placeholder="전체 유형" />
               </SelectTrigger>
@@ -153,7 +197,7 @@ export function ProjectListExpert() {
                 표시 {sortedProjects.length}건
               </span>
               <span className="rounded-md border bg-slate-50 px-3 py-2">
-                전체 {data?.totalCount ?? 0}건
+                전체 {totalCount}건
               </span>
               <span className="rounded-md border bg-slate-50 px-3 py-2">
                 신규 {newProjectCount}건
@@ -188,7 +232,7 @@ export function ProjectListExpert() {
               </div>
               <Select
                 value={sortKey}
-                onValueChange={(value) => setSortKey(value as ProjectSortKey)}
+                onValueChange={handleSortKeyChange}
               >
                 <SelectTrigger className="h-9 w-full bg-white sm:w-[180px]">
                   <SelectValue placeholder="정렬 기준" />
@@ -226,8 +270,92 @@ export function ProjectListExpert() {
           {!isLoading && !error && sortedProjects.length > 0 ? (
             <JobTable projects={sortedProjects} />
           ) : null}
+
+          {!error && totalCount > 0 ? (
+            <PaginationBar
+              currentPage={currentPage}
+              isLoading={isLoading}
+              pageSize={pageSize}
+              totalCount={totalCount}
+              totalPages={totalPages}
+              onNextPage={() =>
+                setPage((current) => Math.min(current + 1, totalPages))
+              }
+              onPageSizeChange={handlePageSizeChange}
+              onPreviousPage={() =>
+                setPage((current) => Math.max(current - 1, 1))
+              }
+            />
+          ) : null}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function PaginationBar({
+  currentPage,
+  isLoading,
+  onNextPage,
+  onPageSizeChange,
+  onPreviousPage,
+  pageSize,
+  totalCount,
+  totalPages,
+}: {
+  currentPage: number;
+  isLoading: boolean;
+  onNextPage: () => void;
+  onPageSizeChange: (value: string) => void;
+  onPreviousPage: () => void;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}) {
+  return (
+    <div className="flex flex-col gap-3 border-t bg-white px-4 py-3 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-wrap items-center gap-2">
+        <span>
+          전체 {totalCount}건 · {currentPage}/{totalPages}페이지
+        </span>
+        <Select value={String(pageSize)} onValueChange={onPageSizeChange}>
+          <SelectTrigger className="h-8 w-[112px] bg-white">
+            <SelectValue placeholder="표시 개수" />
+          </SelectTrigger>
+          <SelectContent>
+            {pageSizeOptions.map((size) => (
+              <SelectItem key={size} value={String(size)}>
+                {size}개씩
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1 px-2 text-xs"
+          disabled={isLoading || currentPage <= 1}
+          onClick={onPreviousPage}
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          이전
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1 px-2 text-xs"
+          disabled={isLoading || currentPage >= totalPages}
+          onClick={onNextPage}
+        >
+          다음
+          <ChevronRight className="h-3.5 w-3.5" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -251,6 +379,10 @@ function sortProjects(
 
     return compareDateDesc(left.postedDate, right.postedDate);
   });
+}
+
+function getApiSort(sortKey: ProjectSortKey): JobPostSort {
+  return sortKey === "postedDateAsc" ? "posted_at_asc" : "posted_at_desc";
 }
 
 function compareDateAsc(left?: string, right?: string) {

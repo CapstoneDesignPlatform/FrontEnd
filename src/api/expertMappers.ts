@@ -5,6 +5,9 @@ import type {
   ClientContactVM,
   CreateBidRequest,
   CreateBidRequestDto,
+  ExpertJobMyBidVM,
+  ExpertSignupRequest,
+  ExpertSignupRequestDto,
   ExpertJobDetailVM,
   ExpertJobListItemVM,
   ExpertJobListResultVM,
@@ -18,6 +21,7 @@ import type {
   JobPostTypeLabel,
   MyBidItemDto,
   MyBidItemVM,
+  MyBidSummaryDto,
   UpdateExpertProfileRequestDto,
 } from "../types/expert";
 
@@ -85,6 +89,15 @@ function mapClientContactDtoToVM(
   };
 }
 
+function mapMyBidSummaryDtoToVM(dto: MyBidSummaryDto): ExpertJobMyBidVM {
+  return {
+    amount: dto.bid_amount,
+    id: dto.id,
+    status: bidStatusLabels[dto.status],
+    submittedAt: formatDate(dto.submitted_at),
+  };
+}
+
 export function mapJobPostListItemDtoToVM(dto: JobPostListItemDto): ExpertJobListItemVM {
   return {
     id: dto.id,
@@ -128,7 +141,8 @@ export function mapJobPostDetailDtoToVM(dto: JobPostDetailResponseDto): ExpertJo
   return {
     ...mapJobPostListItemDtoToVM(dto),
     createdAt: formatDate(dto.created_at),
-    hasMyBid: dto.has_my_bid ?? Boolean(dto.my_bid),
+    hasMyBid: dto.has_my_bid === true || Boolean(dto.my_bid),
+    myBid: dto.my_bid ? mapMyBidSummaryDtoToVM(dto.my_bid) : undefined,
     company: {
       id: dto.company.id,
       name: dto.company.name,
@@ -192,5 +206,17 @@ export function mapExpertProfileVMToUpdateDto(
 export function mapCreateBidRequestToDto(payload: CreateBidRequest): CreateBidRequestDto {
   return {
     bid_amount: payload.price,
+  };
+}
+
+export function mapExpertSignupRequestToDto(
+  payload: ExpertSignupRequest,
+): ExpertSignupRequestDto {
+  return {
+    company_name: payload.companyName,
+    email: payload.email,
+    name: payload.name,
+    password: payload.password,
+    phone: payload.phone,
   };
 }

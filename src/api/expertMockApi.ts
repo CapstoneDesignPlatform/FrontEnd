@@ -27,6 +27,7 @@ export const expertMockApi: ExpertApi = {
       email: payload.email,
       phone: payload.phone,
     };
+    profileDto.expert_profile.company_name = payload.companyName;
     profileDto.expert_profile.verification_status = "NOT_APPLIED";
     profileDto.expert_profile.is_verified = false;
 
@@ -93,6 +94,25 @@ export const expertMockApi: ExpertApi = {
     };
 
     return mapBidDtoToVM(createdBidDto);
+  },
+
+  async updateBid(payload) {
+    const dto = mapCreateBidRequestToDto(payload);
+    const job =
+      mockExpertJobsDto.items.find((item) => item.id === payload.jobPostId) ??
+      mockExpertJobsDto.items[0];
+    const updatedBidDto: MyBidItemDto = {
+      id: mockExpertJobDetailDto.my_bid?.id ?? Date.now(),
+      job_post_id: payload.jobPostId,
+      job_post_title: job.title,
+      bid_amount: dto.bid_amount,
+      status: "PENDING",
+      submitted_at: new Date().toISOString(),
+      total_bid_count: job.bid_count,
+      client_contact: null,
+    };
+
+    return mapBidDtoToVM(updatedBidDto);
   },
 
   async getMyBids() {

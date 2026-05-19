@@ -33,21 +33,10 @@ Request:
 }
 ```
 
-### 확인 요청
-
-- 이미 입찰한 공고에 같은 API를 다시 호출하면 수정 처리되는지 확인이 필요합니다.
-- 생성과 수정이 분리되어야 한다면 수정 API를 추가로 제공해주세요.
-
-수정 API 후보:
+### 입찰 수정 API
 
 ```http
 PATCH /api/expert/job-posts/{job_post_id}/bids
-```
-
-또는
-
-```http
-PATCH /api/expert/me/bids/{bid_id}
 ```
 
 Request:
@@ -57,6 +46,13 @@ Request:
   "bid_amount": 3500000
 }
 ```
+
+현재 프론트는 `has_my_bid: true`인 공고에서 입찰을 제출할 때 위 PATCH API를 호출합니다.
+
+### 확인 요청
+
+- `PATCH /api/expert/job-posts/{job_post_id}/bids`를 수정 API로 제공해주세요.
+- 응답은 생성 API와 동일하게 `bid` 객체를 내려주는 것을 기대합니다.
 
 ### 백엔드 검증 요청
 
@@ -141,8 +137,9 @@ GET /api/expert/me/bids
 - 내가 입찰한 공고면 `has_my_bid: true`
 - 입찰하지 않은 공고면 `has_my_bid: false`, `my_bid: null`
 - `my_bid`가 있으면 `has_my_bid`도 항상 `true`
+- `has_my_bid`와 `my_bid`가 서로 불일치하면 백엔드 응답 오류로 간주합니다.
 
-이 값이 정확해야 공고 상세와 공고 목록에서 버튼 상태가 정상 동작합니다.
+프론트는 방어적으로 `my_bid`가 있으면 입찰 수정 상태로 처리하지만, 이 값이 정확해야 공고 상세와 공고 목록에서 버튼 상태가 정상 동작합니다.
 
 ## 4. 파일 다운로드 URL API 사용 정책 확인
 
@@ -243,14 +240,30 @@ GET /api/expert/job-posts?page=1&size=20&sort=bid_count_desc
 
 현재 전문가 회원가입 후 프론트는 전문가 인증 화면으로 이동합니다.
 
+현재 프론트의 전문가 회원가입 화면은 `상호명`을 필수로 입력받습니다.
+
+프론트 요청값:
+
+```json
+{
+  "company_name": "케이법무법인",
+  "name": "홍길동",
+  "email": "expert@example.com",
+  "password": "password",
+  "phone": "01012345678"
+}
+```
+
 확인 요청:
 
+- `POST /api/auth/signup/expert` 요청에서 `company_name`을 받을 수 있는지
 - `POST /api/auth/signup/expert` 후 access token을 즉시 발급하는지
 - 회원가입 직후 자동 로그인 상태가 되는지
 - 자동 로그인하지 않는다면 프론트에서 로그인 페이지로 이동해야 하는지
 
 권장:
 
+- 회원가입 시 `company_name`을 저장하고, 응답의 `expert_profile.company_name`에도 동일하게 반영
 - 회원가입 성공 후 access token을 내려주면 프론트가 저장 후 인증 신청 페이지로 이동
 - access token을 내려주지 않는 정책이면 명확히 로그인 필요 상태를 반환
 

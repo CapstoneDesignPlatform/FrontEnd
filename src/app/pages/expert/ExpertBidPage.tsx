@@ -1,10 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import { ArrowLeft, CheckCircle2, ClipboardList } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CircleAlert, ClipboardList } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
-import { createBid, getExpertJobDetail } from "../../../api/expert";
+import { createBid, getExpertJobDetail, updateBid } from "../../../api/expert";
+import type { CreateBidRequest, MyBidItemVM } from "../../../types/expert";
 import { AsyncStateCard } from "../../components/common/AsyncStateCard";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -12,6 +13,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Checkbox } from "../../components/ui/checkbox";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import {
+  canBidOnExpertJob,
+  getExpertBidAvailability,
+} from "../../components/expert/jobStatus";
 import { useAsyncAction } from "../../hooks/useAsyncAction";
 import { useAsyncData } from "../../hooks/useAsyncData";
 
@@ -22,6 +27,11 @@ const cautionItems = [
   '"의뢰인"과 입찰가격 이하의 금액으로 조정이 불가하며 "플랫폼"에서 정하지 않은 부당한 방법으로 용역수수료를 수납할 경우, 이에 따른 불이익(향후 입찰 금지, 회원 탈퇴 등)을 받을 수 있습니다.',
   '진단내용 및 보고서 제출 등 의뢰인 요청사항에 따른 용역 업무 범위, 기한, 수수료 수납 등은 의뢰인과 직접 협의 및 진행하여야 하며, 향후 법률상 문제에 대하여 통신판매중개업을 수행하는 "플랫폼"은 어떠한 책임을 부담하지 않습니다.',
 ];
+
+interface SubmitBidResult {
+  bid: MyBidItemVM;
+  isEditing: boolean;
+}
 
 export function ExpertBidPage() {
   const { id } = useParams();
@@ -38,20 +48,41 @@ export function ExpertBidPage() {
     keepPreviousData: true,
   });
   const { isPending: isSubmittingBid, run: submitBid } = useAsyncAction(
-    createBid,
+    async (
+      payload: CreateBidRequest,
+      isEditing: boolean,
+    ): Promise<SubmitBidResult> => {
+      const bid = isEditing ? await updateBid(payload) : await createBid(payload);
+
+      return { bid, isEditing };
+    },
     {
       onError: () => {
-        toast.error("입찰 제출에 실패했습니다.");
+        toast.error("입찰 처리에 실패했습니다.");
       },
-      onSuccess: () => {
-        toast.success("입찰이 완료되었습니다.");
+      onSuccess: ({ isEditing }) => {
+        toast.success(isEditing ? "입찰이 수정되었습니다." : "입찰이 완료되었습니다.");
         navigate("/expert/bids");
       },
     },
   );
 
+  const projectId = project?.id;
+  const projectBidAmount = project?.myBid?.amount;
+
+  useEffect(() => {
+    if (!projectId) return;
+
+    setBidAmount(projectBidAmount !== undefined ? String(projectBidAmount) : "");
+  }, [projectId, projectBidAmount]);
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+
+    if (!project || !canBidOnExpertJob(project)) {
+      toast.error("입찰이 마감된 공고입니다.");
+      return;
+    }
 
     const amount = Number(bidAmount.trim());
 
@@ -65,10 +96,15 @@ export function ExpertBidPage() {
       return;
     }
 
-    void submitBid({
-      jobPostId: Number(id ?? project?.id ?? 1),
-      price: amount,
-    });
+    const isEditingBid = project.hasMyBid === true || Boolean(project.myBid);
+
+    void submitBid(
+      {
+        jobPostId: Number(id ?? project.id),
+        price: amount,
+      },
+      isEditingBid,
+    );
   };
 
   if (error) {
@@ -89,7 +125,11 @@ export function ExpertBidPage() {
 
   if (!project) return null;
 
-  const canSubmit = hasReadCautions && hasAgreedToBid && !isSubmittingBid;
+  const bidStatus = getExpertBidAvailability(project);
+  const canBid = canBidOnExpertJob(project);
+  const isEditingBid = project.hasMyBid === true || Boolean(project.myBid);
+  const canSubmit =
+    canBid && hasReadCautions && hasAgreedToBid && !isSubmittingBid;
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -97,11 +137,23 @@ export function ExpertBidPage() {
         <div>
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="border-teal-200 bg-teal-50 text-teal-700">
-              입찰 참여
+              {isEditingBid ? "입찰 수정" : "입찰 참여"}
             </Badge>
             <Badge variant="outline">{project.type}</Badge>
+            <Badge
+              variant="outline"
+              className={
+                canBid
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-slate-200 bg-slate-50 text-slate-500"
+              }
+            >
+              {bidStatus}
+            </Badge>
           </div>
-          <h1 className="text-2xl font-semibold text-slate-950">입찰 페이지</h1>
+          <h1 className="text-2xl font-semibold text-slate-950">
+            {isEditingBid ? "입찰 수정 페이지" : "입찰 페이지"}
+          </h1>
         </div>
         <Button asChild variant="outline" size="sm">
           <Link to={`/expert/jobs/${project.id}`}>
@@ -110,6 +162,18 @@ export function ExpertBidPage() {
           </Link>
         </Button>
       </div>
+
+      {!canBid ? (
+        <div className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+          <div>
+            <p className="font-semibold text-slate-950">입찰이 마감된 공고입니다.</p>
+            <p className="mt-1">
+              마감된 공고는 입찰을 새로 제출하거나 기존 입찰을 수정할 수 없습니다.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <Card className="border-slate-200 shadow-sm">
@@ -128,8 +192,14 @@ export function ExpertBidPage() {
               <BidInfoRow
                 label="진행상태"
                 value={
-                  <Badge className="bg-teal-100 text-teal-700">
-                    진행 중
+                  <Badge
+                    className={
+                      canBid
+                        ? "bg-teal-100 text-teal-700"
+                        : "bg-slate-100 text-slate-600"
+                    }
+                  >
+                    {canBid ? "진행 중" : "입찰 마감"}
                   </Badge>
                 }
               />
@@ -149,6 +219,7 @@ export function ExpertBidPage() {
                   type="text"
                   value={bidAmount}
                   onChange={(event) => setBidAmount(event.target.value)}
+                  disabled={!canBid || isSubmittingBid}
                   className="max-w-sm bg-white"
                 />
                 <span className="text-sm font-medium text-slate-700">
@@ -176,12 +247,14 @@ export function ExpertBidPage() {
             <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
               <AgreementCheckbox
                 checked={hasReadCautions}
+                disabled={!canBid || isSubmittingBid}
                 id="hasReadCautions"
                 label="각 항목의 모든 주의사항에 대해 이해하였습니다."
                 onCheckedChange={setHasReadCautions}
               />
               <AgreementCheckbox
                 checked={hasAgreedToBid}
+                disabled={!canBid || isSubmittingBid}
                 id="hasAgreedToBid"
                 label="위의 모든 내용에 대해 동의하며, 최종적으로 입찰에 참여합니다."
                 onCheckedChange={setHasAgreedToBid}
@@ -200,7 +273,13 @@ export function ExpertBidPage() {
             className="bg-teal-600 hover:bg-teal-700"
           >
             <CheckCircle2 className="h-4 w-4" />
-            {isSubmittingBid ? "입찰 제출 중" : "입찰 참여"}
+            {isSubmittingBid
+              ? isEditingBid
+                ? "입찰 수정 중"
+                : "입찰 제출 중"
+              : isEditingBid
+                ? "입찰 수정"
+                : "입찰 참여"}
           </Button>
         </div>
       </form>
@@ -227,20 +306,28 @@ function BidInfoRow({
 
 function AgreementCheckbox({
   checked,
+  disabled = false,
   id,
   label,
   onCheckedChange,
 }: {
   checked: boolean;
+  disabled?: boolean;
   id: string;
   label: string;
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
-    <label htmlFor={id} className="flex cursor-pointer items-start gap-3 text-sm text-slate-700">
+    <label
+      htmlFor={id}
+      className={`flex items-start gap-3 text-sm text-slate-700 ${
+        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+      }`}
+    >
       <Checkbox
         id={id}
         checked={checked}
+        disabled={disabled}
         onCheckedChange={(value) => onCheckedChange(value === true)}
         className="mt-0.5"
       />

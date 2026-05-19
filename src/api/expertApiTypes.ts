@@ -6,6 +6,7 @@ import type {
   ExpertProfileFormVM,
   ExpertSignupRequest,
   MyBidItemVM,
+  UpdateBidRequest,
 } from "../types/expert";
 import type {
   ExpertVerificationStatus,
@@ -20,6 +21,7 @@ export interface ExpertApi {
   getExpertProfile(): Promise<ExpertProfileFormVM>;
   getMyBids(): Promise<MyBidItemVM[]>;
   registerExpert(payload: ExpertSignupRequest): Promise<ExpertProfileFormVM>;
+  updateBid(payload: UpdateBidRequest): Promise<MyBidItemVM>;
   updateExpertProfile(profile: ExpertProfileFormVM): Promise<ExpertProfileFormVM>;
 }
 

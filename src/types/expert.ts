@@ -207,6 +207,7 @@ export interface ExpertSignupRequestDto {
   email: string;
   password: string;
   phone: string;
+  company_name: string;
 }
 
 export interface ExpertSignupResponseDto {
@@ -261,6 +262,14 @@ export interface ExpertJobListResultVM {
 export interface ExpertJobDetailVM extends ExpertJobListItemVM {
   createdAt: string;
   company: CompanySummaryVM;
+  myBid?: ExpertJobMyBidVM;
+}
+
+export interface ExpertJobMyBidVM {
+  amount: number;
+  id: number;
+  status: BidStatusLabel;
+  submittedAt: string;
 }
 
 export interface MyBidItemVM {
@@ -307,7 +316,10 @@ export interface CreateBidRequest {
   price: number;
 }
 
+export type UpdateBidRequest = CreateBidRequest;
+
 export interface ExpertSignupRequest {
+  companyName: string;
   name: string;
   email: string;
   password: string;
