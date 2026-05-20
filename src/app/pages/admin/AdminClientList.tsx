@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Download } from "lucide-react";
 import { exportToExcel } from "../../utils/exportExcel";
+import { getClientList } from "../../../api/admin/clientApi";
+import type { AdminClientSummary } from "../../../api/admin/clientApi";
 
+// 백엔드 데이터를 프론트 UI에 맞게 변환
 interface Client {
   id: number;
   name: string;
@@ -17,63 +20,20 @@ interface Client {
   registeredAt: string;
 }
 
-const allClients: Client[] = [
-  {
-    id: 1,
-    name: "김철수",
-    company: "(주)대한건설",
-    businessNumber: "123-45-67890",
-    phone: "010-1111-2222",
-    email: "client@example.com",
-    address: "서울특별시 강남구 테헤란로 123",
-    status: "active",
-    registeredAt: "2026-03-01",
-  },
-  {
-    id: 2,
-    name: "이영희",
-    company: "한국제조(주)",
-    businessNumber: "234-56-78901",
-    phone: "010-2222-3333",
-    email: "lee@example.com",
-    address: "서울특별시 서초구 서초대로 456",
-    status: "active",
-    registeredAt: "2026-03-05",
-  },
-  {
-    id: 3,
-    name: "박민수",
-    company: "전기산업(주)",
-    businessNumber: "345-67-89012",
-    phone: "010-3333-4444",
-    email: "park@example.com",
-    address: "서울특별시 송파구 올림픽로 789",
-    status: "pending",
-    registeredAt: "2026-03-10",
-  },
-  {
-    id: 4,
-    name: "정수현",
-    company: "(주)IT솔루션",
-    businessNumber: "456-78-90123",
-    phone: "010-4444-5555",
-    email: "jung@example.com",
-    address: "서울특별시 마포구 홍익로 321",
-    status: "suspended",
-    registeredAt: "2026-02-20",
-  },
-  {
-    id: 5,
-    name: "최영수",
-    company: "안전소방(주)",
-    businessNumber: "567-89-01234",
-    phone: "010-5555-6666",
-    email: "choi@example.com",
-    address: "경기도 성남시 분당구 판교로 111",
-    status: "withdrawn",
-    registeredAt: "2026-02-15",
-  },
-];
+// 백엔드 → 프론트 타입 변환 함수
+function mapToClient(c: AdminClientSummary): Client {
+  return {
+    id: c.userId,
+    name: c.name,
+    company: c.companyName ?? "-",
+    businessNumber: c.businessNumber ?? "-",
+    phone: "-", // 백엔드 Summary에 phone 없음 → Detail에서 가져옴
+    email: c.email,
+    address: "-", // 백엔드 Summary에 address 없음
+    status: "active", // TODO: 백엔드에서 status 필드 추가 후 연결
+    registeredAt: c.createdAt.slice(0, 10),
+  };
+}
 
 const statusMap = {
   active: { label: "정상", className: "bg-green-100 text-green-700" },
@@ -83,10 +43,33 @@ const statusMap = {
 };
 
 type StatusFilter = "all" | "active" | "pending" | "suspended" | "withdrawn";
-
 export function AdminClientList() {
+  const [allClients, setAllClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    setLoading(true);
+    getClientList()
+      .then((res) => setAllClients(res.data.content.map(mapToClient)))
+      .catch(() => setError("데이터를 불러오지 못했습니다."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center py-20 text-sm text-gray-500">
+        불러오는 중...
+      </div>
+    );
+  if (error)
+    return (
+      <div className="flex items-center justify-center py-20 text-sm text-red-500">
+        {error}
+      </div>
+    );
 
   const filtered = allClients.filter((c) => {
     if (statusFilter !== "all" && c.status !== statusFilter) return false;
