@@ -1,11 +1,16 @@
 import { X } from "lucide-react";
 
 import { VerificationFileUpload } from "./VerificationFileUpload";
-import { VerificationTextField } from "./VerificationFields";
+import {
+  VerificationSelectField,
+  VerificationTextField,
+} from "./VerificationFields";
 import type { VerificationCertificateData } from "./types";
+import { CERTIFICATE_TYPE_OPTIONS } from "./verificationConstants";
 
 interface CertificateCardProps {
   certificate: VerificationCertificateData;
+  certificateTypeOptions?: string[];
   disabled?: boolean;
   isPrimary?: boolean;
   onChange: (data: VerificationCertificateData) => void;
@@ -14,6 +19,7 @@ interface CertificateCardProps {
 
 export function CertificateCard({
   certificate,
+  certificateTypeOptions = CERTIFICATE_TYPE_OPTIONS,
   disabled = false,
   isPrimary = false,
   onChange,
@@ -39,7 +45,7 @@ export function CertificateCard({
           type="button"
           onClick={onDelete}
           disabled={disabled}
-          aria-label="자격증 삭제"
+          aria-label="등록증 삭제"
           className="absolute right-4 top-4 z-10 rounded-full p-2 text-muted-foreground transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <X className="h-4 w-4" />
@@ -49,7 +55,7 @@ export function CertificateCard({
       <div className="mb-4 flex items-center justify-between">
         <div className="space-y-1">
           <p className="text-[14px] font-medium text-foreground">
-            {isPrimary ? "대표 자격증" : "추가 자격증"}
+            {isPrimary ? "등록증" : "추가 등록증"}
           </p>
           <p className="text-[12px] text-muted-foreground">
             PDF, JPG, PNG 파일을 업로드할 수 있습니다.
@@ -66,26 +72,29 @@ export function CertificateCard({
         <VerificationFileUpload
           disabled={disabled}
           fileName={certificate.fileName}
+          heightClassName="h-[110px]"
           inputId={fileInputId}
-          previewAlt="자격증 미리보기"
+          previewAlt="등록증 미리보기"
           previewKind={certificate.previewKind}
           previewUrl={certificate.previewUrl}
-          uploadLabel="클릭하여 자격증 사본 업로드"
+          uploadLabel="클릭하여 등록증 업로드"
           onPreviewChange={(preview) =>
             onChange({
               ...certificate,
               ...preview,
+              fileId: undefined,
             })
           }
         />
 
         <div className="space-y-3">
-          <VerificationTextField
+          <VerificationSelectField
             id={`${fieldIdPrefix}-type`}
             label="자격증 종류"
             value={certificate.type}
             onChange={(value) => handleFieldChange("type", value)}
-            placeholder="예: 공인회계사"
+            options={certificateTypeOptions}
+            placeholder="자격증 종류 선택"
             required={isPrimary}
             disabled={disabled}
           />
@@ -93,17 +102,17 @@ export function CertificateCard({
           <div className="grid gap-3 md:grid-cols-2">
             <VerificationTextField
               id={`${fieldIdPrefix}-number`}
-              label="자격증 번호"
+              label="등록번호"
               value={certificate.number}
               onChange={(value) => handleFieldChange("number", value)}
-              placeholder="자격증 번호"
+              placeholder="등록번호"
               required={isPrimary}
               disabled={disabled}
             />
 
             <VerificationTextField
               id={`${fieldIdPrefix}-issue-date`}
-              label="발급일"
+              label="유효기간"
               type="date"
               value={certificate.issueDate}
               onChange={(value) => handleFieldChange("issueDate", value)}

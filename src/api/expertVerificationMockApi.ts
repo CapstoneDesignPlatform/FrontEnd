@@ -29,8 +29,23 @@ export const expertVerificationMockApi: ExpertVerificationApi = {
       issue_date: dto.issue_date,
       company_name: dto.company_name,
       portfolio: dto.portfolio,
-      certificates: dto.certificates,
-      business_license: dto.business_license,
+      certificates: request.certificates?.map((certificate, index) => ({
+        file_id: certificate.fileId ?? index + 1,
+        file_name: certificate.fileName,
+        holder_name: certificate.holderName,
+        issue_date: certificate.issueDate,
+        license_number: certificate.licenseNumber,
+        license_type: certificate.licenseType,
+      })),
+      business_license: request.businessLicense
+        ? {
+            business_number: request.businessLicense.businessNumber,
+            company_name: request.businessLicense.companyName,
+            file_id: request.businessLicense.fileId ?? 100,
+            file_name: request.businessLicense.fileName,
+            representative_name: request.businessLicense.ownerName,
+          }
+        : undefined,
       submitted_at: new Date().toISOString().slice(0, 10),
     };
 

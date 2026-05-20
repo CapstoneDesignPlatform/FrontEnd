@@ -1,6 +1,8 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import Cookies from "js-cookie";
 
-console.log("SERVER URL:", import.meta.env.VITE_SERVER_URL);
+const JWT_TOKEN_KEY = "ACCESS_TOKEN";
+
 export const instance: AxiosInstance = axios.create({
   baseURL: "",
   headers: {
@@ -8,3 +10,21 @@ export const instance: AxiosInstance = axios.create({
   },
   withCredentials: true,
 });
+
+export const userInstance = axios.create({
+  baseURL: "/api",
+  withCredentials: true,
+});
+
+userInstance.interceptors.request.use(
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+    const token = Cookies.get(JWT_TOKEN_KEY);
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: unknown) => {
+    return Promise.reject(error);
+  },
+);

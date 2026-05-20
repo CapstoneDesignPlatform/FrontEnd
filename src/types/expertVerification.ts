@@ -45,6 +45,56 @@ export interface FileResource {
   url?: string;
 }
 
+export type VerificationFilePurpose = "CERTIFICATE" | "BUSINESS_REGISTRATION";
+
+export interface UploadedFileDto {
+  id: number;
+  original_name: string;
+  stored_name: string;
+  mime_type: string;
+  size: number;
+  purpose: VerificationFilePurpose;
+  created_at: string;
+}
+
+export interface UploadFileResponseDto {
+  file: UploadedFileDto;
+}
+
+export interface RegisterCertificateRequestDto {
+  certificate_name: string;
+  certificate_number: string;
+  issue_date: string;
+  owner_name?: string;
+  file_id: number;
+}
+
+export interface RegisterCertificateResponseDto {
+  id: number;
+  file_id: number;
+  certificate_name: string;
+  certificate_type_code: string;
+  certificate_number: string;
+  issue_date: string;
+  expired_at: string | null;
+  owner_name: string | null;
+}
+
+export interface RegisterBusinessRegistrationRequestDto {
+  file_id: number;
+  business_number?: string;
+  representative_name?: string;
+  company_name?: string;
+}
+
+export interface RegisterBusinessRegistrationResponseDto {
+  id: number;
+  file_id: number;
+  business_number: string | null;
+  representative_name: string | null;
+  company_name: string | null;
+}
+
 export interface VerificationRequestDto {
   id: number | null;
   expert_profile_id?: number;
@@ -66,20 +116,26 @@ export interface ExpertVerificationStatusResponseDto {
 }
 
 export interface VerificationCertificateDto {
-  license_type: string;
-  license_number: string;
+  license_type?: string;
+  license_number?: string;
+  certificate_name?: string;
+  certificate_number?: string;
   issue_date: string;
   holder_name?: string;
+  owner_name?: string;
   file_id?: number;
   file_name?: string;
+  original_name?: string;
 }
 
 export interface VerificationBusinessLicenseDto {
   business_number?: string;
   owner_name?: string;
+  representative_name?: string;
   company_name?: string;
   file_id?: number;
   file_name?: string;
+  original_name?: string;
 }
 
 export interface CreateVerificationRequestDto {
@@ -88,11 +144,7 @@ export interface CreateVerificationRequestDto {
   issue_date: string;
   company_name: string;
   portfolio?: string;
-  certificates?: VerificationCertificateDto[];
-  business_license?: VerificationBusinessLicenseDto;
 }
-
-export type CreateVerificationResponseDto = ExpertVerificationStatusResponseDto;
 
 export interface ExpertVerificationStatusVM {
   id: number | null;
@@ -131,6 +183,7 @@ export interface SubmitExpertVerificationCertificate {
   licenseType: string;
   licenseNumber: string;
   issueDate: string;
+  file?: File | null;
   fileId?: number;
   holderName?: string;
   fileName?: string;
@@ -138,6 +191,7 @@ export interface SubmitExpertVerificationCertificate {
 
 export interface SubmitExpertVerificationBusinessLicense {
   businessNumber?: string;
+  file?: File | null;
   ownerName?: string;
   companyName?: string;
   fileId?: number;

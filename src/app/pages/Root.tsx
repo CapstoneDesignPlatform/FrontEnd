@@ -1,5 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
+import Cookies from 'js-cookie';
+
 import {
   Building2,
   ClipboardList,
@@ -79,6 +81,14 @@ function isExpertNavActive(pathname: string, href: string) {
       pathname.startsWith("/expert/my-bids")
     );
   }
+
+  if (href === "/expert/dashboard") {
+    return (
+      pathname.startsWith("/expert/dashboard") ||
+      pathname.startsWith("/expert/profile")
+    );
+  }
+
   return pathname.startsWith(href);
 }
 
@@ -97,7 +107,7 @@ function BottomExpertNavigation({ pathname }: { pathname: string }) {
       icon: ClipboardList,
     },
     {
-      href: "/expert/profile",
+      href: "/expert/dashboard",
       label: "마이",
       ariaLabel: "마이페이지",
       icon: UserRound,
@@ -158,6 +168,8 @@ export function Root() {
 
   const handleLogout = () => {
     clearDemoExpertApproval();
+    Cookies.remove("ACCESS_TOKEN");
+    Cookies.remove("USER_ROLE");
     setUser(null);
   };
 
@@ -167,15 +179,22 @@ export function Root() {
         shouldShowMobileExpertBottomNav ? "pb-24 md:pb-0" : ""
       }`}
     >
-      {!isAdminLoginPage && (
-        <header className="bg-white border-b sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-8">
-                <Link to="/" className="flex items-center gap-2">
-                  <Building2 className="h-8 w-8 text-teal-600" />
-                  <span className="text-xl font-bold">ProToCall</span>
-                </Link>
+      <header className="bg-white border-b sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-8">
+              <Link to="/" className="flex items-center gap-2">
+                <img 
+                  src="src/assets/images/logo.png" 
+                  alt="진단매치 로고" 
+                  className="h-8 w-auto"
+                />
+                
+                <span className="text-xl font-bold">
+                  <span style={{ color: '#34499C' }}>진단</span>
+                  <span style={{ color: '#80ACEB' }}>매치</span>
+                </span>
+              </Link>
 
                 <NavigationMenu className="hidden md:flex">
                   <NavigationMenuList className="gap-2">
@@ -390,7 +409,7 @@ export function Root() {
                         to={
                           user.type === "client"
                             ? "/client/mypage"
-                            : "/expert/profile"
+                            : "/expert/dashboard"
                         }
                       >
                         My Page
@@ -415,7 +434,6 @@ export function Root() {
             </div>
           </div>
         </header>
-      )}
 
       {layoutVariant === "contained" ? (
         <ContainedOutlet context={outletContext} />
@@ -423,48 +441,50 @@ export function Root() {
         <FullWidthOutlet context={outletContext} />
       )}
 
-      <footer className="mt-12 bg-[#263238]">
-        <div className="border-b border-gray-700">
-          <div className="container mx-auto px-4 py-8">
-            <h3 className="text-center text-sm text-gray-400 mb-6">
+      <footer className="mt-12 bg-[#ffffff] border-t border-gray-100">
+        {/* 관련 기관 섹션 */}
+        <div className="border-b border-gray-100">
+          <div className="container mx-auto px-4 py-4">
+            <h3 className="text-center text-xs font-medium text-gray-400 mb-4"> {/* mb-6에서 4로 줄임 */}
               관련 기관
             </h3>
-            <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-gray-300">
-              <a href="https://www.law.go.kr" className="hover:text-teal-400">
-                국가법령정보센터
+            <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-4">
+              {/* 각 링크를 이미지로 교체 */}
+              <a href="https://www.law.go.kr" target="_blank" rel="noopener noreferrer">
+                <img src="src/assets/svg/국가법령정보센터.svg" alt="국가법령정보센터" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
-              <a href="https://www.molit.go.kr" className="hover:text-teal-400">
-                국토교통부
+              <a href="https://www.molit.go.kr" target="_blank" rel="noopener noreferrer">
+                <img src="src/assets/svg/국토교통부.svg" alt="국토교통부" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
-              <a href="https://www.kicpa.or.kr" className="hover:text-teal-400">
-                한국공인회계사회
+              <a href="https://www.kicpa.or.kr" target="_blank" rel="noopener noreferrer" className="ml-6 mr-2">
+                <img src="src/assets/svg/한국공인회계사회.svg" alt="한국공인회계사회" className="h-6 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
-              <a
-                href="https://www.kacpta.or.kr"
-                className="hover:text-teal-400"
-              >
-                한국세무사회
+              <a href="https://www.kacpta.or.kr" target="_blank" rel="noopener noreferrer">
+                <img src="src/assets/svg/한국세무사회.svg" alt="한국세무사회" className="h- opacity-70 hover:opacity-100 transition-opacity" />
               </a>
-              <a
-                href="https://www.kmtca.or.kr/"
-                className="hover:text-teal-400"
-              >
-                한국경영기술지도사회
+              <a href="https://www.kmtca.or.kr/" target="_blank" rel="noopener noreferrer">
+                <img src="src/assets/svg/한국경영기술지도사회.svg" alt="한국경영기술지도사회" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
-              <a href="https://www.cak.or.kr" className="hover:text-teal-400">
-                대한건설협회
+              <a href="https://www.cak.or.kr" target="_blank" rel="noopener noreferrer">
+                <img src="src/assets/svg/대한건설협회.svg" alt="대한건설협회" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
-              <a
-                href="https://www.kosca.or.kr/"
-                className="hover:text-teal-400"
-              >
-                전문건설협회
+              <a href="https://www.kosca.or.kr/" target="_blank" rel="noopener noreferrer">
+                <img src="src/assets/svg/전문건설협회.svg" alt="전문건설협회" className="h-10 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
             </div>
           </div>
         </div>
-        <div className="container mx-auto px-4 py-6 text-center text-sm text-gray-400">
-          © 2026 ProToCall. All rights reserved.
+
+        <div className="container mx-auto px-4 py-8 text-center text-sm text-gray-400">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-8 mb-3">
+            <span>(주)세움경영진단</span>
+            <span>사업자등록번호 : 012-345-67890</span>
+            <span>TEL : 1111-2222</span>
+            <span>대표이사 : 장승희</span>
+          </div>
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+            © 2026 ProToCall. All rights reserved.
+          </div>
         </div>
       </footer>
 

@@ -39,7 +39,7 @@ export function useMockExpertVerificationStatus() {
     () => getExpertVerificationStatus(statusOverride),
     [statusOverride],
   );
-  const { data } = useAsyncData(loadVerificationStatus);
+  const { data, error, isLoading } = useAsyncData(loadVerificationStatus);
 
-  return { location, status: data?.status ?? null };
+  return { error, isLoading, location, status: data?.status ?? null };
 }
