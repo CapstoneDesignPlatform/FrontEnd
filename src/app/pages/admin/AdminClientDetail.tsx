@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import {
+  getClientDetail,
+  getAnnouncementsByClient,
+} from "../../../api/admin/clientApi";
 import { Download } from "lucide-react";
 import { exportToExcel } from "../../utils/exportExcel";
 import {
@@ -58,104 +62,74 @@ export function AdminClientDetail() {
   );
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusHistory, setStatusHistory] = useState<StatusHistory[]>([
-    { date: "2026-03-01 10:00", content: "회원 가입 완료", status: "정상" },
+    { date: "-", content: "회원 가입 완료", status: "정상" },
   ]);
+  const [client, setClient] = useState<Client>({
+    id: id ?? "",
+    memberNumber: "-",
+    name: "-",
+    company: "-",
+    businessNumber: "-",
+    phone: "-",
+    email: "-",
+    address: "-",
+    registeredAt: "-",
+    projects: [],
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const allClients: Client[] = [
-    {
-      id: "1",
-      memberNumber: "CL-2026-0001",
-      name: "김철수",
-      company: "(주)대한건설",
-      businessNumber: "123-45-67890",
-      phone: "010-1111-2222",
-      email: "client@example.com",
-      address: "서울특별시 강남구 테헤란로 123",
-      registeredAt: "2026-03-01 10:00",
-      projects: [
-        {
-          id: 1,
-          code: "REQ-L5X9K2M",
-          title: "건설업 일반건설업(토목공사업) 면허 취득",
-          status: "matched",
-          createdAt: "2026-04-05",
-        },
-        {
-          id: 2,
-          code: "REQ-M3P7N1K",
-          title: "실태조사 대응용 재무자료 검토",
-          status: "completed",
-          createdAt: "2026-03-28",
-        },
-      ],
-    },
-    {
-      id: "2",
-      memberNumber: "CL-2026-0002",
-      name: "이영희",
-      company: "한국제조(주)",
-      businessNumber: "234-56-78901",
-      phone: "010-2222-3333",
-      email: "lee@example.com",
-      address: "서울특별시 서초구 서초대로 456",
-      registeredAt: "2026-03-05 11:00",
-      projects: [
-        {
-          id: 3,
-          code: "REQ-K9L2M5P",
-          title: "제조업 실태 조사",
-          status: "completed",
-          createdAt: "2026-04-04",
-        },
-      ],
-    },
-    {
-      id: "3",
-      memberNumber: "CL-2026-0003",
-      name: "박민수",
-      company: "전기산업(주)",
-      businessNumber: "345-67-89012",
-      phone: "010-3333-4444",
-      email: "park@example.com",
-      address: "서울특별시 송파구 올림픽로 789",
-      registeredAt: "2026-03-10 09:30",
-      projects: [],
-    },
-    {
-      id: "4",
-      memberNumber: "CL-2026-0004",
-      name: "정수현",
-      company: "(주)IT솔루션",
-      businessNumber: "456-78-90123",
-      phone: "010-4444-5555",
-      email: "jung@example.com",
-      address: "서울특별시 마포구 홍익로 321",
-      registeredAt: "2026-02-20 14:00",
-      projects: [
-        {
-          id: 4,
-          code: "REQ-N7M4K1L",
-          title: "정보통신공사업 등록",
-          status: "unmatched",
-          createdAt: "2026-04-02",
-        },
-      ],
-    },
-    {
-      id: "5",
-      memberNumber: "CL-2026-0005",
-      name: "최영수",
-      company: "안전소방(주)",
-      businessNumber: "567-89-01234",
-      phone: "010-5555-6666",
-      email: "choi@example.com",
-      address: "경기도 성남시 분당구 판교로 111",
-      registeredAt: "2026-02-15 10:00",
-      projects: [],
-    },
-  ];
+  useEffect(() => {
+    if (!id) return;
+    Promise.all([
+      getClientDetail(Number(id)),
+      getAnnouncementsByClient(Number(id)),
+    ])
+      .then(([clientRes, projectsRes]) => {
+        const c = clientRes.data;
+        const projects = (projectsRes.data ?? []).map((a: any) => ({
+          id: a.id,
+          code: a.announcementCode,
+          title: `${a.industry} - ${a.purpose}`,
+          status: a.status,
+          createdAt: a.createdAt?.slice(0, 10) ?? "-",
+        }));
+        setClient({
+          id: String(c.userId),
+          memberNumber: `CL-${c.userId}`,
+          name: c.name ?? "-",
+          company: c.companyName ?? "-",
+          businessNumber: c.businessNumber ?? "-",
+          phone: c.phone ?? c.contact ?? "-",
+          email: c.email ?? "-",
+          address: c.address ?? "-",
+          registeredAt: c.createdAt?.slice(0, 10) ?? "-",
+          projects,
+        });
+        setStatusHistory([
+          {
+            date: c.createdAt?.slice(0, 10) ?? "-",
+            content: "회원 가입 완료",
+            status: "정상",
+          },
+        ]);
+      })
+      .catch(() => setError("데이터를 불러오지 못했습니다."))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-  const client = allClients.find((c) => c.id === id) ?? allClients[0];
+  if (loading)
+    return (
+      <div className="flex items-center justify-center py-20 text-sm text-gray-500">
+        불러오는 중...
+      </div>
+    );
+  if (error)
+    return (
+      <div className="flex items-center justify-center py-20 text-sm text-red-500">
+        {error}
+      </div>
+    );
 
   const getProjectStatusBadge = (status: string) => {
     switch (status) {
@@ -521,7 +495,7 @@ export function AdminClientDetail() {
                         </td>
                         <td className="border-b border-gray-200 px-2 py-1">
                           <Link
-                            to={`/admin/projects/${project.id}`}
+                            to={`/admin/projects/${project.code}`}
                             className="text-teal-600 hover:underline whitespace-nowrap"
                           >
                             상세 →
