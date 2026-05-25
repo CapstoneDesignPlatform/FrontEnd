@@ -6,6 +6,7 @@ import {
   getExpertVerificationStatus,
   submitExpertVerification,
 } from "../../../../api/expertVerification";
+import { ApiError } from "../../../../api/apiClient";
 import { useAsyncAction } from "../../../hooks/useAsyncAction";
 import { useAsyncData } from "../../../hooks/useAsyncData";
 import type {
@@ -40,6 +41,7 @@ function createEmptyCertificate(): VerificationCertificateData {
     type: "",
     number: "",
     issueDate: "",
+    expiryDate: "",
     name: "",
     file: null,
     fileId: undefined,
@@ -57,6 +59,7 @@ function createCertificateFromVerification(
     type: certificate.licenseType,
     number: certificate.licenseNumber,
     issueDate: certificate.issueDate,
+    expiryDate: certificate.expiryDate,
     name: certificate.holderName ?? "",
     fileId: certificate.fileId,
     fileName: certificate.fileName ?? "",
@@ -77,6 +80,7 @@ function createPrimaryCertificateFromRequest(
     type: certificateType,
     number: verificationRequest.licenseNumber,
     issueDate: verificationRequest.issueDate,
+    expiryDate: verificationRequest.issueDate,
   };
 }
 
@@ -119,6 +123,37 @@ function releaseCertificatePreviewUrls(
   });
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function getVerificationRequirementMessages(error: ApiError) {
+  const payloadData = isRecord(error.payload) ? error.payload.data : undefined;
+  const errors = isRecord(payloadData) && Array.isArray(payloadData.errors)
+    ? payloadData.errors
+    : [];
+
+  return errors
+    .map((item) =>
+      isRecord(item) && typeof item.message === "string"
+        ? item.message
+        : undefined,
+    )
+    .filter((message): message is string => Boolean(message));
+}
+
+function getSubmitErrorMessage(error: Error) {
+  if (error instanceof ApiError) {
+    const requirementMessages = getVerificationRequirementMessages(error);
+
+    if (requirementMessages.length > 0) {
+      return requirementMessages.slice(0, 3).join("\n");
+    }
+  }
+
+  return error.message || "전문가 인증 신청에 실패했습니다.";
+}
+
 export function useExpertVerificationForm({
   onSubmitted,
   statusOverride,
@@ -140,8 +175,8 @@ export function useExpertVerificationForm({
   const { isPending: isSubmitting, run: submitVerification } = useAsyncAction(
     submitExpertVerification,
     {
-      onError: () => {
-        toast.error("전문가 인증 신청에 실패했습니다.");
+      onError: (error) => {
+        toast.error(getSubmitErrorMessage(error));
       },
       onSuccess: () => {
         toast.success("전문가 인증 신청이 완료되었습니다!");

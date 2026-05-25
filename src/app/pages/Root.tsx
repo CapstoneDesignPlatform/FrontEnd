@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import Cookies from 'js-cookie';
+import { clearAuthTokens } from "../../api/authTokens";
 
 import {
   Building2,
@@ -168,8 +168,7 @@ export function Root() {
 
   const handleLogout = () => {
     clearDemoExpertApproval();
-    Cookies.remove("ACCESS_TOKEN");
-    Cookies.remove("USER_ROLE");
+    clearAuthTokens();
     setUser(null);
   };
 
