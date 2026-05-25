@@ -49,6 +49,39 @@ const bidStatusLabels: Record<BidStatusCode, BidStatusLabel> = {
   REJECTED: "거절됨",
 };
 
+const industryLabels: Record<string, string> = {
+  CONSTRUCTION: "건설업",
+  ELECTRICAL: "전기공사업",
+  ETC: "기타",
+  FIRE_FIGHTING: "소방시설공사업",
+  INFORMATION_COMMUNICATION: "정보통신공사업",
+  PHARMACEUTICAL: "의약품도매상",
+};
+
+const businessTypeLabels: Record<string, string> = {
+  CORPORATION: "법인 사업자",
+  INDIVIDUAL: "개인 사업자",
+  STARTUP: "창업 예정",
+};
+
+const announcementCategoryLabels: Record<string, string> = {
+  ADD: "추가",
+  NEW: "신규",
+};
+
+const currentIndustryLabels: Record<string, string> = {
+  CONSTRUCTION_RELATED: "건설업 관련",
+  NON_CONSTRUCTION_RELATED: "비 건설업 관련",
+  NONE: "없음",
+};
+
+const diagnosisReasonLabels: Record<string, string> = {
+  CAPITAL_CHANGE: "자본금 변동",
+  ETC: "기타",
+  MERGER: "합병",
+  TRANSFER: "양도",
+};
+
 function formatCurrency(value: number) {
   return `₩${value.toLocaleString("ko-KR")}`;
 }
@@ -75,6 +108,15 @@ function formatOptionalDate(value: string | null | undefined) {
 
 function normalizeNullable(value: string | null | undefined) {
   return value ?? undefined;
+}
+
+function mapEnumLabel(
+  value: string | null | undefined,
+  labels: Record<string, string>,
+) {
+  const normalizedValue = normalizeNullable(value);
+
+  return normalizedValue ? labels[normalizedValue] ?? normalizedValue : undefined;
 }
 
 function mapJobPostType(dto: JobPostListItemDto) {
@@ -112,15 +154,15 @@ export function mapJobPostListItemDtoToVM(dto: JobPostListItemDto): ExpertJobLis
     announcementCode: dto.announcement_code,
     companyName: normalizeNullable(dto.company_name),
     title: dto.title,
-    industry: dto.industry,
+    industry: mapEnumLabel(dto.industry, industryLabels) ?? "",
     typeCode: dto.job_type,
     type: mapJobPostType(dto),
-    businessType: normalizeNullable(dto.business_type),
-    classification: normalizeNullable(dto.classification),
+    businessType: mapEnumLabel(dto.business_type, businessTypeLabels),
+    classification: mapEnumLabel(dto.classification, announcementCategoryLabels),
     requiredLicense: normalizeNullable(dto.required_license),
-    currentIndustry: normalizeNullable(dto.current_industry),
+    currentIndustry: mapEnumLabel(dto.current_industry, currentIndustryLabels),
     currentLicense: normalizeNullable(dto.current_license),
-    reason: normalizeNullable(dto.reason),
+    reason: mapEnumLabel(dto.reason, diagnosisReasonLabels),
     assetScale: formatCapitalScale(
       dto.capital_scale ?? dto.capital ?? dto.asset_scale_label,
     ),
