@@ -24,18 +24,17 @@ export const expertVerificationMockApi: ExpertVerificationApi = {
     responseDto.verification_request = {
       ...responseDto.verification_request,
       status: "PENDING",
-      license_type: dto.license_type,
-      license_number: dto.license_number,
-      issue_date: dto.issue_date,
-      company_name: dto.company_name,
-      portfolio: dto.portfolio,
+      specialty: dto.specialty,
+      license_number: request.licenseNumber,
+      issue_date: request.issueDate,
+      company_name: request.companyName,
       certificates: request.certificates?.map((certificate, index) => ({
         file_id: certificate.fileId ?? index + 1,
         file_name: certificate.fileName,
         holder_name: certificate.holderName,
         issue_date: certificate.issueDate,
         license_number: certificate.licenseNumber,
-        license_type: certificate.licenseType,
+        certificate_name: certificate.licenseType,
       })),
       business_license: request.businessLicense
         ? {

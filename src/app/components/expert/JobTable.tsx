@@ -138,8 +138,9 @@ export function JobTable({ projects }: JobTableProps) {
         <tbody className="divide-y divide-slate-100 bg-white">
           {projects.map((project) => {
             const bidStatus = getExpertBidAvailability(project);
-            const bidActionLabel = project.hasMyBid ? "입찰 수정" : "입찰 시작";
             const canBid = canBidOnExpertJob(project);
+            const detailPath = `/expert/jobs/${encodeURIComponent(project.announcementCode)}`;
+            const bidPath = `${detailPath}/bid`;
 
             return (
               <tr
@@ -195,17 +196,15 @@ export function JobTable({ projects }: JobTableProps) {
                   <td className="sticky right-0 hidden border-l bg-white px-4 py-3 text-center shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] group-hover:bg-slate-50 md:table-cell">
                     <div className="flex justify-end gap-2">
                       <Button asChild variant="outline" size="sm" className="h-7 px-2 text-xs">
-                        <Link to={`/expert/jobs/${project.id}`}>상세</Link>
+                        <Link to={detailPath}>상세</Link>
                       </Button>
-                      {canBid ? (
+                      {canBid && !project.hasMyBid ? (
                         <Button
                           asChild
                           size="sm"
                           className={getBidActionButtonClassName(project.hasMyBid)}
                         >
-                          <Link to={`/expert/jobs/${project.id}/bid`}>
-                            {bidActionLabel}
-                          </Link>
+                          <Link to={bidPath}>입찰 시작</Link>
                         </Button>
                       ) : (
                         <Button
@@ -215,7 +214,7 @@ export function JobTable({ projects }: JobTableProps) {
                           className="h-7 px-2 text-xs"
                           disabled
                         >
-                          입찰 마감
+                          {project.hasMyBid ? "입찰 완료" : "입찰 마감"}
                         </Button>
                       )}
                     </div>

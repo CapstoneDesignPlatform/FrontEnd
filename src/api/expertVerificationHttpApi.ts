@@ -15,6 +15,10 @@ import {
 } from "./expertVerificationMappers";
 import type { ExpertVerificationApi } from "./expertApiTypes";
 
+function mapCertificateNameToBackend(value: string) {
+  return value === "경영지도사(재무관리)" ? "경영지도사" : value;
+}
+
 async function uploadVerificationFile(
   file: File,
   purpose: VerificationFilePurpose,
@@ -51,8 +55,9 @@ async function registerCertificate(
 ) {
   const fileId = await getFileId(certificate.file, certificate.fileId, "CERTIFICATE");
   const payload: RegisterCertificateRequestDto = {
-    certificate_name: certificate.licenseType,
+    certificate_name: mapCertificateNameToBackend(certificate.licenseType),
     certificate_number: certificate.licenseNumber,
+    expiry_date: certificate.expiryDate,
     file_id: fileId,
     issue_date: certificate.issueDate,
     owner_name: certificate.holderName,

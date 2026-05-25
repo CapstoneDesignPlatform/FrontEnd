@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate, useOutletContext } from "react-router-dom";
+import { Link, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { toast } from "sonner";
-import Cookies from "js-cookie"; 
+import { persistAuthTokens } from "../../api/authTokens";
 import { userInstance } from "../../api/instance"; 
 
 type OutletContext = {
@@ -37,8 +37,17 @@ const SOCIAL_CONFIGS = {
   },
 };
 
+function getSafeNextPath(nextPath: string | null) {
+  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
+    return null;
+  }
+
+  return nextPath;
+}
+
 export function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setUser } = useOutletContext<OutletContext>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -64,8 +73,7 @@ export function Login() {
       const { success, data, message } = response.data;
 
       if (success) {
-        Cookies.set("ACCESS_TOKEN", data.accessToken, { expires: 1 }); 
-        Cookies.set("REFRESH_TOKEN", data.refreshToken, { expires: 7 }); 
+        persistAuthTokens(data);
 
         const userType = data.role.toLowerCase() as "client" | "expert";
         
@@ -76,7 +84,10 @@ export function Login() {
 
         toast.success(message || "로그인에 성공했습니다.");
 
-        navigate(userType === "client" ? "/client/mypage" : "/expert/dashboard");
+        navigate(
+          getSafeNextPath(searchParams.get("next")) ??
+            (userType === "client" ? "/client/mypage" : "/expert/dashboard"),
+        );
       }
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || "로그인 중 오류가 발생했습니다.";

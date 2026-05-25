@@ -3,6 +3,7 @@ import type {
   BidStatusLabel,
   ClientContactDto,
   ClientContactVM,
+  CreateBidResponseDto,
   CreateBidRequest,
   CreateBidRequestDto,
   ExpertJobMyBidVM,
@@ -13,6 +14,7 @@ import type {
   ExpertJobListResultVM,
   ExpertProfileFormVM,
   ExpertProfileResponseDto,
+  ExpertSignupResponseDto,
   JobPostDetailResponseDto,
   JobPostListItemDto,
   JobPostListResponseDto,
@@ -33,7 +35,9 @@ const jobPostTypeLabels: Record<JobPostTypeCode, JobPostTypeLabel> = {
 };
 
 const jobPostStatusLabels: Record<JobPostStatusCode, string> = {
+  ACTIVE: "입찰 가능",
   BIDDING: "입찰 가능",
+  CANCELLED: "입찰 마감",
   IN_PROGRESS: "입찰 마감",
   COMPLETED: "입찰 마감",
   CLOSED: "입찰 마감",
@@ -49,12 +53,16 @@ function formatCurrency(value: number) {
   return `₩${value.toLocaleString("ko-KR")}`;
 }
 
-function formatAssetScale(value: number | string | null | undefined) {
+function formatCapitalScale(value: number | string | null | undefined) {
   if (value === null || value === undefined || value === "") {
     return undefined;
   }
 
-  return typeof value === "number" ? formatCurrency(value) : value;
+  if (typeof value === "number") {
+    return `${value.toLocaleString("ko-KR")}억원`;
+  }
+
+  return value;
 }
 
 function formatDate(value: string) {
@@ -101,7 +109,8 @@ function mapMyBidSummaryDtoToVM(dto: MyBidSummaryDto): ExpertJobMyBidVM {
 export function mapJobPostListItemDtoToVM(dto: JobPostListItemDto): ExpertJobListItemVM {
   return {
     id: dto.id,
-    companyName: dto.company_name,
+    announcementCode: dto.announcement_code,
+    companyName: normalizeNullable(dto.company_name),
     title: dto.title,
     industry: dto.industry,
     typeCode: dto.job_type,
@@ -112,7 +121,9 @@ export function mapJobPostListItemDtoToVM(dto: JobPostListItemDto): ExpertJobLis
     currentIndustry: normalizeNullable(dto.current_industry),
     currentLicense: normalizeNullable(dto.current_license),
     reason: normalizeNullable(dto.reason),
-    assetScale: formatAssetScale(dto.asset_scale_label),
+    assetScale: formatCapitalScale(
+      dto.capital_scale ?? dto.capital ?? dto.asset_scale_label,
+    ),
     bids: dto.bid_count,
     postedDate: formatDate(dto.posted_at),
     deadline: formatOptionalDate(
@@ -155,7 +166,8 @@ export function mapJobPostDetailDtoToVM(dto: JobPostDetailResponseDto): ExpertJo
 export function mapBidDtoToVM(dto: MyBidItemDto): MyBidItemVM {
   return {
     id: dto.id,
-    projectId: dto.job_post_id,
+    announcementCode: dto.announcement_code,
+    projectId: dto.job_post_id ?? dto.announcement_id ?? dto.id,
     projectTitle: dto.job_post_title,
     myBid: formatCurrency(dto.bid_amount),
     status: bidStatusLabels[dto.status],
@@ -165,6 +177,20 @@ export function mapBidDtoToVM(dto: MyBidItemDto): MyBidItemVM {
     ),
     totalBids: dto.total_bid_count,
     clientContact: mapClientContactDtoToVM(dto.client_contact),
+  };
+}
+
+export function mapCreateBidResponseDtoToVM(dto: CreateBidResponseDto): MyBidItemVM {
+  return {
+    announcementCode: dto.announcement_code,
+    bidDate: formatDate(dto.submitted_at),
+    clientContact: undefined,
+    id: dto.id,
+    myBid: formatCurrency(dto.bid_amount),
+    projectId: dto.id,
+    projectTitle: dto.announcement_code,
+    status: bidStatusLabels[dto.status],
+    totalBids: dto.total_bid_count,
   };
 }
 
@@ -178,13 +204,11 @@ export function mapExpertProfileDtoToVM(dto: ExpertProfileResponseDto): ExpertPr
     email: dto.user.email,
     phone: dto.user.phone ?? "",
     companyName: profile.company_name,
-    licenseType: profile.license_type ?? undefined,
-    expertiseAreas: profile.expertise_areas,
-    portfolio: profile.portfolio ?? undefined,
-    verificationStatus: profile.verification_status,
+    verificationStatus:
+      profile.verification_status ?? (profile.is_verified ? "APPROVED" : "NOT_APPLIED"),
     stats: {
       activeBids: profile.stats.active_bids,
-      wonProjects: profile.stats.won_projects,
+      wonProjects: profile.stats.selected_count ?? profile.stats.won_projects ?? 0,
       completedProjects: profile.stats.completed_projects,
       totalEarned: formatCurrency(profile.stats.total_earned),
     },
@@ -198,8 +222,6 @@ export function mapExpertProfileVMToUpdateDto(
     name: profile.name,
     phone: profile.phone,
     company_name: profile.companyName,
-    expertise_areas: profile.expertiseAreas,
-    portfolio: profile.portfolio,
   };
 }
 
@@ -213,10 +235,43 @@ export function mapExpertSignupRequestToDto(
   payload: ExpertSignupRequest,
 ): ExpertSignupRequestDto {
   return {
-    company_name: payload.companyName,
+    businessName: payload.companyName,
     email: payload.email,
     name: payload.name,
     password: payload.password,
     phone: payload.phone,
+    userType: "EXPERT",
+  };
+}
+
+export function mapExpertSignupResponseToProfileVM(
+  dto: ExpertSignupResponseDto,
+  request: ExpertSignupRequest,
+): ExpertProfileFormVM {
+  const profile = dto.expert_profile;
+
+  if (dto.user && profile) {
+    return mapExpertProfileDtoToVM({
+      expert_profile: profile,
+      user: dto.user,
+    });
+  }
+
+  return {
+    companyName: profile?.company_name ?? request.companyName,
+    email: dto.user?.email ?? request.email,
+    id: profile?.id ?? 0,
+    name: dto.user?.name ?? request.name,
+    phone: dto.user?.phone ?? request.phone,
+    stats: {
+      activeBids: profile?.stats.active_bids ?? 0,
+      completedProjects: profile?.stats.completed_projects ?? 0,
+      totalEarned: formatCurrency(profile?.stats.total_earned ?? 0),
+      wonProjects: profile?.stats.selected_count ?? profile?.stats.won_projects ?? 0,
+    },
+    userId: profile?.user_id ?? dto.user?.id ?? 0,
+    verificationStatus:
+      profile?.verification_status ??
+      (profile?.is_verified ? "APPROVED" : "NOT_APPLIED"),
   };
 }

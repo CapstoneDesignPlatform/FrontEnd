@@ -4,6 +4,7 @@ import type {
   ExpertJobListQuery,
   ExpertJobListResultVM,
   ExpertProfileFormVM,
+  ExpertSignupResultVM,
   ExpertSignupRequest,
   MyBidItemVM,
   UpdateBidRequest,
@@ -20,7 +21,7 @@ export interface ExpertApi {
   getExpertJobs(query?: ExpertJobListQuery): Promise<ExpertJobListResultVM>;
   getExpertProfile(): Promise<ExpertProfileFormVM>;
   getMyBids(): Promise<MyBidItemVM[]>;
-  registerExpert(payload: ExpertSignupRequest): Promise<ExpertProfileFormVM>;
+  registerExpert(payload: ExpertSignupRequest): Promise<ExpertSignupResultVM>;
   updateBid(payload: UpdateBidRequest): Promise<MyBidItemVM>;
   updateExpertProfile(profile: ExpertProfileFormVM): Promise<ExpertProfileFormVM>;
 }

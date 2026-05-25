@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle2, CircleAlert, ClipboardList } from "lucide-reac
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
-import { createBid, getExpertJobDetail, updateBid } from "../../../api/expert";
+import { createBid, getExpertJobDetail } from "../../../api/expert";
 import type { CreateBidRequest, MyBidItemVM } from "../../../types/expert";
 import { AsyncStateCard } from "../../components/common/AsyncStateCard";
 import { Badge } from "../../components/ui/badge";
@@ -52,7 +52,11 @@ export function ExpertBidPage() {
       payload: CreateBidRequest,
       isEditing: boolean,
     ): Promise<SubmitBidResult> => {
-      const bid = isEditing ? await updateBid(payload) : await createBid(payload);
+      if (isEditing) {
+        throw new Error("입찰 수정 API는 아직 제공되지 않습니다.");
+      }
+
+      const bid = await createBid(payload);
 
       return { bid, isEditing };
     },
@@ -84,10 +88,17 @@ export function ExpertBidPage() {
       return;
     }
 
+    const isEditingBid = project.hasMyBid === true || Boolean(project.myBid);
+
     const amount = Number(bidAmount.trim());
 
     if (!Number.isFinite(amount) || amount <= 0) {
       toast.error("입찰 금액은 1원 이상 숫자로 입력해주세요.");
+      return;
+    }
+
+    if (isEditingBid) {
+      toast.error("입찰 수정은 아직 지원되지 않습니다.");
       return;
     }
 
@@ -96,11 +107,9 @@ export function ExpertBidPage() {
       return;
     }
 
-    const isEditingBid = project.hasMyBid === true || Boolean(project.myBid);
-
     void submitBid(
       {
-        jobPostId: Number(id ?? project.id),
+        announcementCode: project.announcementCode,
         price: amount,
       },
       isEditingBid,
@@ -129,7 +138,7 @@ export function ExpertBidPage() {
   const canBid = canBidOnExpertJob(project);
   const isEditingBid = project.hasMyBid === true || Boolean(project.myBid);
   const canSubmit =
-    canBid && hasReadCautions && hasAgreedToBid && !isSubmittingBid;
+    canBid && !isEditingBid && hasReadCautions && hasAgreedToBid && !isSubmittingBid;
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -137,7 +146,7 @@ export function ExpertBidPage() {
         <div>
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="border-teal-200 bg-teal-50 text-teal-700">
-              {isEditingBid ? "입찰 수정" : "입찰 참여"}
+              {isEditingBid ? "입찰 완료" : "입찰 참여"}
             </Badge>
             <Badge variant="outline">{project.type}</Badge>
             <Badge
@@ -152,11 +161,11 @@ export function ExpertBidPage() {
             </Badge>
           </div>
           <h1 className="text-2xl font-semibold text-slate-950">
-            {isEditingBid ? "입찰 수정 페이지" : "입찰 페이지"}
+            {isEditingBid ? "입찰 완료 공고" : "입찰 페이지"}
           </h1>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link to={`/expert/jobs/${project.id}`}>
+          <Link to={`/expert/jobs/${encodeURIComponent(project.announcementCode)}`}>
             <ArrowLeft className="h-4 w-4" />
             상세로 돌아가기
           </Link>
@@ -170,6 +179,18 @@ export function ExpertBidPage() {
             <p className="font-semibold text-slate-950">입찰이 마감된 공고입니다.</p>
             <p className="mt-1">
               마감된 공고는 입찰을 새로 제출하거나 기존 입찰을 수정할 수 없습니다.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {isEditingBid ? (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <div>
+            <p className="font-semibold text-amber-950">이미 입찰한 공고입니다.</p>
+            <p className="mt-1">
+              현재 백엔드에서 입찰 수정 API가 제공되지 않아 추가 제출을 막아두었습니다.
             </p>
           </div>
         </div>
@@ -265,7 +286,9 @@ export function ExpertBidPage() {
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button asChild variant="outline">
-            <Link to={`/expert/jobs/${project.id}`}>취소</Link>
+            <Link to={`/expert/jobs/${encodeURIComponent(project.announcementCode)}`}>
+              취소
+            </Link>
           </Button>
           <Button
             type="submit"
