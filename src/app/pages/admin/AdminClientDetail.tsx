@@ -83,7 +83,7 @@ export function AdminClientDetail() {
     if (!id) return;
     Promise.all([
       getClientDetail(Number(id)),
-      getAnnouncementsByClient(Number(id)),
+      getAnnouncementsByClient(Number(id)).catch(() => ({ data: [] })),
     ])
       .then(([clientRes, projectsRes]) => {
         const c = clientRes.data;

@@ -1,48 +1,49 @@
 import { useParams, Link } from "react-router-dom";
-import { Download } from "lucide-react";
-import { exportToExcel } from "../../utils/exportExcel";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+import { Download, ArrowLeft } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+import { useState, useEffect } from "react";
 import {
-  ArrowLeft,
-  User,
-  Mail,
-  Phone,
-  Building2,
-  CheckCircle,
-  Calendar,
-  Briefcase,
-  MapPin,
-  IdCard,
-  FileText,
-  TrendingUp,
-  DollarSign,
-  Ban,
-  AlertTriangle,
-} from "lucide-react";
-import { useState } from "react";
+  getExpertDetail,
+  getExpertCertificates,
+  getExpertBusinessInfo,
+} from "../../../api/admin/expertApi";
+import type {
+  AdminExpertDetail as ExpertDetailType,
+  AdminExpertCertificate,
+  AdminExpertBusinessInfo,
+} from "../../../api/admin/expertApi";
 
 export function AdminExpertDetail() {
   const { id } = useParams();
-  const [expertStatus, setExpertStatus] = useState<"active" | "inactive">(
-    "active",
-  );
-  const [isProcessing, setIsProcessing] = useState(false);
+  const userId = Number(id);
 
-  // 현황 이력 데이터 (가짜 데이터)
+  const [apiDetail, setApiDetail] = useState<ExpertDetailType | null>(null);
+  const [apiCertificates, setApiCertificates] = useState<
+    AdminExpertCertificate[]
+  >([]);
+  const [apiBusinessInfo, setApiBusinessInfo] =
+    useState<AdminExpertBusinessInfo | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      getExpertDetail(userId),
+      getExpertCertificates(userId),
+      getExpertBusinessInfo(userId).catch(() => ({ data: null })),
+    ])
+      .then(([detailRes, certRes, bizRes]) => {
+        setApiDetail(detailRes.data);
+        setApiCertificates(certRes.data ?? []);
+        setApiBusinessInfo(bizRes.data);
+      })
+      .catch(() => {});
+  }, [userId]);
+
   const [statusHistory, setStatusHistory] = useState([
     {
       date: "2026-03-25 10:00",
       content: "전문가 승인 완료",
       status: "정상",
-      grade: "프리미엄",
+      grade: "스페셜",
       startDate: "2026-03-25",
       endDate: "2027-03-24",
     },
@@ -56,838 +57,313 @@ export function AdminExpertDetail() {
     },
   ]);
 
-  // 데모 데이터
+  const statusLabelMap: Record<string, string> = {
+    APPROVED: "정상",
+    PENDING: "승인대기",
+    REJECTED: "정지",
+    NOT_SUBMITTED: "탈퇴",
+  };
+
   const expert = {
-    id: id || "101",
-    // 기본 정보
-    personalInfo: {
-      name: "홍길동",
-      email: "hong@example.com",
-      phone: "010-1111-1111",
-      birthDate: "1985-03-15",
-      address: "서울특별시 강남구 테헤란로 123, 101동 202호",
-      registeredAt: "2026-02-15 14:30",
-    },
-
-    // 전문가 정보
-    expertInfo: {
-      expertise: "건설업 면허",
-      licenseNumber: "건설-2020-12345",
-      licenseType: "일반건설업(토목공사업)",
-      issueDate: "2020-03-10",
-      expiryDate: "2025-03-09",
-      experience: "10년",
-      companyName: "케이법무법인",
-      companyAddress: "서울특별시 서초구 서초대로 123",
-      companyPhone: "02-1234-5678",
-      businessNumber: "123-45-67890",
-      position: "대표 행정사",
-      description:
-        "건설업 관련 면허 취득 및 컨설팅 전문가입니다. 10년 이상의 경력을 바탕으로 고객님께 최상의 서비스를 제공하겠습니다.",
-      approvedAt: "2026-03-25 10:00",
-    },
-
-    // 활동 통계
-    stats: {
-      totalBids: 24,
-      wonBids: 18,
-      completedProjects: 18,
-      ongoingProjects: 0,
-      totalEarnings: "₩54,000,000",
-      averageBidPrice: "₩3,000,000",
-    },
+    memberNumber: apiDetail
+      ? `EX-${String(apiDetail.userId).padStart(6, "0")}`
+      : "EX-2026-0101",
+    company: apiBusinessInfo?.companyName ?? "케이법무법인",
+    representative: apiBusinessInfo?.representativeName ?? "홍길동",
+    phone: "-",
+    email: apiDetail?.email ?? "hong@example.com",
+    license: apiDetail?.expertField ?? "행정사",
+    businessNumber: apiBusinessInfo?.businessNumber ?? "123-45-67890",
+    address: "-",
+    currentStatus: apiDetail
+      ? (statusLabelMap[apiDetail.verificationStatus] ??
+        apiDetail.verificationStatus)
+      : "정상",
+    certificateFile:
+      apiCertificates.length > 0
+        ? `${apiCertificates[0].certificateTypeCode} (${apiCertificates[0].ownerName})`
+        : "",
+    businessFile: apiBusinessInfo
+      ? `${apiBusinessInfo.companyName} 사업자등록증`
+      : "",
   };
 
-  // 입찰/진행 의뢰 목록
-  const projects = [
-    {
-      id: 1,
-      code: "REQ-L5X9K2M",
-      title: "건설업 일반건설업(토목공사업) 면허 취득",
-      company: "(주)대한건설",
-      bidPrice: "₩2,500,000",
-      bidAt: "2026-04-05 14:30",
-      status: "selected",
-      selectedAt: "2026-04-06",
-    },
-    {
-      id: 2,
-      code: "REQ-M3P7N1K",
-      title: "전문건설업(실내건축공사업) 면허",
-      company: "인테리어건설(주)",
-      bidPrice: "₩2,800,000",
-      bidAt: "2026-04-03 10:20",
-      status: "completed",
-      completedAt: "2026-04-25",
-    },
-    {
-      id: 3,
-      code: "REQ-K9L2M5P",
-      title: "건설업 실태 조사 대행",
-      company: "건축자재(주)",
-      bidPrice: "₩3,200,000",
-      bidAt: "2026-04-01 16:45",
-      status: "completed",
-      completedAt: "2026-04-20",
-    },
-    {
-      id: 4,
-      code: "REQ-N7M4K1L",
-      title: "일반건설업 면허 갱신",
-      company: "(주)세진건설",
-      bidPrice: "₩2,600,000",
-      bidAt: "2026-03-28 11:30",
-      status: "bidding",
-    },
-    {
-      id: 5,
-      code: "REQ-P2K9M3L",
-      title: "건설업 등록 신청",
-      company: "미래건설(주)",
-      bidPrice: "₩3,000,000",
-      bidAt: "2026-03-25 14:00",
-      status: "completed",
-      completedAt: "2026-04-15",
-    },
-    {
-      id: 6,
-      code: "REQ-L1M8K5N",
-      title: "건설업 자본금 증자",
-      company: "(주)청년건설",
-      bidPrice: "₩2,700,000",
-      bidAt: "2026-03-20 09:15",
-      status: "completed",
-      completedAt: "2026-04-10",
-    },
-  ];
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "selected":
-        return <Badge className="bg-blue-600">선택됨</Badge>;
-      case "completed":
-        return <Badge className="bg-green-100 text-green-700">완료</Badge>;
-      case "bidding":
-        return (
-          <Badge variant="outline" className="bg-gray-100 text-gray-700">
-            입찰 중
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">알 수 없음</Badge>;
-    }
+  const statusBadgeClass: Record<string, string> = {
+    정상: "bg-green-100 text-green-700",
+    승인대기: "bg-amber-100 text-amber-700",
+    정지: "bg-red-100 text-red-700",
+    탈퇴: "bg-gray-100 text-gray-600",
   };
 
-  const handleStatusChange = async () => {
-    if (expertStatus === "active") {
-      const reason = prompt("전문가 비활성화 사유를 입력해주세요:");
-      if (!reason) {
-        return;
-      }
-
-      const confirmed = confirm(
-        `${expert.personalInfo.name} 전문가를 비활성화하시겠습니까?\n\n` +
-          `비활성화 사유: ${reason}\n\n` +
-          `비활성화 시 전문가는 입찰 및 모든 활동이 제한됩니다.`,
-      );
-
-      if (!confirmed) {
-        return;
-      }
-    } else {
-      const confirmed = confirm(
-        `${expert.personalInfo.name} 전문가를 다시 활성화하시겠습니까?\n\n` +
-          `활성화 시 전문가는 정상적으로 플랫폼을 이용할 수 있습니다.`,
-      );
-
-      if (!confirmed) {
-        return;
-      }
-    }
-
-    setIsProcessing(true);
-
-    // 실제 서버 요청 시뮬레이션
-    setTimeout(() => {
-      const newStatus = expertStatus === "active" ? "inactive" : "active";
-      setExpertStatus(newStatus);
-      setIsProcessing(false);
-      const now = new Date()
-        .toLocaleString("ko-KR")
-        .replace(/\. /g, "-")
-        .replace(".", "");
-      setStatusHistory((prev) => [
-        {
-          date: now,
-          content:
-            newStatus === "inactive"
-              ? "관리자에 의해 비활성화"
-              : "관리자에 의해 활성화",
-          status: newStatus === "inactive" ? "정지" : "정상",
-          grade: "-",
-          startDate: "-",
-          endDate: "-",
-        },
-        ...prev,
+  const handleExport = () => {
+    import("xlsx").then((XLSX) => {
+      const wb = XLSX.utils.book_new();
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        ["항목", "내용"],
+        ["회원번호", expert.memberNumber],
+        ["업체명", expert.company],
+        ["대표자명", expert.representative],
+        ["연락처", expert.phone],
+        ["이메일", expert.email],
+        ["자격증", expert.license],
+        ["사업자등록번호", expert.businessNumber],
+        ["주소", expert.address],
+        ["현재상태", expert.currentStatus],
       ]);
-      alert(
-        newStatus === "inactive"
-          ? "전문가가 비활성화되었습니다."
-          : "전문가가 활성화되었습니다.",
+      ws1["!cols"] = [{ wch: 16 }, { wch: 50 }];
+      XLSX.utils.book_append_sheet(wb, ws1, "전문가정보");
+
+      const ws2 = XLSX.utils.aoa_to_sheet([
+        ["일시", "내용", "현재상태", "등급", "신청시작일", "신청마감일"],
+        ...statusHistory.map((h) => [
+          h.date,
+          h.content,
+          h.status,
+          h.grade,
+          h.startDate,
+          h.endDate,
+        ]),
+      ]);
+      ws2["!cols"] = [18, 25, 10, 10, 12, 12].map((wch) => ({ wch }));
+      XLSX.utils.book_append_sheet(wb, ws2, "현황이력");
+
+      XLSX.writeFile(
+        wb,
+        `전문가회원카드_${expert.representative}_${new Date().toISOString().slice(0, 10)}.xlsx`,
       );
-    }, 500);
+    });
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* 헤더 */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-3">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/admin/experts/list">
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                전문가 목록으로
-              </Link>
-            </Button>
-          </div>
-          <div className="flex items-center gap-3 mb-3">
-            <Badge className="bg-green-100 text-green-700">승인 완료</Badge>
-            <Badge variant="outline" className="gap-1">
-              <CheckCircle className="h-3 w-3" />
-              인증됨
-            </Badge>
-            {expertStatus === "inactive" && (
-              <Badge
-                variant="outline"
-                className="bg-red-100 text-red-700 border-red-300 gap-1"
-              >
-                <Ban className="h-3 w-3" />
-                비활성화됨
-              </Badge>
-            )}
-          </div>
-          <h1 className="text-3xl mb-2">{expert.personalInfo.name}</h1>
-          <p className="text-gray-600">{expert.expertInfo.expertise} 전문가</p>
-        </div>
-        <div className="flex flex-col gap-2 items-end">
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1 text-xs"
-            onClick={() => {
-              import("xlsx").then((XLSX) => {
-                const wb = XLSX.utils.book_new();
-
-                // 시트1: 전문가 전체 정보
-                const ws1 = XLSX.utils.aoa_to_sheet([
-                  ["항목", "내용"],
-                  ["=== 기본 정보 ===", ""],
-                  ["이름", expert.personalInfo.name],
-                  ["생년월일", expert.personalInfo.birthDate],
-                  ["이메일", expert.personalInfo.email],
-                  ["연락처", expert.personalInfo.phone],
-                  ["주소", expert.personalInfo.address],
-                  ["가입일", expert.personalInfo.registeredAt],
-                  ["승인일", expert.expertInfo.approvedAt],
-                  ["", ""],
-                  ["=== 전문가 정보 ===", ""],
-                  ["전문분야", expert.expertInfo.expertise],
-                  ["경력", expert.expertInfo.experience],
-                  ["면허 종류", expert.expertInfo.licenseType],
-                  ["면허 번호", expert.expertInfo.licenseNumber],
-                  ["발급일", expert.expertInfo.issueDate],
-                  ["만료일", expert.expertInfo.expiryDate],
-                  ["회사명", expert.expertInfo.companyName],
-                  ["직책", expert.expertInfo.position],
-                  ["사업자번호", expert.expertInfo.businessNumber],
-                  ["회사 전화", expert.expertInfo.companyPhone],
-                  ["회사 주소", expert.expertInfo.companyAddress],
-                  ["자기소개", expert.expertInfo.description],
-                  ["", ""],
-                  ["=== 활동 통계 ===", ""],
-                  ["총 입찰", `${expert.stats.totalBids}건`],
-                  ["낙찰", `${expert.stats.wonBids}건`],
-                  [
-                    "낙찰률",
-                    `${Math.round((expert.stats.wonBids / expert.stats.totalBids) * 100)}%`,
-                  ],
-                  ["완료", `${expert.stats.completedProjects}건`],
-                  [
-                    "완료율",
-                    `${Math.round((expert.stats.completedProjects / expert.stats.wonBids) * 100)}%`,
-                  ],
-                  ["진행 중", `${expert.stats.ongoingProjects}건`],
-                  ["총 수익", expert.stats.totalEarnings],
-                  ["평균 입찰가", expert.stats.averageBidPrice],
-                ]);
-                ws1["!cols"] = [{ wch: 16 }, { wch: 50 }];
-                XLSX.utils.book_append_sheet(wb, ws1, "전문가정보");
-
-                // 시트2: 현황 이력
-                const ws2 = XLSX.utils.aoa_to_sheet([
-                  [
-                    "일시",
-                    "내용",
-                    "현재상태",
-                    "등급",
-                    "신청시작일",
-                    "신청마감일",
-                  ],
-                  ...statusHistory.map((h) => [
-                    h.date,
-                    h.content,
-                    h.status,
-                    h.grade,
-                    h.startDate,
-                    h.endDate,
-                  ]),
-                ]);
-                ws2["!cols"] = [18, 25, 10, 10, 12, 12].map((wch) => ({ wch }));
-                XLSX.utils.book_append_sheet(wb, ws2, "현황이력");
-
-                // 시트3: 입찰 의뢰 목록
-                const ws3 = XLSX.utils.aoa_to_sheet([
-                  ["의뢰코드", "공고명", "기업", "입찰가", "입찰일", "상태"],
-                  ...projects.map((p) => [
-                    p.code,
-                    p.title,
-                    p.company,
-                    p.bidPrice,
-                    p.bidAt,
-                    p.status === "selected"
-                      ? "선택됨"
-                      : p.status === "completed"
-                        ? "완료"
-                        : "입찰 중",
-                  ]),
-                ]);
-                ws3["!cols"] = [14, 35, 18, 12, 18, 10].map((wch) => ({ wch }));
-                XLSX.utils.book_append_sheet(wb, ws3, "입찰의뢰목록");
-
-                XLSX.writeFile(
-                  wb,
-                  `전문가상세_${expert.personalInfo.name}_${new Date().toISOString().slice(0, 10)}.xlsx`,
-                );
-              });
-            }}
-          >
-            <Download className="h-3 w-3" />
-            Excel 다운로드
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/admin/experts/list">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              전문가 목록으로
+            </Link>
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className={
-              expertStatus === "active"
-                ? "text-red-600 border-red-200 hover:bg-red-50"
-                : "text-green-600 border-green-200 hover:bg-green-50"
-            }
-            onClick={handleStatusChange}
-            disabled={isProcessing}
-          >
-            {expertStatus === "active" ? (
-              <>
-                <Ban className="h-4 w-4 mr-1" />
-                전문가 자격 비활성화
-              </>
-            ) : (
-              <>
-                <CheckCircle className="h-4 w-4 mr-1" />
-                전문가 자격 활성화
-              </>
-            )}
-          </Button>
+          <h1 className="text-xl font-bold">전문가 회원카드</h1>
         </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="gap-1 text-xs"
+          onClick={handleExport}
+        >
+          <Download className="h-3 w-3" />
+          Excel 다운로드
+        </Button>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* 왼쪽 메인 컨텐츠 */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* 활동 통계 */}
-          <div className="grid md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-gray-600">총 입찰</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {expert.stats.totalBids}건
-                </div>
-                <p className="text-xs text-gray-600 mt-1">전체 입찰 건수</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-gray-600">낙찰</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
-                  {expert.stats.wonBids}건
-                </div>
-                <p className="text-xs text-gray-600 mt-1">
-                  낙찰률:{" "}
-                  {Math.round(
-                    (expert.stats.wonBids / expert.stats.totalBids) * 100,
-                  )}
-                  %
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-gray-600">완료</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {expert.stats.completedProjects}건
-                </div>
-                <p className="text-xs text-gray-600 mt-1">
-                  완료율:{" "}
-                  {Math.round(
-                    (expert.stats.completedProjects / expert.stats.wonBids) *
-                      100,
-                  )}
-                  %
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+      {/* 구분 + 현재상태 */}
+      <div className="border border-gray-300 rounded overflow-hidden">
+        <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 flex justify-between items-center">
+          <span>구분</span>
+          <span className="font-normal text-gray-500">
+            현재상태:{" "}
+            <span
+              className={`px-1.5 py-0.5 rounded text-xs font-semibold ${statusBadgeClass[expert.currentStatus] ?? "bg-gray-100 text-gray-600"}`}
+            >
+              {expert.currentStatus}
+            </span>
+          </span>
+        </div>
+        <table className="w-full text-xs border-collapse">
+          <tbody>
+            <tr className="bg-white">
+              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 w-28 whitespace-nowrap">
+                회원번호
+              </td>
+              <td className="border-b border-gray-200 px-3 py-1.5 font-mono">
+                {expert.memberNumber}
+              </td>
+            </tr>
+            <tr className="bg-gray-50">
+              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                업체명
+              </td>
+              <td className="border-b border-gray-200 px-3 py-1.5">
+                {expert.company}
+              </td>
+            </tr>
+            <tr className="bg-white">
+              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                대표자명
+              </td>
+              <td className="border-b border-gray-200 px-3 py-1.5">
+                {expert.representative}
+              </td>
+            </tr>
+            <tr className="bg-gray-50">
+              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                연락처
+              </td>
+              <td className="border-b border-gray-200 px-3 py-1.5">
+                {expert.phone}
+              </td>
+            </tr>
+            <tr className="bg-white">
+              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                이메일
+              </td>
+              <td className="border-b border-gray-200 px-3 py-1.5">
+                {expert.email}
+              </td>
+            </tr>
+            <tr className="bg-gray-50">
+              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                자격증
+              </td>
+              <td className="border-b border-gray-200 px-3 py-1.5">
+                {expert.license}
+              </td>
+            </tr>
+            <tr className="bg-white">
+              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                사업자등록번호
+              </td>
+              <td className="border-b border-gray-200 px-3 py-1.5 font-mono">
+                {expert.businessNumber}
+              </td>
+            </tr>
+            <tr className="bg-gray-50">
+              <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                주소
+              </td>
+              <td className="px-3 py-1.5">{expert.address}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-          {/* 기본 정보 - 엑셀 (관)전문가 회원카드 시트 기준 */}
-          <div className="border border-gray-300 rounded overflow-hidden">
-            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
-              기본 정보
-            </div>
-            <table className="w-full text-xs border-collapse">
-              <tbody>
-                <tr className="bg-white">
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
-                    이름
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
-                    {expert.personalInfo.name}
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
-                    생년월일
-                  </td>
-                  <td className="border-b border-gray-200 px-3 py-1.5">
-                    {expert.personalInfo.birthDate}
-                  </td>
-                </tr>
-                <tr className="bg-gray-50">
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    이메일
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
-                    {expert.personalInfo.email}
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    연락처
-                  </td>
-                  <td className="border-b border-gray-200 px-3 py-1.5">
-                    {expert.personalInfo.phone}
-                  </td>
-                </tr>
-                <tr className="bg-white">
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    주소
-                  </td>
-                  <td
-                    colSpan={3}
-                    className="border-b border-gray-200 px-3 py-1.5"
+      {/* 현황 이력 */}
+      <div className="border border-gray-300 rounded overflow-hidden">
+        <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+          현황
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="bg-gray-50">
+                {[
+                  "일시",
+                  "내용 입력",
+                  "현재상태",
+                  "등급",
+                  "신청 시작일",
+                  "신청 마감일",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap last:border-r-0"
                   >
-                    {expert.personalInfo.address}
-                  </td>
-                </tr>
-                <tr className="bg-gray-50">
-                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    가입일
-                  </td>
-                  <td className="border-r border-gray-200 px-3 py-1.5">
-                    {expert.personalInfo.registeredAt}
-                  </td>
-                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    승인일
-                  </td>
-                  <td className="px-3 py-1.5">
-                    {expert.expertInfo.approvedAt}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* 전문가 정보 - 엑셀 (관)전문가 회원카드 시트 기준 */}
-          <div className="border border-gray-300 rounded overflow-hidden">
-            <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
-              전문가 정보
-            </div>
-            <table className="w-full text-xs border-collapse">
-              <tbody>
-                <tr className="bg-white">
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
-                    전문 분야
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
-                    {expert.expertInfo.expertise}
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
-                    경력
-                  </td>
-                  <td className="border-b border-gray-200 px-3 py-1.5">
-                    {expert.expertInfo.experience}
-                  </td>
-                </tr>
-                <tr className="bg-gray-50">
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    면허 종류
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
-                    {expert.expertInfo.licenseType}
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    면허 번호
-                  </td>
-                  <td className="border-b border-gray-200 px-3 py-1.5 font-mono">
-                    {expert.expertInfo.licenseNumber}
-                  </td>
-                </tr>
-                <tr className="bg-white">
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    발급일
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
-                    {expert.expertInfo.issueDate}
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    만료일
-                  </td>
-                  <td className="border-b border-gray-200 px-3 py-1.5">
-                    {expert.expertInfo.expiryDate}
-                  </td>
-                </tr>
-                <tr className="bg-gray-50">
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    회사명
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
-                    {expert.expertInfo.companyName}
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    직책
-                  </td>
-                  <td className="border-b border-gray-200 px-3 py-1.5">
-                    {expert.expertInfo.position}
-                  </td>
-                </tr>
-                <tr className="bg-white">
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    사업자번호
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-mono">
-                    {expert.expertInfo.businessNumber}
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    회사 전화
-                  </td>
-                  <td className="border-b border-gray-200 px-3 py-1.5">
-                    {expert.expertInfo.companyPhone}
-                  </td>
-                </tr>
-                <tr className="bg-gray-50">
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    회사 주소
-                  </td>
-                  <td
-                    colSpan={3}
-                    className="border-b border-gray-200 px-3 py-1.5"
-                  >
-                    {expert.expertInfo.companyAddress}
-                  </td>
-                </tr>
-                <tr className="bg-white">
-                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    자기소개
-                  </td>
-                  <td colSpan={3} className="px-3 py-1.5">
-                    {expert.expertInfo.description}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* 현황 이력 - 엑셀 (관)전문가 회원카드 시트 기준 */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">현황 이력</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="border border-gray-300 rounded overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        <th className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap">
-                          일시
-                        </th>
-                        <th className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700">
-                          내용
-                        </th>
-                        <th className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap">
-                          현재상태
-                        </th>
-                        <th className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap">
-                          등급
-                        </th>
-                        <th className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap">
-                          신청 시작일
-                        </th>
-                        <th className="border-b border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap">
-                          신청 마감일
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {statusHistory.map((item, index) => (
-                        <tr
-                          key={index}
-                          className={`hover:bg-teal-50 transition-colors ${index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
-                        >
-                          <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
-                            {item.date}
-                          </td>
-                          <td className="border-b border-r border-gray-200 px-2 py-1">
-                            {item.content}
-                          </td>
-                          <td className="border-b border-r border-gray-200 px-2 py-1">
-                            {item.status === "정상" && (
-                              <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700">
-                                정상
-                              </span>
-                            )}
-                            {item.status === "승인대기" && (
-                              <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
-                                승인대기
-                              </span>
-                            )}
-                            {item.status === "정지" && (
-                              <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700">
-                                정지
-                              </span>
-                            )}
-                            {item.status === "탈퇴" && (
-                              <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">
-                                탈퇴
-                              </span>
-                            )}
-                          </td>
-                          <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
-                            {item.grade}
-                          </td>
-                          <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
-                            {item.startDate}
-                          </td>
-                          <td className="border-b border-gray-200 px-2 py-1 whitespace-nowrap">
-                            {item.endDate}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 입찰/진행 의뢰 목록 */}
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                입찰 및 진행 의뢰
-              </CardTitle>
-              <CardDescription>
-                전문가가 입찰하거나 진행한 의뢰 목록입니다. (총{" "}
-                {projects.length}건)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {projects.map((project) => (
-                  <Link
-                    key={project.id}
-                    to={`/admin/projects/${project.id}`}
-                    className="block"
-                  >
-                    <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2 flex-wrap">
-                              <h3 className="font-semibold">{project.title}</h3>
-                              {getStatusBadge(project.status)}
-                            </div>
-                            <div className="grid md:grid-cols-3 gap-x-4 gap-y-2 text-sm text-gray-600 mb-2">
-                              <div>
-                                <span className="font-medium">의뢰 코드:</span>{" "}
-                                {project.code}
-                              </div>
-                              <div>
-                                <span className="font-medium">기업:</span>{" "}
-                                {project.company}
-                              </div>
-                              <div>
-                                <span className="font-medium">입찰가:</span>{" "}
-                                <span className="font-semibold text-[#009689]">
-                                  {project.bidPrice}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4 text-xs text-gray-500">
-                              <span>입찰일: {project.bidAt}</span>
-                              {project.status === "selected" &&
-                                project.selectedAt && (
-                                  <>
-                                    <span>•</span>
-                                    <span>선택일: {project.selectedAt}</span>
-                                  </>
-                                )}
-                              {project.status === "completed" &&
-                                project.completedAt && (
-                                  <>
-                                    <span>•</span>
-                                    <span>완료일: {project.completedAt}</span>
-                                  </>
-                                )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                    {h}
+                  </th>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
+              </tr>
+            </thead>
+            <tbody>
+              {statusHistory.map((item, index) => (
+                <tr
+                  key={index}
+                  className={`hover:bg-teal-50 transition-colors ${index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                >
+                  <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                    {item.date}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1">
+                    {item.content}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1">
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-xs ${statusBadgeClass[item.status] ?? "bg-gray-100 text-gray-600"}`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                    {item.grade}
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                    {item.startDate}
+                  </td>
+                  <td className="border-b border-gray-200 px-2 py-1 whitespace-nowrap">
+                    {item.endDate}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+      </div>
+      {/* 탈퇴 해지 버튼 - 탈퇴 회원만 표시 */}
+      {expert.currentStatus === "탈퇴" && (
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            className="bg-amber-500 hover:bg-amber-600 text-white text-xs px-6"
+            onClick={() => {
+              if (
+                confirm("탈퇴를 해지하고 재가입 가능 상태로 변경하시겠습니까?")
+              ) {
+                alert("탈퇴 해지 처리되었습니다. (API 연동 예정)");
+              }
+            }}
+          >
+            탈퇴 해지 (재가입 가능)
+          </Button>
+        </div>
+      )}
 
-        {/* 오른쪽 사이드바 */}
-        <div className="space-y-4">
-          {/* 수익 통계 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                수익 통계
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">총 수익</p>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-green-600" />
-                  <p className="text-xl font-bold text-green-600">
-                    {expert.stats.totalEarnings}
-                  </p>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">평균 입찰가</p>
-                <p className="text-lg font-semibold">
-                  {expert.stats.averageBidPrice}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">진행 중인 의뢰</p>
-                <p className="text-lg font-semibold">
-                  {expert.stats.ongoingProjects}건
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 활동 요약 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>활동 요약</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">총 입찰</span>
-                <span className="font-semibold">
-                  {expert.stats.totalBids}건
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">낙찰</span>
-                <span className="font-semibold text-blue-600">
-                  {expert.stats.wonBids}건
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">완료</span>
-                <span className="font-semibold text-green-600">
-                  {expert.stats.completedProjects}건
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">진행 중</span>
-                <span className="font-semibold">
-                  {expert.stats.ongoingProjects}건
-                </span>
-              </div>
-              <div className="border-t pt-3 flex justify-between items-center">
-                <span className="text-gray-600">낙찰률</span>
-                <span className="font-semibold">
-                  {Math.round(
-                    (expert.stats.wonBids / expert.stats.totalBids) * 100,
-                  )}
-                  %
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">완료율</span>
-                <span className="font-semibold">
-                  {Math.round(
-                    (expert.stats.completedProjects / expert.stats.wonBids) *
-                      100,
-                  )}
-                  %
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 가입 정보 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>가입 정보</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div>
-                <p className="text-gray-600 mb-1">가입일</p>
-                <p className="font-semibold">
-                  {expert.personalInfo.registeredAt}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-600 mb-1">승인일</p>
-                <p className="font-semibold">{expert.expertInfo.approvedAt}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 mb-1">상태</p>
-                {expertStatus === "active" ? (
-                  <Badge className="bg-green-100 text-green-700">활성화</Badge>
+      {/* 첨부파일 */}
+      {/* 첨부파일 */}
+      <div className="border border-gray-300 rounded overflow-hidden">
+        <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
+          첨부파일
+        </div>
+        <table className="w-full text-xs border-collapse">
+          <tbody>
+            <tr className="bg-white">
+              <td className="border-b border-r border-gray-200 px-3 py-2 font-semibold text-gray-600 w-28 whitespace-nowrap">
+                자격증
+              </td>
+              <td className="border-b border-gray-200 px-3 py-2">
+                {expert.certificateFile ? (
+                  <button
+                    className="text-teal-600 hover:underline flex items-center gap-1"
+                    onClick={() => alert("파일 다운로드 기능 연동 예정입니다.")}
+                  >
+                    <Download className="h-3 w-3" />
+                    {expert.certificateFile}
+                  </button>
                 ) : (
-                  <Badge className="bg-red-100 text-red-700">비활성화</Badge>
+                  <span className="text-gray-400">첨부파일 없음</span>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </td>
+            </tr>
+            <tr className="bg-gray-50">
+              <td className="border-r border-gray-200 px-3 py-2 font-semibold text-gray-600 whitespace-nowrap">
+                사업자등록증
+              </td>
+              <td className="px-3 py-2">
+                {expert.businessFile ? (
+                  <button
+                    className="text-teal-600 hover:underline flex items-center gap-1"
+                    onClick={() => alert("파일 다운로드 기능 연동 예정입니다.")}
+                  >
+                    <Download className="h-3 w-3" />
+                    {expert.businessFile}
+                  </button>
+                ) : (
+                  <span className="text-gray-400">첨부파일 없음</span>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ interface NotificationRecord {
   supplyAmount: number;
   vat: number;
   note: string;
+  grade: "special" | "business" | "free";
 }
 
 const records: NotificationRecord[] = [
@@ -35,6 +36,8 @@ const records: NotificationRecord[] = [
     supplyAmount: 27273,
     vat: 2727,
     note: "",
+
+    grade: "free",
   },
   {
     id: 2,
@@ -48,6 +51,7 @@ const records: NotificationRecord[] = [
     supplyAmount: 45455,
     vat: 4545,
     note: "",
+    grade: "business",
   },
   {
     id: 3,
@@ -61,6 +65,7 @@ const records: NotificationRecord[] = [
     supplyAmount: 18182,
     vat: 1818,
     note: "",
+    grade: "business",
   },
   {
     id: 4,
@@ -74,6 +79,7 @@ const records: NotificationRecord[] = [
     supplyAmount: 72727,
     vat: 7273,
     note: "",
+    grade: "business",
   },
   {
     id: 5,
@@ -87,6 +93,7 @@ const records: NotificationRecord[] = [
     supplyAmount: 9091,
     vat: 909,
     note: "",
+    grade: "free",
   },
 ];
 
@@ -95,9 +102,14 @@ export function AdminNotificationStats() {
   const [endDate, setEndDate] = useState("2026-04-30");
   const [viewType, setViewType] = useState<ViewType>("individual");
 
-  const totalCount = records.reduce((sum, r) => sum + r.count, 0);
-  const totalSupply = records.reduce((sum, r) => sum + r.supplyAmount, 0);
-  const totalVat = records.reduce((sum, r) => sum + r.vat, 0);
+  const filtered = records.filter((r) => {
+    if (startDate && r.date < startDate) return false;
+    if (endDate && r.date > endDate) return false;
+    return true;
+  });
+  const totalCount = filtered.reduce((sum, r) => sum + r.count, 0);
+  const totalSupply = filtered.reduce((sum, r) => sum + r.supplyAmount, 0);
+  const totalVat = filtered.reduce((sum, r) => sum + r.vat, 0);
   const handleExport = () => {
     import("xlsx").then((XLSX) => {
       const wb = XLSX.utils.book_new();
@@ -284,7 +296,7 @@ export function AdminNotificationStats() {
                 </tr>
               </thead>
               <tbody>
-                {records.map((r, i) => (
+                {filtered.map((r, i) => (
                   <tr
                     key={r.id}
                     className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
@@ -314,6 +326,17 @@ export function AdminNotificationStats() {
                     </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
                       {r.date}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-xs ${r.grade === "special" ? "bg-yellow-100 text-yellow-700" : r.grade === "business" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}
+                      >
+                        {r.grade === "special"
+                          ? "스페셜"
+                          : r.grade === "business"
+                            ? "비즈니스"
+                            : "무료"}
+                      </span>
                     </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1 text-center font-semibold">
                       {r.count}

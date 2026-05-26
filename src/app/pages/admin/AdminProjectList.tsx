@@ -71,7 +71,7 @@ const statusMap: Record<
 > = {
   bidding: { label: "입찰 중", className: "bg-blue-100 text-blue-700" },
   closed: { label: "마감", className: "bg-gray-100 text-gray-700" },
-  paid: { label: "결제", className: "bg-green-100 text-green-700" },
+  paid: { label: "전문가 선택", className: "bg-green-100 text-green-700" },
   in_progress: {
     label: "진단시작",
     className: "bg-yellow-100 text-yellow-700",
@@ -88,7 +88,7 @@ const statusOptions: { value: ProjectStatus; label: string }[] = [
   { value: "all", label: "전체" },
   { value: "bidding", label: "입찰 중" },
   { value: "closed", label: "마감" },
-  { value: "paid", label: "결제" },
+  { value: "paid", label: "전문가 선택" },
   { value: "in_progress", label: "진단시작" },
   { value: "association", label: "협회경유" },
   { value: "sent", label: "발송" },
@@ -141,29 +141,33 @@ export function AdminProjectList() {
       // 시트1: 현재 필터 적용된 목록
       const ws1 = XLSX.utils.aoa_to_sheet([
         [
-          "의뢰코드",
-          "공고명",
-          "업종",
-          "기업명",
+          "의뢰번호",
           "의뢰인",
+          "대표자",
+          "사업자",
+          "연락처",
           "구분",
+          "의뢰 내용",
           "상태",
-          "입찰수",
-          "등록일",
+          "입찰",
+          "종료상태",
         ],
         ...filtered.map((p) => [
           p.code,
-          p.title,
-          p.industry,
-          p.company,
           p.clientName,
+          p.company,
+          "-",
+          "-",
           p.clientType === "member" ? "회원" : "비회원",
+          p.title,
           statusMap[p.status].label,
           p.bidCount,
-          p.createdAt,
+          "-",
         ]),
       ]);
-      ws1["!cols"] = [20, 30, 15, 20, 10, 8, 10, 8, 12].map((wch) => ({ wch }));
+      ws1["!cols"] = [20, 12, 15, 14, 14, 8, 30, 10, 8, 10].map((wch) => ({
+        wch,
+      }));
       XLSX.utils.book_append_sheet(wb, ws1, "의뢰현황목록");
 
       // 시트2: 상태별 집계
@@ -280,15 +284,16 @@ export function AdminProjectList() {
             <thead>
               <tr className="bg-gray-100">
                 {[
-                  "의뢰코드",
-                  "공고명",
-                  "업종",
-                  "기업명",
+                  "의뢰번호",
                   "의뢰인",
+                  "대표자",
+                  "사업자",
+                  "연락처",
                   "구분",
+                  "의뢰 내용",
                   "상태",
-                  "입찰수",
-                  "등록일",
+                  "입찰",
+                  "종료상태",
                   "상세",
                 ].map((h) => (
                   <th
@@ -303,7 +308,7 @@ export function AdminProjectList() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-8 text-gray-400">
+                  <td colSpan={11} className="text-center py-8 text-gray-400">
                     조건에 맞는 공고가 없습니다.
                   </td>
                 </tr>
@@ -316,17 +321,17 @@ export function AdminProjectList() {
                     <td className="border-b border-r border-gray-200 px-2 py-1 font-mono whitespace-nowrap">
                       {p.code}
                     </td>
-                    <td className="border-b border-r border-gray-200 px-2 py-1 max-w-[200px] truncate">
-                      {p.title}
-                    </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
-                      {p.industry}
+                      {p.clientName}
                     </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
                       {p.company}
                     </td>
-                    <td className="border-b border-r border-gray-200 px-2 py-1">
-                      {p.clientName}
+                    <td className="border-b border-r border-gray-200 px-2 py-1 font-mono">
+                      -
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                      -
                     </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1">
                       <span
@@ -334,6 +339,9 @@ export function AdminProjectList() {
                       >
                         {p.clientType === "member" ? "회원" : "비회원"}
                       </span>
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1 max-w-[200px] truncate">
+                      {p.title}
                     </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1">
                       <span
@@ -346,8 +354,9 @@ export function AdminProjectList() {
                       {p.bidCount}
                     </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
-                      {p.createdAt}
+                      -
                     </td>
+
                     <td className="border-b border-gray-200 px-2 py-1">
                       <Link
                         to={`/admin/projects/${p.code}`}
