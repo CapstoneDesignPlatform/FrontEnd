@@ -1,5 +1,4 @@
 import { Badge } from "../../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { AsyncStateCard } from "../../components/common/AsyncStateCard";
 import { ExpertProfileForm } from "../../components/expert/ExpertProfileForm";
 import { getExpertProfile, updateExpertProfile } from "../../../api/expert";
@@ -29,13 +28,7 @@ export function ExpertProfile() {
   );
 
   const handleChange = (
-    field: keyof Pick<
-      ExpertProfileFormVM,
-      | "name"
-      | "phone"
-      | "companyName"
-      | "portfolio"
-    >,
+    field: keyof Pick<ExpertProfileFormVM, "name" | "phone" | "companyName">,
     value: string,
   ) => {
     if (!profile) return;
@@ -88,21 +81,6 @@ export function ExpertProfile() {
         onChange={handleChange}
         onSubmit={handleSubmit}
       />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>전문 분야</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {profile.expertiseAreas.map((area) => (
-              <Badge key={area} variant="outline" className="bg-teal-50 text-teal-700 border-teal-200">
-                {area}
-              </Badge>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

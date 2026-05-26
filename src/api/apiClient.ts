@@ -1,3 +1,5 @@
+import { getStoredAccessToken } from "./authTokens";
+
 type QueryValue = string | number | boolean | null | undefined;
 
 export interface ApiErrorPayload {
@@ -61,7 +63,7 @@ function getErrorMessage(payload: unknown, status: number) {
 }
 
 function getDefaultAccessToken() {
-  return window.localStorage.getItem("serviceplatform.accessToken") ?? undefined;
+  return getStoredAccessToken() ?? undefined;
 }
 
 function isBodyInit(body: unknown): body is BodyInit {

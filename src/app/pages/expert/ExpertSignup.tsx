@@ -83,7 +83,14 @@ export function ExpertSignup() {
       onError: () => {
         toast.error("회원가입에 실패했습니다.");
       },
-      onSuccess: (profile) => {
+      onSuccess: ({ loginRequired, profile }) => {
+        if (loginRequired) {
+          setUser(null);
+          toast.success("회원가입이 완료되었습니다. 로그인 후 인증 신청을 진행해주세요.");
+          navigate("/login?next=/expert/verification/apply");
+          return;
+        }
+
         setUser({ type: "expert", name: profile.name });
         toast.success("회원가입이 완료되었습니다!");
         navigate("/expert/verification/apply");

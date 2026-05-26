@@ -1,5 +1,6 @@
 import type {
   CreateVerificationRequestDto,
+  ExpertVerificationStatus,
   ExpertVerificationStatusResponseDto,
   ExpertVerificationStatusVM,
   SubmitExpertVerificationRequest,
@@ -9,13 +10,27 @@ import type {
   VerificationCertificateVM,
 } from "../types/expertVerification";
 
+const managementConsultantFrontendLabel = "경영지도사(재무관리)";
+const managementConsultantBackendLabel = "경영지도사";
+
+function mapBackendCertificateName(value: string | undefined) {
+  return value === managementConsultantBackendLabel
+    ? managementConsultantFrontendLabel
+    : value;
+}
+
 function mapVerificationCertificateDtoToVM(
   certificate: VerificationCertificateDto,
 ): VerificationCertificateVM {
+  const licenseType = mapBackendCertificateName(certificate.certificate_name);
+  const issueDate = certificate.issue_date ?? "";
+  const expiryDate = certificate.expiry_date ?? certificate.expired_at ?? issueDate;
+
   return {
-    licenseType: certificate.license_type ?? certificate.certificate_name ?? "",
+    licenseType: licenseType ?? "",
     licenseNumber: certificate.license_number ?? certificate.certificate_number ?? "",
-    issueDate: certificate.issue_date,
+    issueDate,
+    expiryDate,
     fileId: certificate.file_id,
     holderName: certificate.holder_name ?? certificate.owner_name,
     fileName: certificate.file_name ?? certificate.original_name,
@@ -34,23 +49,42 @@ function mapVerificationBusinessLicenseDtoToVM(
   };
 }
 
+function mapBackendVerificationStatus(
+  request: ExpertVerificationStatusResponseDto["verification_request"],
+): ExpertVerificationStatus {
+  if (request.status === true) {
+    return "APPROVED";
+  }
+
+  if (request.status === false) {
+    return request.id ? "PENDING" : "NOT_APPLIED";
+  }
+
+  if (request.status === "NOT_SUBMITTED") {
+    return "NOT_APPLIED";
+  }
+
+  return request.status;
+}
+
 export function mapVerificationStatusDtoToVM(
   dto: ExpertVerificationStatusResponseDto,
 ): ExpertVerificationStatusVM {
   const request = dto.verification_request;
+  const businessLicense =
+    request.business_license ?? request.business_registration_info;
 
   return {
     id: request.id,
     expertProfileId: request.expert_profile_id,
-    status: request.status,
-    licenseType: request.license_type ?? "",
+    status: mapBackendVerificationStatus(request),
+    licenseType: request.specialty ?? "",
     licenseNumber: request.license_number ?? "",
     issueDate: request.issue_date ?? "",
     companyName: request.company_name ?? "",
-    portfolio: request.portfolio ?? undefined,
     certificates: request.certificates?.map(mapVerificationCertificateDtoToVM),
-    businessLicense: request.business_license
-      ? mapVerificationBusinessLicenseDtoToVM(request.business_license)
+    businessLicense: businessLicense
+      ? mapVerificationBusinessLicenseDtoToVM(businessLicense)
       : undefined,
     submittedAt: request.submitted_at ?? undefined,
     reviewedAt: request.reviewed_at ?? undefined,
@@ -62,10 +96,6 @@ export function mapSubmitVerificationRequestToDto(
   payload: SubmitExpertVerificationRequest,
 ): CreateVerificationRequestDto {
   return {
-    license_type: payload.licenseType,
-    license_number: payload.licenseNumber,
-    issue_date: payload.issueDate,
-    company_name: payload.companyName,
-    portfolio: payload.portfolio,
+    specialty: payload.licenseType,
   };
 }

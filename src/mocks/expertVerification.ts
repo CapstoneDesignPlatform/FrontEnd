@@ -10,7 +10,6 @@ const mockExpertVerificationProfile = {
   companyName: "케이법무법인",
   licenseType: "경영지도사",
   licenseNumber: "EXP-2026-001",
-  portfolio: "건설업 신규 면허 120건, 실태조사 대응 80건 이상 수행",
 };
 
 export const mockExpertVerificationProfileId =
@@ -21,14 +20,13 @@ export const mockExpertVerificationStatusDto: ExpertVerificationStatusResponseDt
     id: 1,
     expert_profile_id: mockExpertVerificationProfile.expertProfileId,
     status: "NOT_APPLIED",
-    license_type: mockExpertVerificationProfile.licenseType,
+    specialty: mockExpertVerificationProfile.licenseType,
     license_number: mockExpertVerificationProfile.licenseNumber,
     issue_date: "2020-03-15",
     company_name: mockExpertVerificationProfile.companyName,
-    portfolio: mockExpertVerificationProfile.portfolio,
     certificates: [
       {
-        license_type: mockExpertVerificationProfile.licenseType,
+        certificate_name: mockExpertVerificationProfile.licenseType,
         license_number: mockExpertVerificationProfile.licenseNumber,
         issue_date: "2020-03-15",
         holder_name: mockExpertVerificationProfile.userName,
