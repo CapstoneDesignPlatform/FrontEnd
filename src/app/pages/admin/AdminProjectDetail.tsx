@@ -479,7 +479,7 @@ export function AdminProjectDetail() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
-          {/* 의뢰 내용 - 엑셀 스타일 */}
+          {/* 의뢰 내용 */}
           <div className="border border-gray-300 rounded overflow-hidden">
             <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
               의뢰 내용
@@ -488,19 +488,41 @@ export function AdminProjectDetail() {
               <tbody>
                 <tr className="bg-white">
                   <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-28">
-                    설명
+                    등록일자
                   </td>
-                  <td className="border-b border-gray-200 px-3 py-1.5 whitespace-pre-wrap">
-                    {project.description}
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {project.createdAt}
                   </td>
                 </tr>
                 <tr className="bg-gray-50">
-                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
-                    필수 요구사항
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                    진단 업종
                   </td>
-                  <td className="px-3 py-1.5 whitespace-pre-wrap">
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {project.industry}
+                  </td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                    구분
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
+                    {project.type}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                    필요 면허
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">
                     {project.requirements}
                   </td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+                    자산규모
+                  </td>
+                  <td className="px-3 py-1.5">{project.budget}</td>
                 </tr>
               </tbody>
             </table>
@@ -549,27 +571,11 @@ export function AdminProjectDetail() {
                     {project.company.phone}
                   </td>
                   <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    설립일
+                    휴대전화
                   </td>
-                  <td className="border-b border-gray-200 px-3 py-1.5">
-                    {project.company.establishedDate}
-                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">-</td>
                 </tr>
                 <tr className="bg-gray-50">
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    자본금
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
-                    {project.company.capital}
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
-                    직원 수
-                  </td>
-                  <td className="border-b border-gray-200 px-3 py-1.5">
-                    {project.company.employees}명
-                  </td>
-                </tr>
-                <tr className="bg-white">
                   <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
                     주소
                   </td>

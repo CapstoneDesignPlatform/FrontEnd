@@ -85,27 +85,31 @@ export function AdminClientList() {
       // 시트1: 필터 적용 의뢰인 목록
       const ws1 = XLSX.utils.aoa_to_sheet([
         [
-          "이름",
-          "업체명",
-          "사업자번호",
+          "구분",
+          "대표자",
+          "사업자",
           "연락처",
           "이메일",
+          "자격증",
+          "사업자등록번호",
           "주소",
           "상태",
-          "가입일",
         ],
         ...filtered.map((c) => [
-          c.name,
           c.company,
+          c.name,
           c.businessNumber,
           c.phone,
           c.email,
+          "-",
+          c.businessNumber,
           c.address,
           statusMap[c.status].label,
-          c.registeredAt,
         ]),
       ]);
-      ws1["!cols"] = [10, 18, 14, 14, 22, 30, 8, 12].map((wch) => ({ wch }));
+      ws1["!cols"] = [18, 10, 14, 14, 22, 10, 14, 30, 8].map((wch) => ({
+        wch,
+      }));
       XLSX.utils.book_append_sheet(wb, ws1, "의뢰인목록");
 
       // 시트2: 상태별 집계
@@ -196,14 +200,15 @@ export function AdminClientList() {
             <thead>
               <tr className="bg-gray-100">
                 {[
-                  "이름",
-                  "업체명",
-                  "사업자번호",
+                  "구분",
+                  "대표자",
+                  "사업자",
                   "연락처",
                   "이메일",
+                  "자격증",
+                  "사업자등록번호",
                   "주소",
                   "상태",
-                  "가입일",
                   "상세",
                 ].map((h) => (
                   <th
@@ -218,7 +223,7 @@ export function AdminClientList() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-8 text-gray-400">
+                  <td colSpan={10} className="text-center py-8 text-gray-400">
                     검색 결과가 없습니다.
                   </td>
                 </tr>
@@ -228,11 +233,11 @@ export function AdminClientList() {
                     key={c.id}
                     className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                   >
-                    <td className="border-b border-r border-gray-200 px-2 py-1 font-medium">
-                      {c.name}
+                    <td className="border-b border-r border-gray-200 px-2 py-1 font-medium whitespace-nowrap">
+                      {c.company}
                     </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
-                      {c.company}
+                      {c.name}
                     </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1 font-mono">
                       {c.businessNumber}
@@ -242,6 +247,12 @@ export function AdminClientList() {
                     </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1">
                       {c.email}
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1">
+                      -
+                    </td>
+                    <td className="border-b border-r border-gray-200 px-2 py-1 font-mono">
+                      {c.businessNumber}
                     </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1 max-w-[160px] truncate">
                       {c.address}
@@ -253,9 +264,7 @@ export function AdminClientList() {
                         {statusMap[c.status].label}
                       </span>
                     </td>
-                    <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
-                      {c.registeredAt}
-                    </td>
+
                     <td className="border-b border-gray-200 px-2 py-1">
                       <Link
                         to={`/admin/clients/${c.id}`}
