@@ -76,7 +76,7 @@ function TypeBadgeLabel({ type }: { type: ExpertJobListItemVM["type"] }) {
 export function JobTable({ projects }: JobTableProps) {
   return (
     <div className="overflow-x-auto bg-white">
-      <table className="w-full min-w-[920px] border-collapse text-sm">
+      <table className="w-full table-fixed border-collapse text-sm md:min-w-[920px] md:table-auto">
         <thead className="bg-slate-50 text-xs font-medium text-slate-500">
           <tr>
             <th
@@ -87,31 +87,31 @@ export function JobTable({ projects }: JobTableProps) {
             </th>
             <th
               scope="col"
-              className="w-[92px] border-b px-4 py-3 text-center"
+              className="hidden w-[92px] border-b px-4 py-3 text-center md:table-cell"
             >
               등록일
             </th>
             <th
               scope="col"
-              className="w-[74px] border-b px-3 py-3 text-center"
+              className="w-[56px] border-b px-1.5 py-3 text-center md:w-[74px] md:px-3"
             >
               유형
             </th>
             <th
               scope="col"
-              className="w-[124px] border-b px-4 py-3 text-left"
+              className="hidden w-[124px] border-b px-4 py-3 text-left md:table-cell"
             >
               업종
             </th>
             <th
               scope="col"
-              className="hidden w-[260px] border-b px-4 py-3 text-left md:table-cell"
+              className="border-b px-2 py-3 text-left md:w-[260px] md:px-4"
             >
               핵심 조건
             </th>
             <th
               scope="col"
-              className="hidden w-[92px] border-b px-4 py-3 text-right md:table-cell"
+              className="w-[62px] border-b px-1.5 py-3 text-right md:w-[92px] md:px-4"
             >
               자산
             </th>
@@ -123,13 +123,13 @@ export function JobTable({ projects }: JobTableProps) {
             </th>
             <th
               scope="col"
-              className="hidden w-[92px] border-b px-4 py-3 text-center md:table-cell"
+              className="w-[72px] border-b px-1.5 py-3 text-center md:w-[92px] md:px-4"
             >
               상태
             </th>
             <th
               scope="col"
-              className="sticky right-0 hidden w-[156px] border-b border-l bg-slate-50 px-4 py-3 text-center md:table-cell"
+              className="sticky right-0 w-[58px] border-b border-l bg-slate-50 px-1.5 py-3 text-center md:w-[156px] md:px-4"
             >
               액션
             </th>
@@ -150,7 +150,7 @@ export function JobTable({ projects }: JobTableProps) {
                   <td className="hidden whitespace-nowrap px-4 py-3 font-mono text-xs text-slate-500 md:table-cell">
                     {formatJobNumber(project.id)}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-center text-slate-600">
+                  <td className="hidden whitespace-nowrap px-4 py-3 text-center text-slate-600 md:table-cell">
                     <div className="flex flex-col items-center gap-1">
                       <span>{formatTableDate(project.postedDate)}</span>
                       {project.isNew ? (
@@ -160,28 +160,28 @@ export function JobTable({ projects }: JobTableProps) {
                       ) : null}
                     </div>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3 text-center">
+                  <td className="whitespace-nowrap px-1.5 py-3 text-center md:px-3">
                     <Badge
                       variant="outline"
                       aria-label={project.type}
-                      className={`justify-center px-2 py-1 text-center text-[11px] ${typeBadgeClass[project.type]}`}
+                      className={`justify-center px-1 py-1 text-center text-[10px] md:px-2 md:text-[11px] ${typeBadgeClass[project.type]}`}
                     >
                       <TypeBadgeLabel type={project.type} />
                     </Badge>
                   </td>
-                  <td className="truncate px-4 py-3 text-left text-slate-700">
+                  <td className="hidden truncate px-4 py-3 text-left text-slate-700 md:table-cell">
                     {project.industry}
                   </td>
-                  <td className="hidden max-w-[260px] px-4 py-3 text-slate-600 md:table-cell">
+                  <td className="min-w-0 px-2 py-3 text-slate-600 md:max-w-[260px] md:px-4">
                     <span className="block truncate">{getRequirementText(project)}</span>
                   </td>
-                  <td className="hidden whitespace-nowrap px-4 py-3 text-right text-slate-600 md:table-cell">
+                  <td className="whitespace-nowrap px-1.5 py-3 text-right text-slate-600 md:px-4">
                     {project.assetScale ?? "-"}
                   </td>
                   <td className="hidden whitespace-nowrap px-4 py-3 text-center text-slate-600 md:table-cell">
                     <span className="font-semibold text-slate-950">{project.bids}</span>명
                   </td>
-                  <td className="hidden whitespace-nowrap px-4 py-3 text-center md:table-cell">
+                  <td className="whitespace-nowrap px-1.5 py-3 text-center md:px-4">
                     <Badge
                       variant="outline"
                       className={
@@ -193,16 +193,16 @@ export function JobTable({ projects }: JobTableProps) {
                       {bidStatus}
                     </Badge>
                   </td>
-                  <td className="sticky right-0 hidden border-l bg-white px-4 py-3 text-center shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] group-hover:bg-slate-50 md:table-cell">
-                    <div className="flex justify-end gap-2">
-                      <Button asChild variant="outline" size="sm" className="h-7 px-2 text-xs">
+                  <td className="sticky right-0 border-l bg-white px-1.5 py-3 text-center shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] group-hover:bg-slate-50 md:px-4">
+                    <div className="flex justify-end gap-1 md:gap-2">
+                      <Button asChild variant="outline" size="sm" className="h-7 px-1.5 text-xs md:px-2">
                         <Link to={detailPath}>상세</Link>
                       </Button>
                       {canBid && !project.hasMyBid ? (
                         <Button
                           asChild
                           size="sm"
-                          className={getBidActionButtonClassName(project.hasMyBid)}
+                          className={`hidden md:inline-flex ${getBidActionButtonClassName(project.hasMyBid)}`}
                         >
                           <Link to={bidPath}>입찰 시작</Link>
                         </Button>
@@ -211,7 +211,7 @@ export function JobTable({ projects }: JobTableProps) {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2 text-xs"
+                          className="hidden h-7 px-2 text-xs md:inline-flex"
                           disabled
                         >
                           {project.hasMyBid ? "입찰 완료" : "입찰 마감"}
