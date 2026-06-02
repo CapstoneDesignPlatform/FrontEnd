@@ -38,25 +38,6 @@ export function AdminExpertDetail() {
       .catch(() => {});
   }, [userId]);
 
-  const [statusHistory, setStatusHistory] = useState([
-    {
-      date: "2026-03-25 10:00",
-      content: "전문가 승인 완료",
-      status: "정상",
-      grade: "스페셜",
-      startDate: "2026-03-25",
-      endDate: "2027-03-24",
-    },
-    {
-      date: "2026-02-15 14:30",
-      content: "회원 가입",
-      status: "승인대기",
-      grade: "-",
-      startDate: "-",
-      endDate: "-",
-    },
-  ]);
-
   const statusLabelMap: Record<string, string> = {
     APPROVED: "정상",
     PENDING: "승인대기",
@@ -64,29 +45,10 @@ export function AdminExpertDetail() {
     NOT_SUBMITTED: "탈퇴",
   };
 
-  const expert = {
-    memberNumber: apiDetail
-      ? `EX-${String(apiDetail.userId).padStart(6, "0")}`
-      : "EX-2026-0101",
-    company: apiBusinessInfo?.companyName ?? "케이법무법인",
-    representative: apiBusinessInfo?.representativeName ?? "홍길동",
-    phone: "-",
-    email: apiDetail?.email ?? "hong@example.com",
-    license: apiDetail?.expertField ?? "행정사",
-    businessNumber: apiBusinessInfo?.businessNumber ?? "123-45-67890",
-    address: "-",
-    currentStatus: apiDetail
-      ? (statusLabelMap[apiDetail.verificationStatus] ??
-        apiDetail.verificationStatus)
-      : "정상",
-    certificateFile:
-      apiCertificates.length > 0
-        ? `${apiCertificates[0].certificateTypeCode} (${apiCertificates[0].ownerName})`
-        : "",
-    businessFile: apiBusinessInfo
-      ? `${apiBusinessInfo.companyName} 사업자등록증`
-      : "",
-  };
+  const currentStatus = apiDetail
+    ? (statusLabelMap[apiDetail.verificationStatus] ??
+      apiDetail.verificationStatus)
+    : "-";
 
   const statusBadgeClass: Record<string, string> = {
     정상: "bg-green-100 text-green-700",
@@ -95,41 +57,46 @@ export function AdminExpertDetail() {
     탈퇴: "bg-gray-100 text-gray-600",
   };
 
+  const cert = apiCertificates[0];
+
+  const attachments = [
+    ...apiCertificates.map((c) => ({
+      name: `${c.certificateTypeCode}_${c.ownerName}.pdf`,
+      type: "자격증",
+      size: "-",
+      uploadedAt: "-",
+      fileId: c.fileId,
+    })),
+    ...(apiBusinessInfo
+      ? [
+          {
+            name: `${apiBusinessInfo.companyName}_사업자등록증.pdf`,
+            type: "사업자등록증",
+            size: "-",
+            uploadedAt: "-",
+          },
+        ]
+      : []),
+  ];
+
   const handleExport = () => {
     import("xlsx").then((XLSX) => {
       const wb = XLSX.utils.book_new();
-      const ws1 = XLSX.utils.aoa_to_sheet([
+      const ws = XLSX.utils.aoa_to_sheet([
         ["항목", "내용"],
-        ["회원번호", expert.memberNumber],
-        ["업체명", expert.company],
-        ["대표자명", expert.representative],
-        ["연락처", expert.phone],
-        ["이메일", expert.email],
-        ["자격증", expert.license],
-        ["사업자등록번호", expert.businessNumber],
-        ["주소", expert.address],
-        ["현재상태", expert.currentStatus],
+        ["이름", apiBusinessInfo?.representativeName ?? "-"],
+        ["이메일", apiDetail?.email ?? "-"],
+        ["전문분야", apiDetail?.expertField ?? "-"],
+        ["상호", apiBusinessInfo?.companyName ?? "-"],
+        ["사업자번호", apiBusinessInfo?.businessNumber ?? "-"],
+        ["면허종류", cert?.certificateTypeCode ?? "-"],
+        ["현재상태", currentStatus],
       ]);
-      ws1["!cols"] = [{ wch: 16 }, { wch: 50 }];
-      XLSX.utils.book_append_sheet(wb, ws1, "전문가정보");
-
-      const ws2 = XLSX.utils.aoa_to_sheet([
-        ["일시", "내용", "현재상태", "등급", "신청시작일", "신청마감일"],
-        ...statusHistory.map((h) => [
-          h.date,
-          h.content,
-          h.status,
-          h.grade,
-          h.startDate,
-          h.endDate,
-        ]),
-      ]);
-      ws2["!cols"] = [18, 25, 10, 10, 12, 12].map((wch) => ({ wch }));
-      XLSX.utils.book_append_sheet(wb, ws2, "현황이력");
-
+      ws["!cols"] = [{ wch: 16 }, { wch: 50 }];
+      XLSX.utils.book_append_sheet(wb, ws, "전문가정보");
       XLSX.writeFile(
         wb,
-        `전문가회원카드_${expert.representative}_${new Date().toISOString().slice(0, 10)}.xlsx`,
+        `전문가_${apiBusinessInfo?.representativeName ?? userId}_${new Date().toISOString().slice(0, 10)}.xlsx`,
       );
     });
   };
@@ -145,7 +112,14 @@ export function AdminExpertDetail() {
               전문가 목록으로
             </Link>
           </Button>
-          <h1 className="text-xl font-bold">전문가 회원카드</h1>
+          <h1 className="text-xl font-bold">
+            {apiBusinessInfo?.representativeName ?? "-"} 전문가 회원카드
+          </h1>
+          <span
+            className={`px-2 py-0.5 rounded text-xs font-medium ${statusBadgeClass[currentStatus] ?? "bg-gray-100 text-gray-600"}`}
+          >
+            {currentStatus}
+          </span>
         </div>
         <Button
           size="sm"
@@ -158,212 +132,229 @@ export function AdminExpertDetail() {
         </Button>
       </div>
 
-      {/* 구분 + 현재상태 */}
+      {/* 기본 정보 요약 */}
       <div className="border border-gray-300 rounded overflow-hidden">
-        <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 flex justify-between items-center">
-          <span>구분</span>
-          <span className="font-normal text-gray-500">
-            현재상태:{" "}
-            <span
-              className={`px-1.5 py-0.5 rounded text-xs font-semibold ${statusBadgeClass[expert.currentStatus] ?? "bg-gray-100 text-gray-600"}`}
-            >
-              {expert.currentStatus}
-            </span>
-          </span>
-        </div>
         <table className="w-full text-xs border-collapse">
           <tbody>
-            <tr className="bg-white">
-              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 w-28 whitespace-nowrap">
-                회원번호
-              </td>
-              <td className="border-b border-gray-200 px-3 py-1.5 font-mono">
-                {expert.memberNumber}
-              </td>
-            </tr>
             <tr className="bg-gray-50">
-              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
-                업체명
+              <td className="border-b border-r border-gray-300 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-24">
+                이름
               </td>
-              <td className="border-b border-gray-200 px-3 py-1.5">
-                {expert.company}
+              <td className="border-b border-r border-gray-300 px-3 py-1.5">
+                {apiBusinessInfo?.representativeName ?? "-"}
               </td>
+              <td className="border-b border-r border-gray-300 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap w-24">
+                신청일
+              </td>
+              <td className="border-b border-gray-300 px-3 py-1.5">-</td>
             </tr>
             <tr className="bg-white">
-              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
-                대표자명
-              </td>
-              <td className="border-b border-gray-200 px-3 py-1.5">
-                {expert.representative}
-              </td>
-            </tr>
-            <tr className="bg-gray-50">
-              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
-                연락처
-              </td>
-              <td className="border-b border-gray-200 px-3 py-1.5">
-                {expert.phone}
-              </td>
-            </tr>
-            <tr className="bg-white">
-              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+              <td className="border-b border-r border-gray-300 px-3 py-1.5 font-semibold text-gray-600">
                 이메일
               </td>
-              <td className="border-b border-gray-200 px-3 py-1.5">
-                {expert.email}
+              <td className="border-b border-r border-gray-300 px-3 py-1.5">
+                {apiDetail?.email ?? "-"}
               </td>
+              <td className="border-b border-r border-gray-300 px-3 py-1.5 font-semibold text-gray-600">
+                연락처
+              </td>
+              <td className="border-b border-gray-300 px-3 py-1.5">-</td>
             </tr>
             <tr className="bg-gray-50">
-              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
-                자격증
+              <td className="border-b border-r border-gray-300 px-3 py-1.5 font-semibold text-gray-600">
+                전문분야
               </td>
-              <td className="border-b border-gray-200 px-3 py-1.5">
-                {expert.license}
+              <td className="border-b border-r border-gray-300 px-3 py-1.5">
+                {apiDetail?.expertField ?? "-"}
+              </td>
+              <td className="border-b border-r border-gray-300 px-3 py-1.5 font-semibold text-gray-600">
+                상호
+              </td>
+              <td className="border-b border-gray-300 px-3 py-1.5">
+                {apiBusinessInfo?.companyName ?? "-"}
               </td>
             </tr>
             <tr className="bg-white">
-              <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
-                사업자등록번호
+              <td className="border-b border-r border-gray-300 px-3 py-1.5 font-semibold text-gray-600">
+                휴대전화
               </td>
-              <td className="border-b border-gray-200 px-3 py-1.5 font-mono">
-                {expert.businessNumber}
+              <td className="border-b border-r border-gray-300 px-3 py-1.5">
+                -
+              </td>
+              <td className="border-b border-r border-gray-300 px-3 py-1.5 font-semibold text-gray-600">
+                사업자번호
+              </td>
+              <td className="border-b border-gray-300 px-3 py-1.5 font-mono">
+                {apiBusinessInfo?.businessNumber ?? "-"}
               </td>
             </tr>
             <tr className="bg-gray-50">
-              <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap">
+              <td className="border-r border-gray-300 px-3 py-1.5 font-semibold text-gray-600">
                 주소
               </td>
-              <td className="px-3 py-1.5">{expert.address}</td>
+              <td colSpan={3} className="px-3 py-1.5">
+                -
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      {/* 현황 이력 */}
-      <div className="border border-gray-300 rounded overflow-hidden">
-        <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
-          현황
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs border-collapse">
-            <thead>
-              <tr className="bg-gray-50">
-                {[
-                  "일시",
-                  "내용 입력",
-                  "현재상태",
-                  "등급",
-                  "신청 시작일",
-                  "신청 마감일",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap last:border-r-0"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {statusHistory.map((item, index) => (
-                <tr
-                  key={index}
-                  className={`hover:bg-teal-50 transition-colors ${index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
-                >
-                  <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
-                    {item.date}
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          {/* 전문가 인증 정보 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 border-b border-gray-300">
+              전문가 인증 정보
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <tbody>
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 w-28 whitespace-nowrap">
+                    면허 종류
                   </td>
-                  <td className="border-b border-r border-gray-200 px-2 py-1">
-                    {item.content}
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    {cert?.certificateTypeCode ?? "-"}
                   </td>
-                  <td className="border-b border-r border-gray-200 px-2 py-1">
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-xs ${statusBadgeClass[item.status] ?? "bg-gray-100 text-gray-600"}`}
-                    >
-                      {item.status}
-                    </span>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 w-28 whitespace-nowrap">
+                    면허 번호
                   </td>
-                  <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
-                    {item.grade}
-                  </td>
-                  <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
-                    {item.startDate}
-                  </td>
-                  <td className="border-b border-gray-200 px-2 py-1 whitespace-nowrap">
-                    {item.endDate}
+                  <td className="border-b border-gray-200 px-3 py-1.5 font-mono">
+                    -
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      {/* 탈퇴 해지 버튼 - 탈퇴 회원만 표시 */}
-      {expert.currentStatus === "탈퇴" && (
-        <div className="flex justify-end">
-          <Button
-            size="sm"
-            className="bg-amber-500 hover:bg-amber-600 text-white text-xs px-6"
-            onClick={() => {
-              if (
-                confirm("탈퇴를 해지하고 재가입 가능 상태로 변경하시겠습니까?")
-              ) {
-                alert("탈퇴 해지 처리되었습니다. (API 연동 예정)");
-              }
-            }}
-          >
-            탈퇴 해지 (재가입 가능)
-          </Button>
-        </div>
-      )}
+                <tr className="bg-gray-50">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    발급일
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    -
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    만료일
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">-</td>
+                </tr>
 
-      {/* 첨부파일 */}
-      {/* 첨부파일 */}
-      <div className="border border-gray-300 rounded overflow-hidden">
-        <div className="bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
-          첨부파일
+                <tr className="bg-white">
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    직책
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5">
+                    -
+                  </td>
+                  <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    휴대전화
+                  </td>
+                  <td className="border-b border-gray-200 px-3 py-1.5">-</td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600">
+                    회사 주소
+                  </td>
+                  <td colSpan={3} className="px-3 py-1.5">
+                    -
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* 소개글 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 border-b border-gray-300">
+              소개글
+            </div>
+            <div className="px-3 py-2 text-xs text-gray-700 bg-white min-h-[48px]">
+              -
+            </div>
+          </div>
+
+          {/* 첨부 서류 */}
+          <div className="border border-gray-300 rounded overflow-hidden">
+            <div className="bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 border-b border-gray-300">
+              첨부 서류 (총 {attachments.length}개)
+            </div>
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="bg-gray-50">
+                  {["파일명", "종류", "크기", "업로드일시", "다운로드"].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="border-b border-r border-gray-300 px-2 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap last:border-r-0"
+                      >
+                        {h}
+                      </th>
+                    ),
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {attachments.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4 text-gray-400">
+                      첨부파일 없음
+                    </td>
+                  </tr>
+                ) : (
+                  attachments.map((f, i) => (
+                    <tr
+                      key={i}
+                      className={i % 2 === 1 ? "bg-gray-50" : "bg-white"}
+                    >
+                      <td className="border-b border-r border-gray-200 px-2 py-1">
+                        {f.name}
+                      </td>
+                      <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                        {f.type}
+                      </td>
+                      <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                        {f.size}
+                      </td>
+                      <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
+                        {f.uploadedAt}
+                      </td>
+                      <td className="border-b border-gray-200 px-2 py-1">
+                        <button
+                          className="text-teal-600 hover:underline"
+                          onClick={() =>
+                            alert("파일 다운로드 기능 연동 예정입니다.")
+                          }
+                        >
+                          다운로드
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <table className="w-full text-xs border-collapse">
-          <tbody>
-            <tr className="bg-white">
-              <td className="border-b border-r border-gray-200 px-3 py-2 font-semibold text-gray-600 w-28 whitespace-nowrap">
-                자격증
-              </td>
-              <td className="border-b border-gray-200 px-3 py-2">
-                {expert.certificateFile ? (
-                  <button
-                    className="text-teal-600 hover:underline flex items-center gap-1"
-                    onClick={() => alert("파일 다운로드 기능 연동 예정입니다.")}
-                  >
-                    <Download className="h-3 w-3" />
-                    {expert.certificateFile}
-                  </button>
-                ) : (
-                  <span className="text-gray-400">첨부파일 없음</span>
-                )}
-              </td>
-            </tr>
-            <tr className="bg-gray-50">
-              <td className="border-r border-gray-200 px-3 py-2 font-semibold text-gray-600 whitespace-nowrap">
-                사업자등록증
-              </td>
-              <td className="px-3 py-2">
-                {expert.businessFile ? (
-                  <button
-                    className="text-teal-600 hover:underline flex items-center gap-1"
-                    onClick={() => alert("파일 다운로드 기능 연동 예정입니다.")}
-                  >
-                    <Download className="h-3 w-3" />
-                    {expert.businessFile}
-                  </button>
-                ) : (
-                  <span className="text-gray-400">첨부파일 없음</span>
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+
+        {/* 우측: 탈퇴 해지 버튼 */}
+        <div className="space-y-4">
+          {currentStatus === "탈퇴" && (
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                className="bg-amber-500 hover:bg-amber-600 text-white text-xs px-6"
+                onClick={() => {
+                  if (
+                    confirm(
+                      "탈퇴를 해지하고 재가입 가능 상태로 변경하시겠습니까?",
+                    )
+                  ) {
+                    alert("탈퇴 해지 처리되었습니다. (API 연동 예정)");
+                  }
+                }}
+              >
+                탈퇴 해지 (재가입 가능)
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
