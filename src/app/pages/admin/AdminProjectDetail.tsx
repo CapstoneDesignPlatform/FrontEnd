@@ -36,8 +36,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { Download } from "lucide-react";
-import { exportToExcel } from "../../utils/exportExcel";
-
+import { downloadAnnouncementDetailExcel } from "../../../api/admin/excelApi";
 type ProjectStatus =
   | "bidding"
   | "closed"
@@ -323,138 +322,7 @@ export function AdminProjectDetail() {
             size="sm"
             variant="outline"
             className="gap-1 text-xs"
-            onClick={() => {
-              // 시트 1: 의뢰 기본 정보
-              const ws1Data = [
-                ["항목", "내용"],
-                ["의뢰코드", project.code],
-                ["의뢰명", project.title],
-                ["유형", project.type],
-                ["업종", project.industry],
-                ["상태", getStatusLabel(projectStatus)],
-                ["예산", project.budget],
-                ["희망완료일", project.deadline],
-                ["지역", project.location],
-                ["등록일", project.createdAt],
-                ["최종수정일", project.updatedAt],
-                ["", ""],
-                ["=== 의뢰 내용 ===", ""],
-                ["설명", project.description],
-                ["필수 요구사항", project.requirements],
-                ["", ""],
-                ["=== 의뢰인 정보 ===", ""],
-                ["의뢰인 이름", project.client.name],
-                ["이메일", project.client.email],
-                ["연락처", project.client.phone],
-                ["회원유형", project.client.isGuest ? "비회원" : "정회원"],
-                ["", ""],
-                ["=== 기업 정보 ===", ""],
-                ["기업명", project.company.name],
-                ["사업자 유형", project.company.businessType],
-                ["사업자등록번호", project.company.businessNumber],
-                ["대표자명", project.company.representative],
-                ["대표 전화", project.company.phone],
-                ["주소", project.company.address],
-                ["설립일", project.company.establishedDate],
-                ["자본금", project.company.capital],
-                ["직원 수", `${project.company.employees}명`],
-              ];
-
-              // 시트 2: 입찰 현황
-              const ws2Headers = [
-                "전문가명",
-                "소속",
-                "연락처",
-                "이메일",
-                "입찰가",
-                "예상기간(일)",
-                "입찰일시",
-                "인증여부",
-                "선택여부",
-                "메시지",
-              ];
-              const ws2Rows = sortedBids.map((bid) => [
-                bid.expertName,
-                bid.company,
-                bid.phone,
-                bid.email,
-                bid.price,
-                bid.estimatedDays,
-                bid.bidAt,
-                bid.verified ? "인증" : "-",
-                bid.isSelected ? "선택됨" : "-",
-                bid.message,
-              ]);
-
-              // 시트 3: 선택된 전문가 (있을 경우)
-              const ws3Data = project.selectedExpert
-                ? [
-                    ["항목", "내용"],
-                    ["전문가명", project.selectedExpert.name],
-                    ["소속", project.selectedExpert.company],
-                    ["연락처", project.selectedExpert.phone],
-                    ["이메일", project.selectedExpert.email],
-                    ["확정금액", project.selectedExpert.price],
-                    ["선택일", project.selectedExpert.selectedAt],
-                  ]
-                : [
-                    ["항목", "내용"],
-                    ["선택된 전문가 없음", ""],
-                  ];
-
-              // 입찰 통계
-              const avgPrice = Math.round(
-                sortedBids.reduce(
-                  (s, b) => s + parseInt(b.price.replace(/[^0-9]/g, "")),
-                  0,
-                ) / sortedBids.length,
-              );
-              const ws3DataFull = [
-                ...ws3Data,
-                ["", ""],
-                ["=== 입찰 통계 ===", ""],
-                ["총 입찰자", `${project.bids.length}명`],
-                ["최저 입찰가", sortedBids[0]?.price ?? "-"],
-                [
-                  "최고 입찰가",
-                  sortedBids[sortedBids.length - 1]?.price ?? "-",
-                ],
-                ["평균 입찰가", `₩${avgPrice.toLocaleString()}`],
-                [
-                  "인증 전문가",
-                  `${project.bids.filter((b) => b.verified).length}명`,
-                ],
-              ];
-
-              import("xlsx").then((XLSX) => {
-                const wb = XLSX.utils.book_new();
-
-                // 시트 1: 의뢰 정보
-                const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
-                ws1["!cols"] = [{ wch: 20 }, { wch: 50 }];
-                XLSX.utils.book_append_sheet(wb, ws1, "의뢰정보");
-
-                // 시트 2: 입찰현황
-                const ws2 = XLSX.utils.aoa_to_sheet([ws2Headers, ...ws2Rows]);
-                ws2["!cols"] = ws2Headers.map((h, i) => ({
-                  wch: Math.max(
-                    h.length * 2,
-                    ...ws2Rows.map((r) => String(r[i] ?? "").length * 1.2),
-                  ),
-                }));
-                XLSX.utils.book_append_sheet(wb, ws2, "입찰현황");
-
-                // 시트 3: 선택전문가+통계
-                const ws3 = XLSX.utils.aoa_to_sheet(ws3DataFull);
-                ws3["!cols"] = [{ wch: 20 }, { wch: 30 }];
-                XLSX.utils.book_append_sheet(wb, ws3, "선택전문가_통계");
-
-                XLSX.writeFile(
-                  wb,
-                  `의뢰상세_${project.code}_${new Date().toISOString().slice(0, 10)}.xlsx`,
-                );
-              });
-            }}
+            onClick={() => downloadAnnouncementDetailExcel(project.code)}
           >
             <Download className="h-3 w-3" />
             Excel 다운로드

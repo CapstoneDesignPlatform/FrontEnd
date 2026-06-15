@@ -6,6 +6,7 @@ import { Download } from "lucide-react";
 import { exportToExcel } from "../../utils/exportExcel";
 import { getClientList } from "../../../api/admin/clientApi";
 import type { AdminClientSummary } from "../../../api/admin/clientApi";
+import { downloadClientListExcel } from "../../../api/admin/excelApi";
 
 // 백엔드 데이터를 프론트 UI에 맞게 변환
 interface Client {
@@ -78,58 +79,7 @@ export function AdminClientList() {
     return true;
   });
 
-  const handleExport = () => {
-    import("xlsx").then((XLSX) => {
-      const wb = XLSX.utils.book_new();
-
-      // 시트1: 필터 적용 의뢰인 목록
-      const ws1 = XLSX.utils.aoa_to_sheet([
-        [
-          "구분",
-          "대표자",
-          "사업자",
-          "연락처",
-          "이메일",
-          "자격증",
-          "사업자등록번호",
-          "주소",
-          "상태",
-        ],
-        ...filtered.map((c) => [
-          c.company,
-          c.name,
-          c.businessNumber,
-          c.phone,
-          c.email,
-          "-",
-          c.businessNumber,
-          c.address,
-          statusMap[c.status].label,
-        ]),
-      ]);
-      ws1["!cols"] = [18, 10, 14, 14, 22, 10, 14, 30, 8].map((wch) => ({
-        wch,
-      }));
-      XLSX.utils.book_append_sheet(wb, ws1, "의뢰인목록");
-
-      // 시트2: 상태별 집계
-      const ws2 = XLSX.utils.aoa_to_sheet([
-        ["상태", "인원수"],
-        ["정상", counts.active],
-        ["대기", counts.pending],
-        ["정지", counts.suspended],
-        ["탈퇴", counts.withdrawn],
-        ["합계", allClients.length],
-      ]);
-      ws2["!cols"] = [{ wch: 10 }, { wch: 10 }];
-      XLSX.utils.book_append_sheet(wb, ws2, "상태별집계");
-
-      XLSX.writeFile(
-        wb,
-        `의뢰인목록_${new Date().toISOString().slice(0, 10)}.xlsx`,
-      );
-    });
-  };
+  const handleExport = () => downloadClientListExcel();
 
   const counts = {
     all: allClients.length,
