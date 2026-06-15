@@ -138,7 +138,7 @@ export function AdminFeeDetail() {
                 className="w-40"
               />
             </div>
-            <Button className="bg-[#009689] hover:bg-[#007d71]">조회</Button>
+            <Button className="bg-[#34499C] hover:bg-[#2a3d84]">조회</Button>
 
             <Button
               variant="outline"
@@ -169,7 +169,7 @@ export function AdminFeeDetail() {
             <CardTitle className="text-sm">총 중개수수료</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-teal-600">
+            <div className="text-xl font-bold text-blue-600">
               ₩{totalFee.toLocaleString()}
             </div>
           </CardContent>
@@ -234,7 +234,7 @@ export function AdminFeeDetail() {
                     <td className="py-2 px-3 text-right font-semibold">
                       ₩{item.bidAmount.toLocaleString()}
                     </td>
-                    <td className="py-2 px-3 text-right text-teal-600 font-semibold">
+                    <td className="py-2 px-3 text-right text-blue-600 font-semibold">
                       ₩{item.feeAmount.toLocaleString()}
                     </td>
                     <td className="py-2 px-3 text-right">
@@ -252,7 +252,7 @@ export function AdminFeeDetail() {
                   <td className="py-2 px-3 text-right">
                     ₩{totalBid.toLocaleString()}
                   </td>
-                  <td className="py-2 px-3 text-right text-teal-600">
+                  <td className="py-2 px-3 text-right text-blue-600">
                     ₩{totalFee.toLocaleString()}
                   </td>
                   <td className="py-2 px-3 text-right">

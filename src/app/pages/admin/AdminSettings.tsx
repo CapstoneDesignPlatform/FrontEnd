@@ -116,26 +116,26 @@ export function AdminSettings() {
               </thead>
               <tbody>
                 <tr className="bg-white">
-                  <td className="border-r border-gray-200 px-3 py-2 font-bold text-teal-600">
+                  <td className="border-r border-gray-200 px-3 py-2 font-bold text-blue-600">
                     {dumpingLower}%
                   </td>
-                  <td className="border-r border-gray-200 px-3 py-2 font-bold text-teal-600">
+                  <td className="border-r border-gray-200 px-3 py-2 font-bold text-blue-600">
                     {dumpingUpper}%
                   </td>
-                  <td className="border-r border-gray-200 px-3 py-2 font-bold text-teal-600">
+                  <td className="border-r border-gray-200 px-3 py-2 font-bold text-blue-600">
                     {platformFee}%
                   </td>
-                  <td className="border-r border-gray-200 px-3 py-2 font-bold text-teal-600">
+                  <td className="border-r border-gray-200 px-3 py-2 font-bold text-blue-600">
                     {medianBaseRatio}%
                   </td>
                   <td className="border-r border-gray-200 px-3 py-2">
-                    <span className="font-bold text-teal-600">
+                    <span className="font-bold text-blue-600">
                       중앙값의 {medianBaseRatio}%
                     </span>
                     <p className="text-gray-400 text-xs">최저가 이상 추천</p>
                   </td>
                   <td className="border-gray-200 px-3 py-2">
-                    <span className="font-bold text-teal-600">
+                    <span className="font-bold text-blue-600">
                       {exposureCount}건
                     </span>
                     <p className="text-gray-400 text-xs">
@@ -202,7 +202,7 @@ export function AdminSettings() {
             </div>
             <Button
               type="submit"
-              className="bg-[#009689] hover:bg-[#007d71] text-sm"
+              className="bg-[#34499C] hover:bg-[#2a3d84] text-sm"
             >
               설정 저장
             </Button>

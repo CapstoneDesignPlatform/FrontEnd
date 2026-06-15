@@ -13,7 +13,7 @@ interface JobTableProps {
 }
 
 const typeBadgeClass: Record<ExpertJobListItemVM["type"], string> = {
-  "필요 면허": "border-teal-200 bg-teal-50 text-teal-700",
+  "필요 면허": "border-blue-200 bg-blue-50 text-blue-700",
   "실태 조사": "border-blue-200 bg-blue-50 text-blue-700",
   "주기적 신고": "border-amber-200 bg-amber-50 text-amber-700",
   기타: "border-slate-200 bg-slate-50 text-slate-700",
@@ -54,7 +54,7 @@ function formatTableDate(date: string) {
 function getBidActionButtonClassName(hasMyBid?: boolean) {
   return hasMyBid
     ? "h-7 bg-sky-600 px-2 text-xs text-white hover:bg-sky-700"
-    : "h-7 bg-teal-600 px-2 text-xs text-white hover:bg-teal-700";
+    : "h-7 bg-blue-600 px-2 text-xs text-white hover:bg-blue-700";
 }
 
 function TypeBadgeLabel({ type }: { type: ExpertJobListItemVM["type"] }) {

@@ -27,11 +27,11 @@ export function PurposeSelection({ onSelectPurpose }: ProjectPurposeProps) {
             {PURPOSES.map((purpose) => (
               <Card
                 key={purpose.value}
-                className="group cursor-pointer border-2 border-gray-100 hover:border-teal-600 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden"
+                className="group cursor-pointer border-2 border-gray-100 hover:border-blue-600 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden"
                 onClick={() => onSelectPurpose(purpose.value)}
               >
                 <CardHeader className="py-10 text-center">
-                  <CardTitle className="text-xl group-hover:text-teal-600 transition-colors">
+                  <CardTitle className="text-xl group-hover:text-blue-600 transition-colors">
                     {purpose.label}
                   </CardTitle>
                 </CardHeader>

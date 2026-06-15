@@ -20,7 +20,7 @@ export function IndustrySelection({ onSelectIndustry }: IndustrySelectionProps) 
             {industries.map((industry) => (
               <Card
                 key={industry.value}
-                className="cursor-pointer hover:border-[#009689] hover:shadow-md transition-all"
+                className="cursor-pointer hover:border-[#34499C] hover:shadow-md transition-all"
                 onClick={() => onSelectIndustry(industry.value)}
               >
                 <CardHeader>

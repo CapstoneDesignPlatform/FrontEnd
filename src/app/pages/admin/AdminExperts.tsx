@@ -157,7 +157,7 @@ export function AdminExperts() {
           {
             label: "승인 완료",
             value: stats.approvedExperts,
-            color: "text-teal-600",
+            color: "text-blue-600",
           },
         ].map((s) => (
           <div
@@ -237,7 +237,7 @@ export function AdminExperts() {
                   </td>
                   <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
                     {e.hasDocuments ? (
-                      <span className="text-teal-600 font-semibold">✓</span>
+                      <span className="text-blue-600 font-semibold">✓</span>
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}
@@ -245,7 +245,7 @@ export function AdminExperts() {
                   <td className="border-b border-gray-200 px-2 py-1">
                     <Link
                       to={`/admin/experts/approval/${e.id}`}
-                      className="text-teal-600 hover:underline whitespace-nowrap"
+                      className="text-blue-600 hover:underline whitespace-nowrap"
                     >
                       상세 →
                     </Link>
@@ -280,7 +280,7 @@ export function AdminExperts() {
               {recentApproved.map((e, i) => (
                 <tr
                   key={e.id}
-                  className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                  className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                 >
                   <td className="border-b border-r border-gray-200 px-2 py-1 font-medium">
                     {e.name}
@@ -294,7 +294,7 @@ export function AdminExperts() {
                   <td className="border-b border-gray-200 px-2 py-1">
                     <Link
                       to={`/admin/experts/detail/${e.id}`}
-                      className="text-teal-600 hover:underline whitespace-nowrap"
+                      className="text-blue-600 hover:underline whitespace-nowrap"
                     >
                       상세 →
                     </Link>

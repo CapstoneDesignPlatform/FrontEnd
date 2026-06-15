@@ -77,7 +77,7 @@ export function ExpertProfile() {
           <h1 className="text-3xl mb-2">전문가 프로필 관리</h1>
           <p className="text-gray-600">의뢰인에게 노출될 기본 전문가 정보를 관리하세요.</p>
         </div>
-        <Badge className="bg-teal-100 text-teal-700">
+        <Badge className="bg-blue-100 text-blue-700">
           {profile.verificationStatus}
         </Badge>
       </div>
@@ -96,7 +96,7 @@ export function ExpertProfile() {
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {profile.expertiseAreas.map((area) => (
-              <Badge key={area} variant="outline" className="bg-teal-50 text-teal-700 border-teal-200">
+              <Badge key={area} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                 {area}
               </Badge>
             ))}

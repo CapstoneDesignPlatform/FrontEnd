@@ -152,7 +152,7 @@ const statusMap: Record<
     className: "bg-purple-100 text-purple-700",
   },
   sent: { label: "발송", className: "bg-orange-100 text-orange-700" },
-  completed: { label: "완료", className: "bg-teal-100 text-teal-700" },
+  completed: { label: "완료", className: "bg-blue-100 text-blue-700" },
 };
 
 const statusOptions: { value: ProjectStatus; label: string }[] = [
@@ -189,7 +189,7 @@ export function AdminProjectList() {
       const ws1 = XLSX.utils.aoa_to_sheet([
         [
           "의뢰코드",
-          "공고명",
+          "의뢰명",
           "업종",
           "기업명",
           "의뢰인",
@@ -257,7 +257,7 @@ export function AdminProjectList() {
         <div>
           <h1 className="text-xl font-bold">의뢰현황 조회</h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            모든 의뢰 공고를 확인하고 관리합니다.
+            모든 의뢰 의뢰를 확인하고 관리합니다.
           </p>
         </div>
         <Button
@@ -282,7 +282,7 @@ export function AdminProjectList() {
             <button
               key={s.value}
               onClick={() => setSelectedStatus(s.value)}
-              className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${selectedStatus === s.value ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"}`}
+              className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${selectedStatus === s.value ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-400"}`}
             >
               {s.label} ({count})
             </button>
@@ -303,7 +303,7 @@ export function AdminProjectList() {
             <button
               key={t.value}
               onClick={() => setSelectedClientType(t.value)}
-              className={`px-2 py-0.5 rounded border text-xs transition-colors ${selectedClientType === t.value ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"}`}
+              className={`px-2 py-0.5 rounded border text-xs transition-colors ${selectedClientType === t.value ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-400"}`}
             >
               {t.label}
             </button>
@@ -328,7 +328,7 @@ export function AdminProjectList() {
               <tr className="bg-gray-100">
                 {[
                   "의뢰코드",
-                  "공고명",
+                  "의뢰명",
                   "업종",
                   "기업명",
                   "의뢰인",
@@ -351,14 +351,14 @@ export function AdminProjectList() {
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="text-center py-8 text-gray-400">
-                    조건에 맞는 공고가 없습니다.
+                    조건에 맞는 의뢰가 없습니다.
                   </td>
                 </tr>
               ) : (
                 filtered.map((p, i) => (
                   <tr
                     key={p.id}
-                    className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                    className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                   >
                     <td className="border-b border-r border-gray-200 px-2 py-1 font-mono whitespace-nowrap">
                       {p.code}
@@ -377,7 +377,7 @@ export function AdminProjectList() {
                     </td>
                     <td className="border-b border-r border-gray-200 px-2 py-1">
                       <span
-                        className={`px-1.5 py-0.5 rounded text-xs ${p.clientType === "member" ? "bg-teal-50 text-teal-700" : "bg-gray-100 text-gray-600"}`}
+                        className={`px-1.5 py-0.5 rounded text-xs ${p.clientType === "member" ? "bg-blue-50 text-blue-700" : "bg-gray-100 text-gray-600"}`}
                       >
                         {p.clientType === "member" ? "회원" : "비회원"}
                       </span>
@@ -398,7 +398,7 @@ export function AdminProjectList() {
                     <td className="border-b border-gray-200 px-2 py-1">
                       <Link
                         to={`/admin/projects/${p.id}`}
-                        className="text-teal-600 hover:underline whitespace-nowrap"
+                        className="text-blue-600 hover:underline whitespace-nowrap"
                       >
                         상세 →
                       </Link>

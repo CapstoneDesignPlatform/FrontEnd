@@ -142,7 +142,7 @@ function CertificateSection({
           disabled={isPending}
         />
         {qualificationType === MULTIPLE_CERTIFICATE_REQUIRED_TYPE ? (
-          <p className="mt-2 text-[12px] text-teal-700">
+          <p className="mt-2 text-[12px] text-blue-700">
             전문경영진단은 경영지도사(재무관리) 등록증을 2개 이상 등록해야 합니다.
           </p>
         ) : null}
@@ -178,7 +178,7 @@ function CertificateSection({
               type="button"
               variant="outline"
               onClick={onAddCertificate}
-              className="h-14 w-full gap-2 border-dashed border-teal-300 bg-white text-teal-700 hover:bg-teal-50 hover:text-teal-800"
+              className="h-14 w-full gap-2 border-dashed border-blue-300 bg-white text-blue-700 hover:bg-blue-50 hover:text-blue-800"
               disabled={isPending}
             >
               <Plus className="h-4 w-4" />
@@ -215,7 +215,7 @@ function QualificationTypeToggle({
             "rounded-full px-2 py-0.5 text-[11px] font-semibold",
             isRequiredMissing
               ? "bg-red-100 text-red-700"
-              : "bg-teal-50 text-teal-700",
+              : "bg-blue-50 text-blue-700",
           )}
         >
           필수 선택
@@ -245,7 +245,7 @@ function QualificationTypeToggle({
               className={cn(
                 "flex min-h-11 items-center justify-center rounded-md px-2 py-2 text-center text-[12px] leading-snug transition-colors disabled:cursor-not-allowed disabled:opacity-60 sm:text-[14px]",
                 isSelected
-                  ? "bg-white font-medium text-teal-700 shadow-sm ring-1 ring-teal-600"
+                  ? "bg-white font-medium text-blue-700 shadow-sm ring-1 ring-blue-600"
                   : "text-gray-600 hover:bg-white/70 hover:text-foreground",
                 isRequiredMissing && !isSelected
                   ? "bg-white/50 text-red-700"

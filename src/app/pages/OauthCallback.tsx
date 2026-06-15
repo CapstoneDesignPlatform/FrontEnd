@@ -146,7 +146,7 @@ export function OAuthCallback() {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
       <div className="text-center space-y-4">
-        <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto" />
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
         <p className="text-gray-500 text-sm">소셜 로그인 처리 중...</p>
       </div>
     </div>

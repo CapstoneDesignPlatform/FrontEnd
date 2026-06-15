@@ -57,7 +57,7 @@ export function ReservationLookup() {
 
             <div className="text-center text-sm pt-4">
               <span className="text-gray-600">예약코드를 찾을 수 없으신가요? </span>
-              <Link to="/login" className="text-teal-600 hover:underline">
+              <Link to="/login" className="text-blue-600 hover:underline">
                 로그인하기
               </Link>
             </div>

@@ -28,15 +28,15 @@ export function AdminLogin() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Building2 className="h-8 w-8 text-teal-600" />
+            <Building2 className="h-8 w-8 text-blue-600" />
             <span className="text-2xl font-bold">ProToCall</span>
           </div>
           <p className="text-sm text-gray-500">관리자 전용 접속</p>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
-          <div className="flex items-center justify-center w-12 h-12 bg-teal-50 rounded-full mx-auto mb-6">
-            <Lock className="h-5 w-5 text-teal-600" />
+          <div className="flex items-center justify-center w-12 h-12 bg-blue-50 rounded-full mx-auto mb-6">
+            <Lock className="h-5 w-5 text-blue-600" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -53,7 +53,7 @@ export function AdminLogin() {
                 }}
                 placeholder="비밀번호를 입력하세요"
                 className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-all
-                  ${error ? "border-red-400 bg-red-50" : "border-gray-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"}
+                  ${error ? "border-red-400 bg-red-50" : "border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"}
                   ${shake ? "animate-pulse" : ""}`}
                 autoFocus
               />
@@ -66,7 +66,7 @@ export function AdminLogin() {
 
             <button
               type="submit"
-              className="w-full py-2 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors"
+              className="w-full py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
             >
               접속
             </button>
