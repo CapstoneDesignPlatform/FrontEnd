@@ -29,7 +29,7 @@ export function AdminLogin() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Building2 className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold">ProToCall</span>
+            <span className="text-2xl font-bold">진단매치</span>
           </div>
           <p className="text-sm text-gray-500">관리자 전용 접속</p>
         </div>
