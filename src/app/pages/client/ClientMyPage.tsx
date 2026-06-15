@@ -10,6 +10,7 @@ export function ClientMyPage() {
   const [selectedPastProject, setSelectedPastProject] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBid, setSelectedBid] = useState<any | null>(null);
+  const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
 
   // 현재 진행중인 의뢰 데이터를 상태로 관리
   const [projectData, setProjectData] = useState({
@@ -66,7 +67,7 @@ export function ClientMyPage() {
   ];
 
   const steps = [
-    { id: 1, name: "필요 정보 등록" }, { id: 2, name: "마감" }, { id: 3, name: "결재" },
+    { id: 1, name: "필요 정보 등록" }, { id: 2, name: "마감" }, { id: 3, name: "전문가 선택" },
     { id: 4, name: "진단시작" }, { id: 5, name: "협회 경유" }, { id: 6, name: "작성 완료 및 발송" }, { id: 7, name: "수령" },
   ];
 
@@ -113,18 +114,18 @@ export function ClientMyPage() {
           <CardContent>
             <div className="relative">
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200" style={{ width: 'calc(100% - 40px)', left: '20px' }} />
-              <div className="absolute top-5 left-0 h-0.5 bg-teal-600 transition-all duration-500" 
+              <div className="absolute top-5 left-0 h-0.5 bg-blue-600 transition-all duration-500" 
                 style={{ width: `calc(${((projectData.currentStep - 1) / (steps.length - 1)) * 100}% - 40px + ${((projectData.currentStep - 1) / (steps.length - 1)) * 40}px)`, left: '20px' }} 
               />
               <div className="relative flex justify-between">
                 {steps.map((step) => (
                   <div key={step.id} className="flex flex-col items-center" style={{ width: '140px' }}>
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 z-10 transition-all duration-300 ${
-                      step.id < projectData.currentStep ? "bg-teal-600 text-white" : step.id === projectData.currentStep ? "bg-teal-600 text-white ring-4 ring-teal-200" : "bg-gray-200 text-gray-500"
+                      step.id < projectData.currentStep ? "bg-blue-600 text-white" : step.id === projectData.currentStep ? "bg-blue-600 text-white ring-4 ring-blue-200" : "bg-gray-200 text-gray-500"
                     }`}>
                       {step.id < projectData.currentStep ? <CheckCircle2 className="w-6 h-6" /> : <Circle className="w-6 h-6" fill={step.id === projectData.currentStep ? "white" : "none"} />}
                     </div>
-                    <span className={`text-sm text-center font-medium ${step.id <= projectData.currentStep ? "text-teal-600" : "text-gray-500"}`}>{step.name}</span>
+                    <span className={`text-sm text-center font-medium ${step.id <= projectData.currentStep ? "text-blue-600" : "text-gray-500"}`}>{step.name}</span>
                   </div>
                 ))}
               </div>
@@ -165,19 +166,48 @@ export function ClientMyPage() {
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>전문가 견적서</CardTitle>
-              {selectedExpert && <Badge className="bg-teal-100 text-teal-700 border-none px-3 py-1 font-bold">선택 완료 (결제 대기)</Badge>}
+              <div className="flex items-center gap-3">
+                <CardTitle>전문가 견적서</CardTitle>
+                {projectData.currentStep < 4 ? (
+                  <Button
+                    size="sm"
+                    className="bg-[#34499C] hover:bg-[#2a3d84] text-white px-4"
+                    onClick={() => setIsCloseModalOpen(true)}
+                  >
+                    마감
+                  </Button>
+                ) : (
+                  <Badge className="bg-red-100 text-red-600 border-red-200 px-3 py-1 font-bold">마감됨</Badge>
+                )}
+              </div>
+              {selectedExpert && <Badge className="bg-blue-100 text-blue-700 border-none px-3 py-1 font-bold">선택 완료 (결제 대기)</Badge>}
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* 마감 후 결제 안내 배너 */}
+            {projectData.currentStep >= 4 && (
+              <div className={`flex items-start gap-3 rounded-xl px-4 py-3 border ${selectedExpert ? "bg-blue-50 border-blue-200" : "bg-amber-50 border-amber-200"}`}>
+                <CreditCard className={`w-5 h-5 mt-0.5 shrink-0 ${selectedExpert ? "text-blue-500" : "text-amber-500"}`} />
+                <div>
+                  <p className={`text-sm font-semibold ${selectedExpert ? "text-blue-800" : "text-amber-800"}`}>
+                    {selectedExpert ? "결제를 진행해주세요" : "전문가를 선택하고 결제를 진행해주세요"}
+                  </p>
+                  <p className={`text-xs mt-0.5 ${selectedExpert ? "text-blue-600" : "text-amber-600"}`}>
+                    {selectedExpert
+                      ? `${selectedExpert.expertName} 전문가가 선택되었습니다. 아래 결제하기 버튼을 눌러 결제를 완료해주세요.`
+                      : "견적서 목록에서 전문가를 클릭하여 선택한 후 결제를 진행해주세요."}
+                  </p>
+                </div>
+              </div>
+            )}
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b bg-gray-50 text-gray-500 text-sm">
                     <th className="px-4 py-3 text-left font-semibold">전문가</th>
                     <th className="px-4 py-3 text-left font-semibold">상호명</th>
-                    <th className="px-4 py-3 text-left font-semibold">연락처</th>
-                    <th className="px-4 py-3 text-left font-semibold">이메일</th>
+                    {projectData.currentStep >= 4 && <th className="px-4 py-3 text-left font-semibold">연락처</th>}
+                    {projectData.currentStep >= 4 && <th className="px-4 py-3 text-left font-semibold">이메일</th>}
                     <th className="px-4 py-3 text-left font-semibold">전문가 제시</th>
                     <th className="px-4 py-3 text-left font-semibold">최종 확정금액</th>
                     <th className="px-4 py-3 text-center font-semibold">상태</th>
@@ -185,14 +215,14 @@ export function ClientMyPage() {
                 </thead>
                 <tbody>
                   {projectData.bids.map((bid) => (
-                    <tr key={bid.id} onClick={() => handleBidClick(bid)} className={`border-b cursor-pointer transition-colors hover:bg-teal-50/30 ${bid.isSelected ? 'bg-teal-50' : ''}`}>
+                    <tr key={bid.id} onClick={() => handleBidClick(bid)} className={`border-b cursor-pointer transition-colors hover:bg-blue-50/30 ${bid.isSelected ? 'bg-blue-50' : ''}`}>
                       <td className="px-4 py-3 text-sm font-medium">{bid.expertName}</td>
                       <td className="px-4 py-3 text-sm">{bid.companyName}</td>
-                      <td className="px-4 py-3 text-sm">{bid.phone}</td>
-                      <td className="px-4 py-3 text-sm">{bid.email}</td>
+                      {projectData.currentStep >= 4 && <td className="px-4 py-3 text-sm">{bid.phone}</td>}
+                      {projectData.currentStep >= 4 && <td className="px-4 py-3 text-sm">{bid.email}</td>}
                       <td className="px-4 py-3 text-sm">{formatCurrency(bid.proposedAmount)}</td>
-                      <td className="px-4 py-3 text-sm font-bold text-teal-600">{bid.isSelected ? formatCurrency(bid.confirmedAmount) : "-"}</td>
-                      <td className="px-4 py-3 text-center">{bid.isSelected ? <Badge className="bg-teal-600">선택됨</Badge> : <Button variant="outline" size="sm" className="h-7 text-xs">상세보기</Button>}</td>
+                      <td className="px-4 py-3 text-sm font-bold text-blue-600">{bid.isSelected ? formatCurrency(bid.confirmedAmount) : "-"}</td>
+                      <td className="px-4 py-3 text-center">{bid.isSelected ? <Badge className="bg-blue-600">선택됨</Badge> : <Button variant="outline" size="sm" className="h-7 text-xs">상세보기</Button>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -200,19 +230,43 @@ export function ClientMyPage() {
             </div>
 
             {/* 결제 섹션 */}
-            {projectData.currentStep === 3 && selectedExpert && (
+            {projectData.currentStep >= 3 && selectedExpert && (
               <div className="pt-6 border-t animate-in slide-in-from-bottom-2">
-                <div className="flex items-center justify-between bg-teal-50/50 p-6 rounded-2xl border border-teal-100">
+                <div className="flex items-center justify-between bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
                   <div>
-                    <p className="text-sm text-teal-800 font-medium mb-1">최종 확정 전문가: {selectedExpert.expertName}</p>
-                    <p className="text-3xl font-bold text-teal-700">{formatCurrency(selectedExpert.confirmedAmount)}</p>
+                    <p className="text-sm text-blue-800 font-medium mb-1">최종 확정 전문가: {selectedExpert.expertName}</p>
+                    <p className="text-3xl font-bold text-blue-700">{formatCurrency(selectedExpert.confirmedAmount)}</p>
                   </div>
-                  <Button size="lg" className="bg-teal-600 hover:bg-teal-700 h-14 px-8 rounded-xl shadow-lg shadow-teal-200 gap-2"><CreditCard className="w-5 h-5" /> 결제하기</Button>
+                  <Button size="lg" disabled className="bg-blue-600 hover:bg-blue-700 h-14 px-8 rounded-xl shadow-lg shadow-blue-200 gap-2"><CreditCard className="w-5 h-5" /> 결제하기</Button>
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* 마감 확인 모달 */}
+        {isCloseModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm mx-4 space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold text-gray-900">마감 확인</h3>
+                <p className="text-sm text-gray-600">정말 마감하시겠습니까?<br />마감 후에는 새로운 견적을 받을 수 없습니다.</p>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <Button variant="outline" onClick={() => setIsCloseModalOpen(false)}>취소</Button>
+                <Button
+                  className="bg-[#34499C] hover:bg-[#2a3d84] text-white"
+                  onClick={() => {
+                    setProjectData((prev) => ({ ...prev, currentStep: 4 }));
+                    setIsCloseModalOpen(false);
+                  }}
+                >
+                  마감
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 3. 과거 의뢰 내역 */}
@@ -244,7 +298,7 @@ export function ClientMyPage() {
                         {/* 기본 정보 행 */}
                         <tr 
                           className={`border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-                            selectedPastProject === project.id ? 'bg-teal-50/50' : ''
+                            selectedPastProject === project.id ? 'bg-blue-50/50' : ''
                           }`}
                           onClick={() => setSelectedPastProject(selectedPastProject === project.id ? null : project.id)}
                         >
@@ -260,7 +314,7 @@ export function ClientMyPage() {
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              className={selectedPastProject === project.id ? 'text-teal-600' : ''}
+                              className={selectedPastProject === project.id ? 'text-blue-600' : ''}
                             >
                               {selectedPastProject === project.id ? '접기' : '보기'}
                             </Button>
@@ -270,9 +324,9 @@ export function ClientMyPage() {
                         {selectedPastProject === project.id && (
                           <tr className="bg-gray-50/50">
                             <td colSpan={7} className="px-6 py-4">
-                              <div className="bg-white border border-teal-100 rounded-lg shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                                <div className="bg-teal-50 px-4 py-2 border-b border-teal-100">
-                                  <span className="text-sm font-bold text-teal-800">
+                              <div className="bg-white border border-blue-100 rounded-lg shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="bg-blue-50 px-4 py-2 border-b border-blue-100">
+                                  <span className="text-sm font-bold text-blue-800">
                                     {project.registrationDate} 의뢰 - 전문가 견적서 상세
                                   </span>
                                 </div>
@@ -284,27 +338,23 @@ export function ClientMyPage() {
                                       <th className="px-4 py-2 text-left">연락처</th>
                                       <th className="px-4 py-2 text-left">이메일</th>
                                       <th className="px-4 py-2 text-left">제시금액</th>
-                                      <th className="px-4 py-2 text-left text-teal-600">확정금액</th>
+                                      <th className="px-4 py-2 text-left text-blue-600">확정금액</th>
                                       <th className="px-4 py-2 text-left">결과</th>
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {project.bids.map((bid) => (
-                                      <tr key={bid.id} className={`border-b last:border-0 ${bid.isSelected ? 'bg-teal-50/30' : ''}`}>
+                                    {project.bids.filter((bid) => bid.isSelected).map((bid) => (
+                                      <tr key={bid.id} className="border-b last:border-0 bg-blue-50/30">
                                         <td className="px-4 py-2 text-sm font-medium">{bid.expertName}</td>
                                         <td className="px-4 py-2 text-sm">{bid.companyName}</td>
                                         <td className="px-4 py-2 text-sm">{bid.phone}</td>
                                         <td className="px-4 py-2 text-sm text-gray-500">{bid.email}</td>
                                         <td className="px-4 py-2 text-sm font-semibold">{formatCurrency(bid.proposedAmount)}</td>
-                                        <td className="px-4 py-2 text-sm font-bold text-teal-600">
-                                          {bid.isSelected ? formatCurrency(bid.confirmedAmount) : "-"}
+                                        <td className="px-4 py-2 text-sm font-bold text-blue-600">
+                                          {formatCurrency(bid.confirmedAmount)}
                                         </td>
                                         <td className="px-4 py-2 text-sm">
-                                          {bid.isSelected ? (
-                                            <Badge className="bg-teal-600">선택됨</Badge>
-                                          ) : (
-                                            <span className="text-gray-400">미선택</span>
-                                          )}
+                                          <Badge className="bg-blue-600">선정</Badge>
                                         </td>
                                       </tr>
                                     ))}
@@ -330,12 +380,13 @@ export function ClientMyPage() {
         </Card>
       </div>
       
-      <ExpertBidModal 
-        bid={selectedBid} 
-        isOpen={isModalOpen} 
+      <ExpertBidModal
+        bid={selectedBid}
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleConfirmExpert}
         onCancel={handleCancelExpert}
+        viewOnly={projectData.currentStep < 4}
       />
     </div>
   );

@@ -203,7 +203,7 @@ export function AdminNotificationManage() {
           {
             label: "서비스 계속",
             value: `${continueCount}명`,
-            color: "text-teal-600",
+            color: "text-blue-600",
           },
           {
             label: "서비스 정지",
@@ -255,7 +255,7 @@ export function AdminNotificationManage() {
               {members.map((m, i) => (
                 <tr
                   key={m.id}
-                  className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                  className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                 >
                   {isEditing && (
                     <td className="border-b border-r border-gray-200 px-2 py-1">
@@ -315,7 +315,7 @@ export function AdminNotificationManage() {
                   <td className="border-b border-r border-gray-200 px-2 py-1">
                     <button
                       onClick={() => handleToggleService(m.id)}
-                      className={`px-2 py-0.5 rounded border text-xs font-medium transition-colors ${m.serviceStatus === "continue" ? "text-teal-600 border-teal-300 hover:bg-teal-50" : "text-red-600 border-red-300 hover:bg-red-50"}`}
+                      className={`px-2 py-0.5 rounded border text-xs font-medium transition-colors ${m.serviceStatus === "continue" ? "text-blue-600 border-blue-300 hover:bg-blue-50" : "text-red-600 border-red-300 hover:bg-red-50"}`}
                     >
                       {m.serviceStatus === "continue" ? "계속" : "정지"}
                     </button>
@@ -323,7 +323,7 @@ export function AdminNotificationManage() {
                   <td className="border-b border-gray-200 px-2 py-1">
                     <Link
                       to={`/admin/notifications/${m.memberNumber}`}
-                      className="text-teal-600 hover:underline whitespace-nowrap"
+                      className="text-blue-600 hover:underline whitespace-nowrap"
                     >
                       상세 →
                     </Link>

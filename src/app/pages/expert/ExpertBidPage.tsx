@@ -84,7 +84,7 @@ export function ExpertBidPage() {
     event.preventDefault();
 
     if (!project || !canBidOnExpertJob(project)) {
-      toast.error("입찰이 마감된 공고입니다.");
+      toast.error("입찰이 마감된 의뢰입니다.");
       return;
     }
 
@@ -119,7 +119,7 @@ export function ExpertBidPage() {
   if (error) {
     return (
       <div className="space-y-6">
-        <AsyncStateCard message="입찰할 공고 정보를 불러오지 못했습니다." tone="danger" />
+        <AsyncStateCard message="입찰할 의뢰 정보를 불러오지 못했습니다." tone="danger" />
       </div>
     );
   }
@@ -145,7 +145,7 @@ export function ExpertBidPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="border-teal-200 bg-teal-50 text-teal-700">
+            <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
               {isEditingBid ? "입찰 완료" : "입찰 참여"}
             </Badge>
             <Badge variant="outline">{project.type}</Badge>
@@ -176,9 +176,9 @@ export function ExpertBidPage() {
         <div className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
           <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
           <div>
-            <p className="font-semibold text-slate-950">입찰이 마감된 공고입니다.</p>
+            <p className="font-semibold text-slate-950">입찰이 마감된 의뢰입니다.</p>
             <p className="mt-1">
-              마감된 공고는 입찰을 새로 제출하거나 기존 입찰을 수정할 수 없습니다.
+              마감된 의뢰는 입찰을 새로 제출하거나 기존 입찰을 수정할 수 없습니다.
             </p>
           </div>
         </div>
@@ -188,9 +188,21 @@ export function ExpertBidPage() {
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
           <div>
-            <p className="font-semibold text-amber-950">이미 입찰한 공고입니다.</p>
+            <p className="font-semibold text-amber-950">이미 입찰한 의뢰입니다.</p>
             <p className="mt-1">
               현재 백엔드에서 입찰 수정 API가 제공되지 않아 추가 제출을 막아두었습니다.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {isEditingBid ? (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <div>
+            <p className="font-semibold text-amber-950">이미 입찰한 의뢰입니다.</p>
+            <p className="mt-1">
+              마감된 의뢰는 입찰을 새로 제출하거나 기존 입찰을 수정할 수 없습니다.
             </p>
           </div>
         </div>
@@ -200,7 +212,7 @@ export function ExpertBidPage() {
         <Card className="border-slate-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <ClipboardList className="h-5 w-5 text-teal-600" />
+              <ClipboardList className="h-5 w-5 text-blue-600" />
               입찰 내용
             </CardTitle>
           </CardHeader>
@@ -216,7 +228,7 @@ export function ExpertBidPage() {
                   <Badge
                     className={
                       canBid
-                        ? "bg-teal-100 text-teal-700"
+                        ? "bg-blue-100 text-blue-700"
                         : "bg-slate-100 text-slate-600"
                     }
                   >
@@ -293,7 +305,7 @@ export function ExpertBidPage() {
           <Button
             type="submit"
             disabled={!canSubmit}
-            className="bg-teal-600 hover:bg-teal-700"
+            className="bg-blue-600 hover:bg-blue-700"
           >
             <CheckCircle2 className="h-4 w-4" />
             {isSubmittingBid

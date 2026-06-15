@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { toast } from "sonner";
 import { persistAuthTokens } from "../../api/authTokens";
 import { userInstance } from "../../api/instance"; 
+import Cookies from "js-cookie";
+
 
 type OutletContext = {
   setUser: (user: { type: "client" | "expert"; name: string }) => void;
@@ -51,7 +53,6 @@ export function Login() {
   const { setUser } = useOutletContext<OutletContext>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState<"client" | "expert">("client");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,12 +75,29 @@ export function Login() {
 
       if (success) {
         persistAuthTokens(data);
+        Cookies.set("ACCESS_TOKEN", data.accessToken, { expires: 1 });
+        Cookies.set("REFRESH_TOKEN", data.refreshToken, { expires: 7 });
+        Cookies.set("USER_ROLE", data.role, { expires: 1 });
+        if (data.clientInfoId) {
+          Cookies.set("CLIENT_INFO_ID", String(data.clientInfoId), { expires: 1 });
+        }
 
         const userType = data.role.toLowerCase() as "client" | "expert";
-        
-        setUser({ 
-          type: userType, 
-          name: email.split("@")[0] 
+
+        // 실제 이름 조회
+        let userName = email.split("@")[0];
+        try {
+          const myInfoRes = await userInstance.get("/users/myInfo");
+          if (myInfoRes.data?.success) {
+            userName = myInfoRes.data.data.name;
+          }
+        } catch {
+          // myInfo 실패 시 이메일 앞부분으로 폴백
+        }
+
+        setUser({
+          type: userType,
+          name: userName,
         });
 
         toast.success(message || "로그인에 성공했습니다.");
@@ -143,13 +161,13 @@ export function Login() {
               />
             </div>
 
-            <Button type="submit" className="w-full cursor-pointer">
-              로그인
+            <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
+              {isLoading ? "로그인 중..." : "로그인"}
             </Button>
 
             <div className="text-center text-sm">
               <span className="text-gray-600">계정이 없으신가요? </span>
-              <Link to="/register" className="text-teal-600 hover:underline">
+              <Link to="/register" className="text-blue-600 hover:underline">
                 회원가입
               </Link>
             </div>

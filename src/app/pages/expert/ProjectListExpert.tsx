@@ -134,12 +134,12 @@ export function ProjectListExpert() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="mb-2 flex items-center gap-2">
-            <Badge variant="outline" className="border-teal-200 bg-teal-50 text-teal-700">
+            <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
               Expert Board
             </Badge>
-            <span className="text-sm text-gray-500">스프레드시트형 공고 탐색</span>
+            <span className="text-sm text-gray-500">스프레드시트형 의뢰 탐색</span>
           </div>
-          <h1 className="text-3xl">공고 목록</h1>
+          <h1 className="text-3xl">의뢰 목록</h1>
         </div>
         <div className="group relative flex w-fit items-center gap-2">
           <Button variant="outline" className="gap-2">
@@ -149,7 +149,7 @@ export function ProjectListExpert() {
           <button
             type="button"
             aria-describedby="notification-service-info"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-teal-200 bg-teal-50 text-teal-700 transition-colors hover:bg-teal-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-700 transition-colors hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             <Info className="h-4 w-4" />
             <span className="sr-only">알림 서비스 안내 보기</span>
@@ -161,7 +161,7 @@ export function ProjectListExpert() {
           >
             <p className="font-semibold text-slate-950">알림 서비스</p>
             <p className="mt-1 leading-relaxed">
-              새로운 공고가 등록되면 조건에 맞는 전문가에게 빠르게 알림을 보내는
+              새로운 의뢰가 등록되면 조건에 맞는 전문가에게 빠르게 알림을 보내는
               유료 기능입니다.
             </p>
           </div>
@@ -215,8 +215,8 @@ export function ProjectListExpert() {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Table2 className="h-4 w-4 text-teal-600" />
-                실시간 공고 목록
+                <Table2 className="h-4 w-4 text-blue-600" />
+                실시간 의뢰 목록
               </CardTitle>
               <CardDescription>
                 "입찰 가능" 상태에서만 입찰할 수 있으며, 이미 입찰한 공고는 완료 상태로 표시됩니다.
@@ -227,7 +227,7 @@ export function ProjectListExpert() {
                 <SlidersHorizontal className="h-4 w-4" />
                 <span className="md:hidden">유형, 핵심조건, 자산, 상태, 액션만 표시됩니다.</span>
                 <span className="hidden md:inline">
-                  원하는 기준으로 공고를 정렬할 수 있습니다.
+                  원하는 기준으로 의뢰를 정렬할 수 있습니다.
                 </span>
               </div>
               <Select
@@ -251,13 +251,13 @@ export function ProjectListExpert() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4">
-              <AsyncStateCard message="공고 목록을 불러오는 중입니다." />
+              <AsyncStateCard message="의뢰 목록을 불러오는 중입니다." />
             </div>
           ) : null}
 
           {error ? (
             <div className="p-4">
-              <AsyncStateCard message="공고 목록을 불러오지 못했습니다." tone="danger" />
+              <AsyncStateCard message="의뢰 목록을 불러오지 못했습니다." tone="danger" />
             </div>
           ) : null}
 

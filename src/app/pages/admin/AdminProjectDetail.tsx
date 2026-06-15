@@ -251,7 +251,7 @@ export function AdminProjectDetail() {
         );
       case "completed":
         return (
-          <Badge variant="outline" className="bg-teal-100 text-teal-700">
+          <Badge variant="outline" className="bg-blue-100 text-blue-700">
             완료
           </Badge>
         );
@@ -276,7 +276,7 @@ export function AdminProjectDetail() {
       await updateAnnouncementStatus(project.code, value);
       setProjectStatus(value as ProjectStatus);
       alert(
-        `공고 상태를 "${getStatusLabel(value as ProjectStatus)}"로 변경했습니다.`,
+        `의뢰 상태를 "${getStatusLabel(value as ProjectStatus)}"로 변경했습니다.`,
       );
     } catch {
       alert("상태 변경에 실패했습니다.");
@@ -328,7 +328,7 @@ export function AdminProjectDetail() {
               const ws1Data = [
                 ["항목", "내용"],
                 ["의뢰코드", project.code],
-                ["공고명", project.title],
+                ["의뢰명", project.title],
                 ["유형", project.type],
                 ["업종", project.industry],
                 ["상태", getStatusLabel(projectStatus)],
@@ -606,7 +606,7 @@ export function AdminProjectDetail() {
                   </td>
                   <td className="border-b border-gray-200 px-3 py-1.5">
                     <span
-                      className={`px-1.5 py-0.5 rounded text-xs ${project.client.isGuest ? "bg-gray-100 text-gray-600" : "bg-teal-50 text-teal-700"}`}
+                      className={`px-1.5 py-0.5 rounded text-xs ${project.client.isGuest ? "bg-gray-100 text-gray-600" : "bg-blue-50 text-blue-700"}`}
                     >
                       {project.client.isGuest ? "비회원" : "정회원"}
                     </span>
@@ -716,7 +716,7 @@ export function AdminProjectDetail() {
                   {sortedBids.map((bid, index) => (
                     <tr
                       key={bid.id}
-                      className={`hover:bg-teal-50 transition-colors ${bid.isSelected ? "bg-blue-50" : index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                      className={`hover:bg-blue-50 transition-colors ${bid.isSelected ? "bg-blue-50" : index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                     >
                       <td className="border-b border-r border-gray-200 px-2 py-1 font-medium whitespace-nowrap">
                         {bid.expertName}
@@ -730,7 +730,7 @@ export function AdminProjectDetail() {
                       <td className="border-b border-r border-gray-200 px-2 py-1">
                         {bid.email}
                       </td>
-                      <td className="border-b border-r border-gray-200 px-2 py-1 font-semibold text-teal-700 whitespace-nowrap">
+                      <td className="border-b border-r border-gray-200 px-2 py-1 font-semibold text-blue-700 whitespace-nowrap">
                         {bid.price}
                       </td>
                       <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
@@ -852,7 +852,7 @@ export function AdminProjectDetail() {
                     className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
                     <td className="border-b border-r border-gray-200 px-3 py-1.5 font-semibold text-gray-600 whitespace-nowrap last:border-b-0">
-                      <span className="inline-block w-2 h-2 rounded-full bg-teal-500 mr-1.5" />
+                      <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1.5" />
                       {label}
                     </td>
                     <td className="border-b border-gray-200 px-3 py-1.5 last:border-b-0">

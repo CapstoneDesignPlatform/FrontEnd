@@ -26,7 +26,7 @@ const history: NotificationHistory[] = [
   },
   {
     date: "2026-04-05",
-    description: "공고 알림 발송 (3건)",
+    description: "의뢰 알림 발송 (3건)",
     charged: 0,
     deducted: 27273,
     balance: 63636,
@@ -34,7 +34,7 @@ const history: NotificationHistory[] = [
   },
   {
     date: "2026-04-10",
-    description: "공고 알림 발송 (2건)",
+    description: "의뢰 알림 발송 (2건)",
     charged: 0,
     deducted: 18182,
     balance: 45454,
@@ -50,7 +50,7 @@ const history: NotificationHistory[] = [
   },
   {
     date: "2026-04-20",
-    description: "공고 알림 발송 (2건)",
+    description: "의뢰 알림 발송 (2건)",
     charged: 0,
     deducted: 18182,
     balance: 45454,
@@ -212,7 +212,7 @@ export function AdminNotificationMember() {
         </div>
         <Button
           size="sm"
-          className="bg-[#009689] hover:bg-[#007d71] h-7 text-xs"
+          className="bg-[#34499C] hover:bg-[#2a3d84] h-7 text-xs"
         >
           조회
         </Button>
@@ -243,7 +243,7 @@ export function AdminNotificationMember() {
               {history.map((item, i) => (
                 <tr
                   key={i}
-                  className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                  className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                 >
                   <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
                     {item.date}
@@ -266,7 +266,7 @@ export function AdminNotificationMember() {
                   </td>
                   <td className="border-b border-gray-200 px-2 py-1">
                     {item.note === "입금" && (
-                      <Badge className="bg-teal-100 text-teal-700 text-xs px-1 py-0">
+                      <Badge className="bg-blue-100 text-blue-700 text-xs px-1 py-0">
                         입금
                       </Badge>
                     )}

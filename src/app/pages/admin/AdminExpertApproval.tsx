@@ -659,7 +659,7 @@ export function AdminExpertApproval() {
                     <td className="border-b border-gray-200 px-2 py-1">
                       <button
                         onClick={() => handleDownload(doc.name)}
-                        className="text-teal-600 hover:underline"
+                        className="text-blue-600 hover:underline"
                       >
                         다운로드
                       </button>

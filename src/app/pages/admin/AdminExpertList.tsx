@@ -231,7 +231,7 @@ export function AdminExpertList() {
           <button
             key={val}
             onClick={() => setStatusFilter(val)}
-            className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${statusFilter === val ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"}`}
+            className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${statusFilter === val ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-400"}`}
           >
             {label} ({counts[val]})
           </button>
@@ -252,7 +252,7 @@ export function AdminExpertList() {
           <button
             key={val}
             onClick={() => setGradeFilter(val)}
-            className={`px-2 py-0.5 rounded border text-xs font-medium transition-colors ${gradeFilter === val ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"}`}
+            className={`px-2 py-0.5 rounded border text-xs font-medium transition-colors ${gradeFilter === val ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-400"}`}
           >
             {label} ({gradeCounts[val] ?? allExperts.length})
           </button>
@@ -318,7 +318,7 @@ export function AdminExpertList() {
                 filtered.map((e, i) => (
                   <tr
                     key={e.id}
-                    className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"} ${e.status === "withdrawn" ? "opacity-60" : ""}`}
+                    className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"} ${e.status === "withdrawn" ? "opacity-60" : ""}`}
                   >
                     <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
                       {e.representative}
@@ -359,7 +359,7 @@ export function AdminExpertList() {
                               ? `/admin/experts/approval/${e.id}`
                               : `/admin/experts/detail/${e.id}`
                           }
-                          className="text-teal-600 hover:underline whitespace-nowrap"
+                          className="text-blue-600 hover:underline whitespace-nowrap"
                         >
                           상세 →
                         </Link>

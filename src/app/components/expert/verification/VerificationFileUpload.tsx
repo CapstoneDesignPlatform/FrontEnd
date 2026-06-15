@@ -98,7 +98,7 @@ export function VerificationFileUpload({
     <div
       className={cn(
         "relative overflow-hidden rounded-lg bg-gray-50 transition-shadow",
-        dragActive ? "ring-2 ring-teal-500 ring-offset-2" : "",
+        dragActive ? "ring-2 ring-blue-500 ring-offset-2" : "",
       )}
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
@@ -106,7 +106,7 @@ export function VerificationFileUpload({
       onDrop={handleDrop}
     >
       {dragActive ? (
-        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-teal-50/90 text-[14px] font-medium text-teal-700">
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-blue-50/90 text-[14px] font-medium text-blue-700">
           파일을 놓아 업로드
         </div>
       ) : null}
@@ -159,7 +159,7 @@ export function VerificationFileUpload({
       ) : (
         <label
           htmlFor={inputId}
-          className={`flex ${heightClassName} flex-col items-center justify-center border-2 border-dashed border-black/15 bg-white text-center transition-all hover:border-teal-600 hover:bg-teal-50 ${
+          className={`flex ${heightClassName} flex-col items-center justify-center border-2 border-dashed border-black/15 bg-white text-center transition-all hover:border-blue-600 hover:bg-blue-50 ${
             disabled ? "pointer-events-none opacity-50" : "cursor-pointer"
           }`}
         >

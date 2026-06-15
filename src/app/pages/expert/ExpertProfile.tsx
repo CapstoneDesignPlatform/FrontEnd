@@ -70,7 +70,7 @@ export function ExpertProfile() {
           <h1 className="text-3xl mb-2">전문가 프로필 관리</h1>
           <p className="text-gray-600">의뢰인에게 노출될 기본 전문가 정보를 관리하세요.</p>
         </div>
-        <Badge className="bg-teal-100 text-teal-700">
+        <Badge className="bg-blue-100 text-blue-700">
           {profile.verificationStatus}
         </Badge>
       </div>

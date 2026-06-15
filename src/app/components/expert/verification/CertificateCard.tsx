@@ -62,7 +62,7 @@ export function CertificateCard({
           </p>
         </div>
         {isPrimary ? (
-          <span className="rounded-full bg-teal-50 px-3 py-1 text-[12px] font-medium text-teal-700">
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-[12px] font-medium text-blue-700">
             신청 기준
           </span>
         ) : null}

@@ -73,9 +73,9 @@ const homePage = page(
   () => import("./pages/Home"),
   ({ Home }) => Home,
 );
-const archivePage = page(
-  () => import("./pages/category/searchExpert/Archive"),
-  ({ Archive }) => Archive,
+const searchExpertsPage = page(
+  () => import("./pages/category/SearchExperts"),
+  ({ SearchExperts }) => SearchExperts,
 );
 const noticePage = page(
   () => import("./pages/category/bid/Notice"),
@@ -104,6 +104,18 @@ const registerPage = page(
 const supportPage = page(
   () => import("./pages/Support"),
   ({ Support }) => Support,
+);
+const supportFaqPage = page(
+  () => import("./pages/category/support/SupportFaq"),
+  ({ SupportFaq }) => SupportFaq,
+);
+const supportQnaPage = page(
+  () => import("./pages/category/support/SupportQna"),
+  ({ SupportQna }) => SupportQna,
+);
+const supportArchivePage = page(
+  () => import("./pages/category/searchExpert/Archive"),
+  ({ Archive }) => Archive,
 );
 const checkRequestPage = page(
   () => import("./pages/CheckRequest"),
@@ -311,16 +323,19 @@ export const router = createBrowserRouter([
       { path: "signup/expert", lazy: expertSignupPage },
       { path: "check-request", lazy: checkRequestPage },
       { path: "support", lazy: supportPage },
+      { path: "support/faq", lazy: supportFaqPage },
+      { path: "support/qna", lazy: supportQnaPage },
+      { path: "support/archive", lazy: supportArchivePage },
+      { path: "community", lazy: communityPage },
+      { path: "community/:id", lazy: communityDetailPage },
 
       { path: "oauth/callback/kakao", lazy: oauthCallbackPage },
       { path: "oauth/callback/naver", lazy: oauthCallbackPage },
       { path: "oauth/callback/google", lazy: oauthCallbackPage },
 
       { path: "bids/notice", lazy: noticePage },
-      { path: "archives", lazy: archivePage },
-      { path: "community", lazy: communityPage },
-      { path: "community/:id", lazy: communityDetailPage },
-      { path: "community/write", lazy: communityWritePage },
+      { path: "bids/search-experts", lazy: searchExpertsPage },
+      { path: "construction", element: <Navigate to="/client/create-project/construction" replace /> },
 
       // 의뢰인 라우트
       { path: "client/start", lazy: clientStartPage },

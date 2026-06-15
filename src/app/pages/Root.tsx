@@ -1,17 +1,19 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { clearAuthTokens } from "../../api/authTokens";
+import Cookies from 'js-cookie';
+
 
 import {
-  Building2,
   ClipboardList,
   FileText,
   LogOut,
   ChevronDown,
   UserRound,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { AppUser, RootOutletContext } from "../types/rootContext";
+import { userInstance } from "../../api/instance";
 
 import {
   NavigationMenu,
@@ -96,8 +98,8 @@ function BottomExpertNavigation({ pathname }: { pathname: string }) {
   const navItems = [
     {
       href: "/expert/jobs",
-      label: "공고",
-      ariaLabel: "공고 목록",
+      label: "의뢰",
+      ariaLabel: "의뢰 목록",
       icon: FileText,
     },
     {
@@ -126,7 +128,7 @@ function BottomExpertNavigation({ pathname }: { pathname: string }) {
               to={item.href}
               className={`group flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-[22px] px-2 text-center transition-all ${
                 isActive
-                  ? "bg-gradient-to-b from-teal-500 to-teal-700 text-white"
+                  ? "bg-gradient-to-b from-blue-500 to-blue-700 text-white"
                   : "text-slate-500 hover:bg-slate-100"
               }`}
             >
@@ -148,11 +150,35 @@ export function Root() {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState<AppUser | null>(null);
+  const [navValue, setNavValue] = useState("");
+
+  // 새로고침 시 쿠키에 토큰이 있으면 유저 정보 복원
+  useEffect(() => {
+    const token = Cookies.get("ACCESS_TOKEN");
+    const role = Cookies.get("USER_ROLE");
+    if (!token || !role) return;
+
+    userInstance.get("/users/myInfo")
+      .then((res) => {
+        if (res.data?.success) {
+          setUser({
+            type: role.toLowerCase() as "client" | "expert",
+            name: res.data.data.name,
+          });
+        }
+      })
+      .catch(() => {
+        // 토큰 만료 등 → 쿠키 정리
+        Cookies.remove("ACCESS_TOKEN");
+        Cookies.remove("REFRESH_TOKEN");
+        Cookies.remove("USER_ROLE");
+        Cookies.remove("CLIENT_INFO_ID");
+      });
+  }, []);
 
   const isClientRoute = location.pathname.startsWith("/client");
   const isExpertRoute = location.pathname.startsWith("/expert");
   const isAdminRoute = location.pathname.startsWith("/admin");
-  const isAdminLoginPage = location.pathname === "/admin/login";
   const isPendingPage = location.pathname === "/expert/pending";
 
   const layoutVariant = getLayoutVariant({
@@ -169,6 +195,7 @@ export function Root() {
   const handleLogout = () => {
     clearDemoExpertApproval();
     clearAuthTokens();
+    Cookies.remove("CLIENT_INFO_ID");
     setUser(null);
   };
 
@@ -183,9 +210,9 @@ export function Root() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
               <Link to="/" className="flex items-center gap-2">
-                <img 
-                  src="src/assets/images/logo.png" 
-                  alt="진단매치 로고" 
+                <img
+                  src="/images/logo.png"
+                  alt="진단매치 로고"
                   className="h-8 w-auto"
                 />
                 
@@ -195,7 +222,7 @@ export function Root() {
                 </span>
               </Link>
 
-                <NavigationMenu className="hidden md:flex">
+                <NavigationMenu viewport={false} className="hidden md:flex" value={navValue} onValueChange={setNavValue}>
                   <NavigationMenuList className="gap-2">
                     {isAdminRoute ? (
                       <>
@@ -208,7 +235,7 @@ export function Root() {
                           <NavigationMenuItem key={to}>
                             <Link
                               to={to}
-                              className={`text-sm px-4 py-2 rounded transition-colors ${location.pathname.startsWith(to) ? "bg-teal-50 text-teal-600 font-semibold" : "hover:bg-teal-50 hover:text-teal-600"}`}
+                              className={`text-sm px-4 py-2 rounded transition-colors ${location.pathname.startsWith(to) ? "bg-blue-50 text-blue-600 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}`}
                             >
                               {label}
                             </Link>
@@ -217,7 +244,7 @@ export function Root() {
 
                         <NavigationMenuItem>
                           <DropdownMenu>
-                            <DropdownMenuTrigger className="text-sm px-4 py-2 hover:text-teal-600 transition-colors flex items-center gap-1 outline-none">
+                            <DropdownMenuTrigger className="text-sm px-4 py-2 hover:text-blue-600 transition-colors flex items-center gap-1 outline-none">
                               알림서비스 <ChevronDown className="h-3 w-3" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" className="w-40">
@@ -241,7 +268,7 @@ export function Root() {
 
                         <NavigationMenuItem>
                           <DropdownMenu>
-                            <DropdownMenuTrigger className="text-sm px-4 py-2 hover:text-teal-600 transition-colors flex items-center gap-1 outline-none">
+                            <DropdownMenuTrigger className="text-sm px-4 py-2 hover:text-blue-600 transition-colors flex items-center gap-1 outline-none">
                               중개수수료 <ChevronDown className="h-3 w-3" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" className="w-44">
@@ -271,7 +298,7 @@ export function Root() {
                         <NavigationMenuItem>
                           <Link
                             to="/admin/community"
-                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                            className="text-sm px-4 py-2 hover:text-blue-600 transition-colors"
                           >
                             커뮤니티
                           </Link>
@@ -282,15 +309,15 @@ export function Root() {
                         <NavigationMenuItem>
                           <Link
                             to="/expert/jobs"
-                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                            className="text-sm px-4 py-2 hover:text-blue-600 transition-colors"
                           >
-                            공고 목록
+                            의뢰 목록
                           </Link>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
                           <Link
                             to="/expert/bids"
-                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                            className="text-sm px-4 py-2 hover:text-blue-600 transition-colors"
                           >
                             내 입찰 목록
                           </Link>
@@ -298,7 +325,7 @@ export function Root() {
                         <NavigationMenuItem>
                           <Link
                             to="/"
-                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                            className="text-sm px-4 py-2 hover:text-blue-600 transition-colors"
                           >
                             커뮤니티
                           </Link>
@@ -307,48 +334,32 @@ export function Root() {
                     ) : (
                       <>
                         <NavigationMenuItem>
-                          <NavigationMenuTrigger className="text-sm hover:text-teal-600 bg-transparent">
+                          <NavigationMenuTrigger className="text-sm px-3 py-1.5">
                             전문 bid
                           </NavigationMenuTrigger>
                           <NavigationMenuContent>
-                            <ul className="w-48 p-2">
+                            <ul className="w-36 p-1">
                               <li>
-                                <Link
-                                  to="/bids/intro"
-                                  className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md"
-                                >
-                                  전문 bid 소개
-                                </Link>
+                                <Link to="/bids/intro" className="block px-3 py-1.5 text-sm rounded-sm hover:bg-accent transition-colors" onClick={() => setNavValue("")}>전문 bid 소개</Link>
                               </li>
                               <li>
-                                <Link
-                                  to="/bids/notice"
-                                  className="block px-4 py-2 text-sm hover:bg-teal-50 rounded-md"
-                                >
-                                  공지사항
-                                </Link>
+                                <Link to="/bids/notice" className="block px-3 py-1.5 text-sm rounded-sm hover:bg-accent transition-colors" onClick={() => setNavValue("")}>공지사항</Link>
                               </li>
                             </ul>
                           </NavigationMenuContent>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                          <NavigationMenuTrigger className="text-sm hover:text-teal-600 bg-transparent">
+                          <NavigationMenuTrigger
+                            className="text-sm px-3 py-1.5"
+                            onClick={() => { navigate("/client/create-project"); setNavValue(""); }}
+                          >
                             견적 요청
                           </NavigationMenuTrigger>
                           <NavigationMenuContent>
-                            <ul className="w-48 p-2">
+                            <ul className="w-36 p-1">
                               {INDUSTRIES.map((industry) => (
                                 <li key={industry.value}>
-                                  <button
-                                    onClick={() =>
-                                      navigate(
-                                        `/client/create-project/${industry.value}`,
-                                      )
-                                    }
-                                    className="w-full text-left px-4 py-2 text-sm hover:bg-teal-50 rounded-md"
-                                  >
-                                    {industry.label}
-                                  </button>
+                                  <Link to={`/client/create-project/${industry.value}`} className="block px-3 py-1.5 text-sm rounded-sm hover:bg-accent transition-colors" onClick={() => setNavValue("")}>{industry.label}</Link>
                                 </li>
                               ))}
                             </ul>
@@ -356,19 +367,29 @@ export function Root() {
                         </NavigationMenuItem>
                         <NavigationMenuItem>
                           <Link
-                            to="/expert/projects"
-                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
+                            to="bids/search-experts"
+                            className="text-sm px-4 py-2 hover:text-blue-600 transition-colors"
                           >
                             전문가 검색
                           </Link>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                          <Link
-                            to="/"
-                            className="text-sm px-4 py-2 hover:text-teal-600 transition-colors"
-                          >
-                            커뮤니티
-                          </Link>
+                          <NavigationMenuTrigger className="text-sm px-3 py-1.5">
+                            고객 지원
+                          </NavigationMenuTrigger>
+                          <NavigationMenuContent>
+                            <ul className="w-36 p-1">
+                              <li>
+                                <Link to="/support/archive" className="block px-3 py-1.5 text-sm rounded-sm hover:bg-accent transition-colors" onClick={() => setNavValue("")}>자료실</Link>
+                              </li>
+                              <li>
+                                <Link to="/support/faq" className="block px-3 py-1.5 text-sm rounded-sm hover:bg-accent transition-colors" onClick={() => setNavValue("")}>자주하는 질문</Link>
+                              </li>
+                              <li>
+                                <Link to="/community" className="block px-3 py-1.5 text-sm rounded-sm hover:bg-accent transition-colors" onClick={() => setNavValue("")}>Q&A</Link>
+                              </li>
+                            </ul>
+                          </NavigationMenuContent>
                         </NavigationMenuItem>
                       </>
                     )}
@@ -378,7 +399,7 @@ export function Root() {
 
               <div className="flex items-center gap-4">
                 {isAdminRoute ? (
-                  <div className="px-4 py-2 bg-teal-100 text-teal-700 rounded-md text-xs font-bold shadow-sm">
+                  <div className="px-4 py-2 bg-blue-100 text-blue-700 rounded-md text-xs font-bold shadow-sm">
                     관리자 모드
                   </div>
                 ) : !user ? (
@@ -414,11 +435,6 @@ export function Root() {
                         My Page
                       </Link>
                     </Button>
-
-                    <Button variant="ghost" asChild className="text-sm">
-                      <Link to="/support">고객센터</Link>
-                    </Button>
-
                     <Button
                       variant="ghost"
                       size="icon"
@@ -475,14 +491,14 @@ export function Root() {
         </div>
 
         <div className="container mx-auto px-4 py-8 text-center text-sm text-gray-400">
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-8 mb-3">
+          {/* <div className="flex flex-wrap justify-center gap-x-6 gap-y-8 mb-3">
             <span>(주)세움경영진단</span>
             <span>사업자등록번호 : 012-345-67890</span>
             <span>TEL : 1111-2222</span>
             <span>대표이사 : 장승희</span>
-          </div>
+          </div> */}
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-            © 2026 ProToCall. All rights reserved.
+            © 2026 진단매치. All rights reserved.
           </div>
         </div>
       </footer>

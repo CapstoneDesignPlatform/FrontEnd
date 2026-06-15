@@ -218,7 +218,7 @@ export function AdminMembershipStats() {
             <button
               key={val}
               onClick={() => setViewType(val)}
-              className={`px-2 py-0.5 rounded border text-xs transition-colors ${viewType === val ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"}`}
+              className={`px-2 py-0.5 rounded border text-xs transition-colors ${viewType === val ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-400"}`}
             >
               {label}
             </button>
@@ -226,7 +226,7 @@ export function AdminMembershipStats() {
         </div>
         <Button
           size="sm"
-          className="bg-[#009689] hover:bg-[#007d71] h-7 text-xs"
+          className="bg-[#34499C] hover:bg-[#2a3d84] h-7 text-xs"
         >
           조회
         </Button>
@@ -246,7 +246,7 @@ export function AdminMembershipStats() {
           {
             label: "총 건수",
             value: `${records.length}건`,
-            color: "text-teal-600",
+            color: "text-blue-600",
           },
           {
             label: "입금액 합계",
@@ -311,7 +311,7 @@ export function AdminMembershipStats() {
                 {records.map((r, i) => (
                   <tr
                     key={r.id}
-                    className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                    className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                   >
                     <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
                       {i + 1}

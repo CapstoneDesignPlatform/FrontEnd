@@ -173,7 +173,7 @@ export function AdminClientList() {
           <button
             key={val}
             onClick={() => setStatusFilter(val)}
-            className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${statusFilter === val ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"}`}
+            className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${statusFilter === val ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-400"}`}
           >
             {label} ({counts[val]})
           </button>
@@ -231,7 +231,7 @@ export function AdminClientList() {
                 filtered.map((c, i) => (
                   <tr
                     key={c.id}
-                    className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                    className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                   >
                     <td className="border-b border-r border-gray-200 px-2 py-1 font-medium whitespace-nowrap">
                       {c.company}
@@ -268,7 +268,7 @@ export function AdminClientList() {
                     <td className="border-b border-gray-200 px-2 py-1">
                       <Link
                         to={`/admin/clients/${c.id}`}
-                        className="text-teal-600 hover:underline whitespace-nowrap"
+                        className="text-blue-600 hover:underline whitespace-nowrap"
                       >
                         상세 →
                       </Link>

@@ -42,7 +42,7 @@ function TermsModal({ onClose, userType }: { onClose: () => void; userType: "cli
           <div className="flex gap-3">
             {tabs.map((tab) => (
               <button key={tab.key} type="button" onClick={() => setActiveTab(tab.key)}
-                className={`text-sm font-medium pb-1 transition-colors ${activeTab === tab.key ? "text-teal-600 border-b-2 border-teal-600" : "text-gray-500 hover:text-gray-700"}`}>
+                className={`text-sm font-medium pb-1 transition-colors ${activeTab === tab.key ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:text-gray-700"}`}>
                 {tab.label}
               </button>
             ))}
@@ -67,7 +67,7 @@ function TermsPreviewBox({ content, onOpenModal }: { content: string; onOpenModa
         <pre className="text-xs text-gray-500 whitespace-pre-wrap leading-relaxed font-sans">{content}</pre>
       </div>
       <div className="border-t border-gray-200 px-4 py-2 bg-white flex justify-end">
-        <button type="button" onClick={onOpenModal} className="text-xs text-teal-600 hover:text-teal-700 font-medium hover:underline">전문보기 →</button>
+        <button type="button" onClick={onOpenModal} className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline">전문보기 →</button>
       </div>
     </div>
   );
@@ -186,15 +186,15 @@ export function Register() {
       {showTermsModal && userType && <TermsModal onClose={() => setShowTermsModal(false)} userType={userType} />}
 
       <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-200px)]">
-        <Card className="w-full max-w-2xl shadow-lg border-teal-100">
+        <Card className="w-full max-w-2xl shadow-lg border-blue-100">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">{isSocial ? "소셜 회원가입" : "회원가입"}</CardTitle>
             <CardDescription>{STEP_LABELS[step]}</CardDescription>
             <div className="flex items-center justify-center gap-2 mt-4">
               {Array.from({ length: totalSteps }, (_, i) => i + 1).map((num) => (
                 <div key={num} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${displayStep >= num ? "bg-teal-600 text-white" : "bg-gray-200 text-gray-600"}`}>{num}</div>
-                  {num < totalSteps && <div className={`w-12 h-1 ${displayStep > num ? "bg-teal-600" : "bg-gray-200"}`} />}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${displayStep >= num ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"}`}>{num}</div>
+                  {num < totalSteps && <div className={`w-12 h-1 ${displayStep > num ? "bg-blue-600" : "bg-gray-200"}`} />}
                 </div>
               ))}
             </div>
@@ -204,13 +204,13 @@ export function Register() {
             {/* 1단계: 유형 선택 */}
             {step === 1 && (
               <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => { setUserType("client"); setStep(2); }} className="p-8 border-2 rounded-xl hover:border-teal-500 hover:bg-teal-50 transition-all text-center group">
-                  <User className="h-16 w-16 mx-auto mb-4 text-gray-400 group-hover:text-teal-600" />
+                <button onClick={() => { setUserType("client"); setStep(2); }} className="p-8 border-2 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-center group">
+                  <User className="h-16 w-16 mx-auto mb-4 text-gray-400 group-hover:text-blue-600" />
                   <h3 className="font-bold mb-1">의뢰인</h3>
                   <p className="text-xs text-gray-500">서비스를 의뢰하고 싶어요</p>
                 </button>
-                <button onClick={() => { setUserType("expert"); setStep(2); }} className="p-8 border-2 rounded-xl hover:border-teal-500 hover:bg-teal-50 transition-all text-center group">
-                  <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400 group-hover:text-teal-600" />
+                <button onClick={() => { setUserType("expert"); setStep(2); }} className="p-8 border-2 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-center group">
+                  <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400 group-hover:text-blue-600" />
                   <h3 className="font-bold mb-1">전문가</h3>
                   <p className="text-xs text-gray-500">전문 서비스를 제공하고 싶어요</p>
                 </button>
@@ -342,7 +342,7 @@ export function Register() {
             {/* 4단계: 완료 */}
             {step === 4 && (
               <div className="text-center space-y-6 py-8">
-                <CheckCircle2 className="h-20 w-20 text-teal-600 mx-auto animate-bounce" />
+                <CheckCircle2 className="h-20 w-20 text-blue-600 mx-auto animate-bounce" />
                 <h3 className="text-2xl font-bold">회원가입이 완료되었습니다!</h3>
                 <p className="text-gray-500">이제 다양한 진단매치의 서비스를 이용하실 수 있습니다.</p>
                 <Button onClick={() => navigate(userType === "client" ? "/client/company-info" : "/expert/dashboard")} className="w-full" size="lg">시작하기</Button>

@@ -7,8 +7,8 @@ import { Badge } from "../../../components/ui/badge";
 const mockNotices = [
   {
     id: 1,
-    title: "ProToCall 서비스 정식 오픈 안내",
-    content: "ProToCall 플랫폼이 정식으로 오픈되었습니다.",
+    title: "진단매치 서비스 정식 오픈 안내",
+    content: "진단매치 플랫폼이 정식으로 오픈되었습니다.",
     date: "2026-05-01",
     isPinned: true,
     category: "중요",
@@ -73,7 +73,7 @@ export function Notice() {
         <div className="mb-8">
           <h1 className="mb-2">공지사항</h1>
           <p className="text-gray-600">
-            ProToCall의 최신 소식과 중요한 공지사항을 확인하세요.
+            진단매치의 최신 소식과 중요한 공지사항을 확인하세요.
           </p>
         </div>
 

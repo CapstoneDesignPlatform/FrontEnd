@@ -1,7 +1,7 @@
 # Expert API Contract v2
 
 이 문서는 `serviceplatform` 전문가 파트 프론트엔드와 백엔드 연동을 위한 API 계약입니다.
-`/Users/imin-yeong/Downloads/expert-api-contract-v2.md`를 기준으로 현재 프로젝트 코드에 맞게 정리했습니다.
+`/Users/imin-yeong/Downloads/expert-api-contract-v2.md`를 기준으로 현재 의뢰 코드에 맞게 정리했습니다.
 
 ## Frontend API Mode
 
@@ -458,9 +458,9 @@ Response:
 
 정책:
 
-- request body에 `announcement_code` 또는 `expert_profile_id`를 포함하지 않습니다.
-- 같은 전문가가 같은 공고에 중복 입찰하면 `409 DUPLICATE_BID`를 반환합니다.
-- 공고 상태가 `ACTIVE`가 아니면 공고 마감 오류를 반환합니다.
+- request body에 `job_post_id` 또는 `expert_profile_id`를 포함하지 않습니다.
+- 같은 전문가가 같은 의뢰에 중복 입찰하면 `409 DUPLICATE_BID`를 반환합니다.
+- 의뢰 상태가 `BIDDING`이 아니면 `409 JOB_POST_CLOSED`를 반환합니다.
 
 ### 10. Get My Bids
 

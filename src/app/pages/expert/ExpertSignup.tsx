@@ -333,12 +333,12 @@ export function ExpertSignup() {
 
             {step === "account" ? (
               <div className="mx-auto w-full max-w-2xl space-y-5">
-                <div className="rounded-lg border border-teal-200 bg-teal-50 px-4 py-3">
-                  <p className="text-sm font-medium text-teal-900">
+                <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+                  <p className="text-sm font-medium text-blue-900">
                     전문가 계정 정보
                   </p>
-                  <p className="mt-1 text-sm leading-6 text-teal-800">
-                    입력한 계정 정보는 전문가 인증 신청과 공고 입찰 안내에 사용됩니다.
+                  <p className="mt-1 text-sm leading-6 text-blue-800">
+                    입력한 계정 정보는 전문가 인증 신청과 의뢰 입찰 안내에 사용됩니다.
                   </p>
                 </div>
 
@@ -420,7 +420,7 @@ export function ExpertSignup() {
                         </span>
                       ) : null}
                       {hasPasswordMatch ? (
-                        <span className="text-xs font-medium text-teal-600">
+                        <span className="text-xs font-medium text-blue-600">
                           비밀번호가 일치합니다.
                         </span>
                       ) : null}
@@ -512,7 +512,7 @@ function StepNavigation({
       </Button>
       <Button
         type={nextType}
-        className="bg-teal-600 hover:bg-teal-700 sm:w-40"
+        className="bg-blue-600 hover:bg-blue-700 sm:w-40"
         disabled={isNextDisabled}
         onClick={onNext}
       >

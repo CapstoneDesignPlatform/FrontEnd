@@ -125,7 +125,7 @@ export function ExpertDashboard() {
             description="조건에 맞는 새 의뢰를 확인합니다."
             href="/expert/jobs"
             icon={Search}
-            label="입찰 가능한 공고보기"
+            label="입찰 가능한 의뢰보기"
           />
           <DashboardAction
             description="제출한 입찰과 선정 여부를 관리합니다."
@@ -146,7 +146,7 @@ export function ExpertDashboard() {
         <CardHeader className="px-4 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle className="text-base">선정된 공고 목록</CardTitle>
+              <CardTitle className="text-base">선정된 의뢰 목록</CardTitle>
               <CardDescription className="text-xs">
                 선정된 의뢰의 핵심 정보와 의뢰인 정보를 확인하세요.
               </CardDescription>
@@ -167,7 +167,7 @@ export function ExpertDashboard() {
           {!bidsError && selectedBids.length === 0 ? (
             <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center">
               <p className="font-medium text-slate-900">
-                선정된 공고가 없습니다.
+                선정된 의뢰가 없습니다.
               </p>
               <p className="mt-1 text-xs text-slate-500">
                 선정 결과는 내 입찰 목록에서 함께 확인할 수 있습니다.
@@ -286,11 +286,11 @@ function ClientContactPanel({ bid }: { bid: MyBidItemVM }) {
   ].filter((item) => item.value);
 
   return (
-    <div className="border-t border-teal-100 bg-teal-50/40 px-4 py-3">
-      <div className="grid gap-3 rounded-lg border border-teal-100 bg-white p-3 md:grid-cols-3">
+    <div className="border-t border-blue-100 bg-blue-50/40 px-4 py-3">
+      <div className="grid gap-3 rounded-lg border border-blue-100 bg-white p-3 md:grid-cols-3">
         {contactItems.map(({ icon: Icon, label, value }) => (
           <div key={label} className="flex min-w-0 items-center gap-2">
-            <Icon className="h-4 w-4 shrink-0 text-teal-700" />
+            <Icon className="h-4 w-4 shrink-0 text-blue-700" />
             <div className="min-w-0">
               <p className="text-[10px] text-slate-500">{label}</p>
               <p className="truncate text-xs font-medium text-slate-950">
@@ -357,7 +357,7 @@ function DeadlineSummary({ deadline }: { deadline?: string }) {
               ? "border-slate-200 bg-slate-50 text-slate-500"
               : daysLeft <= 3
                 ? "border-red-200 bg-red-50 text-red-700"
-                : "border-teal-200 bg-teal-50 text-teal-700",
+                : "border-blue-200 bg-blue-50 text-blue-700",
           )}
         >
           {formatDaysLeft(daysLeft)}
@@ -424,9 +424,9 @@ function getVerificationMeta(status: ExpertVerificationStatus): {
   if (status === "APPROVED") {
     return {
       actionHref: "/expert/jobs",
-      actionLabel: "입찰 가능한 공고 보기",
+      actionLabel: "입찰 가능한 의뢰 보기",
       actionVariant: "default",
-      badgeClassName: "border-teal-200 bg-teal-50 text-teal-700",
+      badgeClassName: "border-blue-200 bg-blue-50 text-blue-700",
       icon: ShieldCheck,
       label: "인증 완료",
     };

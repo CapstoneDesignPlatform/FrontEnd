@@ -233,7 +233,7 @@ export function AdminMembershipManage() {
         />
         <Button
           size="sm"
-          className="bg-[#009689] hover:bg-[#007d71] h-7 text-xs"
+          className="bg-[#34499C] hover:bg-[#2a3d84] h-7 text-xs"
         >
           조회
         </Button>
@@ -279,7 +279,7 @@ export function AdminMembershipManage() {
               {filtered.map((r, i) => (
                 <tr
                   key={r.id}
-                  className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                  className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                 >
                   <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
                     {i + 1}

@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ 페이지 이동용
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
-import { Edit, Save, X, Info } from "lucide-react"; // ✅ Info 아이콘 추가
+import { Edit, Save, X, Info } from "lucide-react";
 import { toast } from "sonner";
 import { userInstance } from "../../../api/instance"; 
+import DaumPostcodeEmbed from "react-daum-postcode";
 
 const emptyCompanyInfo = {
   companyName: "",
@@ -26,6 +27,9 @@ export function CompanyInfoView() {
   const [isLoading, setIsLoading] = useState(true);
   const [companyInfo, setCompanyInfo] = useState(emptyCompanyInfo);
   const [editedInfo, setEditedInfo] = useState(emptyCompanyInfo);
+  
+  // 💡 주소 모달 창 상태 추가
+  const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
 
   const formatBusinessNumber = (value: string) => {
     const nums = value.replace(/[^\d]/g, "");
@@ -52,6 +56,30 @@ export function CompanyInfoView() {
     }
   };
 
+  // 💡 주소 선택 완료 시 실행되는 함수
+  const handleCompletePostcode = (data: any) => {
+    let fullAddress = data.address;
+    let extraAddress = "";
+
+    if (data.addressType === "R") {
+      if (data.bname !== "") {
+        extraAddress += data.bname;
+      }
+      if (data.buildingName !== "") {
+        extraAddress += extraAddress !== "" ? `, ${data.buildingName}` : data.buildingName;
+      }
+      fullAddress += extraAddress !== "" ? ` (${extraAddress})` : "";
+    }
+
+    // 수정 중인 editedInfo 상태에 주소 업데이트
+    setEditedInfo((prev) => ({
+      ...prev,
+      address: fullAddress,
+    }));
+
+    setIsPostcodeOpen(false);
+  };
+
   // ── 조회 ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchCompanyInfo = async () => {
@@ -73,7 +101,6 @@ export function CompanyInfoView() {
           setEditedInfo(mapped);
         }
       } catch (err: any) {
-        // 404 에러 시엔 그냥 로딩만 끄고 안내 화면(Empty State)을 보여줄 예정이므로 별도 toast는 안 띄워도 됩니다.
         if (err.response?.status !== 404) {
           toast.error(err.response?.data?.message || "기업 정보를 불러오지 못했습니다.");
         }
@@ -132,12 +159,12 @@ export function CompanyInfoView() {
           </div>
           <CardTitle className="text-xl mb-2">등록된 기업 정보가 없습니다</CardTitle>
           <p className="text-gray-500 mb-6 leading-relaxed">
-            전문가에게 프로젝트를 의뢰하기 위해<br />
+            전문가에게 의뢰를 의뢰하기 위해<br />
             먼저 기업 정보를 등록해주세요.
           </p>
           <Button 
             onClick={() => navigate("/client/company-info")}
-            className="bg-teal-600 hover:bg-teal-700 gap-2"
+            className="bg-blue-600 hover:bg-blue-700 gap-2"
           >
             기업 정보 등록하러 가기
           </Button>
@@ -221,10 +248,50 @@ export function CompanyInfoView() {
                   <Input id="phoneNumber" name="phoneNumber" value={editedInfo.phoneNumber} onChange={handleCustomChange} maxLength={13} required />
                 </div>
               </div>
+              
+              {/* 💡 카카오 주소 검색 인풋으로 변경된 부분 */}
               <div className="space-y-2">
                 <Label htmlFor="address">주소</Label>
-                <Input id="address" name="address" value={editedInfo.address} onChange={handleCustomChange} />
+                <div className="flex gap-2">
+                  <Input 
+                    id="address" 
+                    name="address" 
+                    placeholder="주소 검색을 이용해 주세요." 
+                    value={editedInfo.address} 
+                    readOnly 
+                    onClick={() => setIsPostcodeOpen(true)} 
+                    className="cursor-pointer"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsPostcodeOpen(true)}
+                  >
+                    주소 검색
+                  </Button>
+                </div>
               </div>
+
+              {/* 💡 카카오 주소찾기 모달 레이어 */}
+              {isPostcodeOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                  <div className="relative w-full max-w-lg rounded-lg bg-white p-4 shadow-xl">
+                    <div className="flex items-center justify-between mb-3 border-b pb-2">
+                      <h3 className="font-semibold text-lg text-gray-800">주소 검색</h3>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setIsPostcodeOpen(false)}
+                        className="text-gray-500 hover:text-gray-800"
+                      >
+                        닫기
+                      </Button>
+                    </div>
+                    <DaumPostcodeEmbed onComplete={handleCompletePostcode} />
+                  </div>
+                </div>
+              )}
+
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">이메일 <span className="text-red-500">*</span></Label>

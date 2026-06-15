@@ -121,7 +121,7 @@ export function BidList() {
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl">{project.title}</h1>
           <Button asChild variant="outline">
-            <Link to={`/client/projects/${id}`}>프로젝트 상세</Link>
+            <Link to={`/client/projects/${id}`}>의뢰 상세</Link>
           </Button>
         </div>
         <p className="text-gray-600">

@@ -27,7 +27,7 @@ export function Archive() {
             <Card key={item.id} className="p-4 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3 flex-1">
-                  <FileText className="h-5 w-5 text-teal-600 mt-1" />
+                  <FileText className="h-5 w-5 text-blue-600 mt-1" />
                   <div>
                     <h3 className="mb-2 font-semibold">{item.title}</h3>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
