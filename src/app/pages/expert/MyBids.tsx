@@ -92,7 +92,7 @@ export function MyBids() {
           <p className="text-gray-600">제출한 입찰을 관리하고 상태를 확인하세요.</p>
         </div>
         <Button asChild>
-          <Link to="/expert/jobs">새 공고 찾기</Link>
+          <Link to="/expert/jobs">새 의뢰 찾기</Link>
         </Button>
       </div>
 
@@ -119,7 +119,7 @@ export function MyBids() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="h-10 bg-white pl-9"
-                placeholder="공고명, 입찰가, 상태로 검색"
+                placeholder="의뢰명, 입찰가, 상태로 검색"
               />
             </div>
             <p className="text-xs text-gray-500">
@@ -140,7 +140,7 @@ export function MyBids() {
                   onClick={() => setStatusFilter(option.value)}
                   className={`shrink-0 rounded-full px-3 ${
                     isActive
-                      ? "bg-teal-600 text-white hover:bg-teal-700"
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
                       : "bg-white text-gray-700"
                   }`}
                 >
@@ -164,7 +164,7 @@ export function MyBids() {
           <CardHeader className="border-b bg-white px-4 py-3">
             <CardTitle className="text-base">입찰 목록</CardTitle>
             <p className="text-sm text-slate-500">
-              현재 입찰 중인 공고 목록입니다.
+              현재 입찰 중인 의뢰 목록입니다.
             </p>
           </CardHeader>
           <CardContent className="p-0">
@@ -181,7 +181,7 @@ export function MyBids() {
         <AsyncStateCard
           action={
             <Button asChild>
-              <Link to="/expert/jobs">공고 찾아보기</Link>
+              <Link to="/expert/jobs">의뢰 찾아보기</Link>
             </Button>
           }
           message="입찰 내역이 없습니다."
@@ -322,7 +322,7 @@ function MyBidTable({ bids, getStatusColor, onCopyContact }: MyBidTableProps) {
                   </td>
                 </tr>
                 {canViewContact && isContactOpen ? (
-                  <tr className="bg-teal-50/40">
+                  <tr className="bg-blue-50/40">
                     <td colSpan={7} className="px-4 py-3">
                       <ClientContactPanel
                         bid={bid}
@@ -356,12 +356,12 @@ function ClientContactPanel({
   ].filter((item) => item.value);
 
   return (
-    <div className="rounded-lg border border-teal-100 bg-white p-3 shadow-sm">
+    <div className="rounded-lg border border-blue-100 bg-white p-3 shadow-sm">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="grid flex-1 gap-2 md:grid-cols-3">
           {contactItems.map(({ icon: Icon, label, value }) => (
             <div key={label} className="flex min-w-0 items-center gap-2">
-              <Icon className="h-4 w-4 shrink-0 text-teal-700" />
+              <Icon className="h-4 w-4 shrink-0 text-blue-700" />
               <div className="min-w-0">
                 <p className="text-[11px] text-slate-500">{label}</p>
                 <p className="truncate text-sm font-medium text-slate-950">

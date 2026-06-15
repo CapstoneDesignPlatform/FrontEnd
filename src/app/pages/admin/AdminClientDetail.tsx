@@ -279,7 +279,7 @@ export function AdminClientDetail() {
                         ? "완료"
                         : "매칭 대기";
                   const ws3 = XLSX.utils.aoa_to_sheet([
-                    ["의뢰코드", "공고명", "상태", "등록일"],
+                    ["의뢰코드", "의뢰명", "상태", "등록일"],
                     ...client.projects.map((p) => [
                       p.code,
                       p.title,
@@ -429,7 +429,7 @@ export function AdminClientDetail() {
                   {statusHistory.map((item, index) => (
                     <tr
                       key={index}
-                      className={`hover:bg-teal-50 transition-colors ${index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                      className={`hover:bg-blue-50 transition-colors ${index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                     >
                       <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
                         {item.date}
@@ -475,7 +475,7 @@ export function AdminClientDetail() {
                 <table className="w-full text-xs border-collapse">
                   <thead>
                     <tr className="bg-gray-50">
-                      {["의뢰코드", "공고명", "상태", "등록일", "상세"].map(
+                      {["의뢰코드", "의뢰명", "상태", "등록일", "상세"].map(
                         (h) => (
                           <th
                             key={h}
@@ -491,7 +491,7 @@ export function AdminClientDetail() {
                     {client.projects.map((project, i) => (
                       <tr
                         key={project.id}
-                        className={`hover:bg-teal-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                        className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                       >
                         <td className="border-b border-r border-gray-200 px-2 py-1 font-mono whitespace-nowrap">
                           {project.code}
@@ -522,7 +522,7 @@ export function AdminClientDetail() {
                         <td className="border-b border-gray-200 px-2 py-1">
                           <Link
                             to={`/admin/projects/${project.id}`}
-                            className="text-teal-600 hover:underline whitespace-nowrap"
+                            className="text-blue-600 hover:underline whitespace-nowrap"
                           >
                             상세 →
                           </Link>

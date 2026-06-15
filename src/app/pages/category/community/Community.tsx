@@ -11,13 +11,13 @@ const mockPosts = [
   {
     id: 1,
     category: "자유게시판",
-    title: "건설 프로젝트 진행 시 주의사항 공유합니다",
+    title: "건설 의뢰 진행 시 주의사항 공유합니다",
     author: "김철수",
     date: "2026-05-06",
     views: 234,
     comments: 12,
     likes: 45,
-    content: "최근 프로젝트를 진행하면서 겪은 경험을 공유합니다...",
+    content: "최근 의뢰를 진행하면서 겪은 경험을 공유합니다...",
   },
   {
     id: 2,
@@ -66,13 +66,13 @@ const mockPosts = [
   {
     id: 6,
     category: "정보공유",
-    title: "효율적인 프로젝트 관리 도구 추천",
+    title: "효율적인 의뢰 관리 도구 추천",
     author: "한수정",
     date: "2026-05-01",
     views: 312,
     comments: 18,
     likes: 67,
-    content: "프로젝트 관리에 유용한 도구들을 소개합니다...",
+    content: "의뢰 관리에 유용한 도구들을 소개합니다...",
   },
 ];
 

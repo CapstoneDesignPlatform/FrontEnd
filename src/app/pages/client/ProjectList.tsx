@@ -70,15 +70,15 @@ export function ProjectList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl mb-2">내 공고 목록</h1>
-          <p className="text-gray-600">등록한 공고를 관리하고 입찰을 확인하세요.</p>
+          <h1 className="text-3xl mb-2">내 의뢰 목록</h1>
+          <p className="text-gray-600">등록한 의뢰를 관리하고 입찰을 확인하세요.</p>
         </div>
         <Button asChild>
-          <Link to="/client/create-project">새 공고 작성</Link>
+          <Link to="/client/create-project">새 의뢰 작성</Link>
         </Button>
       </div>
 
-      {/* 공고 목록 */}
+      {/* 의뢰 목록 */}
       <div className="grid gap-4">
         {projects.map((project) => (
           <Card key={project.id} className="hover:shadow-lg transition-shadow">

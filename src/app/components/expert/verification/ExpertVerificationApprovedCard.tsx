@@ -18,7 +18,7 @@ export function ExpertVerificationApprovedCard() {
               이제 인증 전문가로서 더 많은 기회를 얻을 수 있습니다.
             </p>
             <Button asChild>
-              <Link to="/expert/jobs">공고 찾아보기</Link>
+              <Link to="/expert/jobs">의뢰 찾아보기</Link>
             </Button>
           </div>
         </div>

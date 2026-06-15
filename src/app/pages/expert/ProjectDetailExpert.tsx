@@ -27,7 +27,7 @@ export function ProjectDetailExpert() {
   if (error) {
     return (
       <div className="space-y-6">
-        <AsyncStateCard message="공고 정보를 불러오지 못했습니다." tone="danger" />
+        <AsyncStateCard message="의뢰 정보를 불러오지 못했습니다." tone="danger" />
       </div>
     );
   }
@@ -35,7 +35,7 @@ export function ProjectDetailExpert() {
   if (isLoading && !project) {
     return (
       <div className="space-y-6">
-        <AsyncStateCard message="공고 정보를 불러오는 중입니다." />
+        <AsyncStateCard message="의뢰 정보를 불러오는 중입니다." />
       </div>
     );
   }
@@ -54,7 +54,7 @@ export function ProjectDetailExpert() {
           <div className="mb-2 flex flex-wrap items-center gap-1.5 md:mb-3 md:gap-2">
             <Badge
               variant="outline"
-              className="border-teal-200 bg-teal-50 text-[11px] text-teal-700 md:text-xs"
+              className="border-blue-200 bg-blue-50 text-[11px] text-blue-700 md:text-xs"
             >
               {project.industry}
             </Badge>
@@ -84,7 +84,7 @@ export function ProjectDetailExpert() {
           </Button>
           {canBid ? (
             <Button
-              className="h-8 bg-teal-600 px-3 text-xs hover:bg-teal-700 md:h-9 md:text-sm"
+              className="h-8 bg-blue-600 px-3 text-xs hover:bg-blue-700 md:h-9 md:text-sm"
               onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
             >
               {hasMyBid ? "입찰 수정" : "입찰 시작"}
@@ -121,7 +121,7 @@ export function ProjectDetailExpert() {
                     <p className="font-medium leading-snug">{project.industry}</p>
                   </div>
                   <div className="min-w-0">
-                    <p className="mb-0.5 text-[11px] text-gray-600 md:mb-1 md:text-sm">공고 유형</p>
+                    <p className="mb-0.5 text-[11px] text-gray-600 md:mb-1 md:text-sm">의뢰 유형</p>
                     <p className="font-medium leading-snug">{project.type}</p>
                   </div>
                 </div>
@@ -195,7 +195,7 @@ export function ProjectDetailExpert() {
             </CardHeader>
             <CardContent className="space-y-2 px-3 pb-3 [&:last-child]:pb-3 md:space-y-4 md:px-6 md:pb-6 md:[&:last-child]:pb-6">
               <div className="flex items-start gap-2 md:gap-3">
-                <Users className="mt-0.5 h-4 w-4 text-teal-600 md:h-5 md:w-5" />
+                <Users className="mt-0.5 h-4 w-4 text-blue-600 md:h-5 md:w-5" />
                 <div className="flex-1">
                   <p className="text-xs text-gray-600 md:text-sm">현재 입찰 수</p>
                   <p className="text-base font-medium md:text-lg">{project.bids}개</p>
@@ -207,20 +207,20 @@ export function ProjectDetailExpert() {
             </CardContent>
           </Card>
 
-          <Card className="gap-0 border-teal-200 bg-teal-50">
+          <Card className="gap-0 border-blue-200 bg-blue-50">
             <CardContent className="px-3 py-3 [&:last-child]:pb-3 md:px-6 md:pt-6 md:[&:last-child]:pb-6">
-              <h4 className="mb-1.5 text-sm font-medium text-teal-900 md:mb-2 md:text-base">
+              <h4 className="mb-1.5 text-sm font-medium text-blue-900 md:mb-2 md:text-base">
                 입찰 안내
               </h4>
               {canBid ? (
-                <ul className="space-y-0.5 text-xs leading-snug text-teal-800 md:space-y-1 md:text-sm">
+                <ul className="space-y-0.5 text-xs leading-snug text-blue-800 md:space-y-1 md:text-sm">
                   <li>• 입찰가는 협상 전 가격입니다</li>
                   <li>• 의뢰인이 선택하면 연락처가 공개됩니다</li>
                   <li>• 최종 가격은 직접 협상으로 결정됩니다</li>
                 </ul>
               ) : (
-                <p className="text-xs leading-snug text-teal-800 md:text-sm">
-                  마감된 공고는 입찰을 시작하거나 수정할 수 없습니다.
+                <p className="text-xs leading-snug text-blue-800 md:text-sm">
+                  마감된 의뢰는 입찰을 시작하거나 수정할 수 없습니다.
                 </p>
               )}
             </CardContent>
@@ -228,7 +228,7 @@ export function ProjectDetailExpert() {
 
           {canBid ? (
             <Button
-              className="h-9 w-full bg-teal-600 text-sm hover:bg-teal-700 md:h-10 md:text-base"
+              className="h-9 w-full bg-blue-600 text-sm hover:bg-blue-700 md:h-10 md:text-base"
               size="lg"
               onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
             >

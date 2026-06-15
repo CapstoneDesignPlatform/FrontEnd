@@ -26,7 +26,7 @@ export function ExpertVerificationStatusCard({
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <p className="text-center text-gray-700">
               전문가 인증이 완료되었습니다.<br />
-              이제 공고를 확인하고 입찰할 수 있습니다.
+              이제 의뢰를 확인하고 입찰할 수 있습니다.
             </p>
           </div>
 
@@ -35,7 +35,7 @@ export function ExpertVerificationStatusCard({
               <Link to="/expert/profile">프로필 관리</Link>
             </Button>
             <Button asChild className="flex-1">
-              <Link to="/expert/jobs">공고 목록 보기</Link>
+              <Link to="/expert/jobs">의뢰 목록 보기</Link>
             </Button>
           </div>
         </CardContent>
@@ -124,14 +124,14 @@ export function ExpertVerificationStatusCard({
     <Card className="w-full max-w-2xl">
       <CardHeader className="text-center">
         <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center">
-            <Clock className="w-10 h-10 text-teal-600" />
+          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
+            <Clock className="w-10 h-10 text-blue-600" />
           </div>
         </div>
         <CardTitle className="text-2xl">전문가 인증 승인 대기중</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-center text-gray-700">
             전문가 인증 신청이 완료되었습니다.<br />
             관리자 승인 후 서비스를 이용하실 수 있습니다.
@@ -164,8 +164,8 @@ export function ExpertVerificationStatusCard({
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
-                <Clock className="w-5 h-5 text-teal-600" />
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
+                <Clock className="w-5 h-5 text-blue-600" />
               </div>
               <div className="flex-1 pt-1">
                 <p className="font-medium text-gray-900">관리자 승인 대기</p>

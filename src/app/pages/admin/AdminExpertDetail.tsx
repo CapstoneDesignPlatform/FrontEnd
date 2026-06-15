@@ -348,7 +348,7 @@ export function AdminExpertDetail() {
 
                 // 시트3: 입찰 의뢰 목록
                 const ws3 = XLSX.utils.aoa_to_sheet([
-                  ["의뢰코드", "공고명", "기업", "입찰가", "입찰일", "상태"],
+                  ["의뢰코드", "의뢰명", "기업", "입찰가", "입찰일", "상태"],
                   ...projects.map((p) => [
                     p.code,
                     p.title,
@@ -653,7 +653,7 @@ export function AdminExpertDetail() {
                       {statusHistory.map((item, index) => (
                         <tr
                           key={index}
-                          className={`hover:bg-teal-50 transition-colors ${index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+                          className={`hover:bg-blue-50 transition-colors ${index % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                         >
                           <td className="border-b border-r border-gray-200 px-2 py-1 whitespace-nowrap">
                             {item.date}
@@ -741,7 +741,7 @@ export function AdminExpertDetail() {
                               </div>
                               <div>
                                 <span className="font-medium">입찰가:</span>{" "}
-                                <span className="font-semibold text-[#009689]">
+                                <span className="font-semibold text-[#34499C]">
                                   {project.bidPrice}
                                 </span>
                               </div>
