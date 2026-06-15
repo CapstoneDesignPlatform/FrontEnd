@@ -99,7 +99,7 @@ export function CertificateCard({
             disabled={disabled}
           />
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-3">
             <VerificationTextField
               id={`${fieldIdPrefix}-number`}
               label="등록번호"
@@ -112,10 +112,20 @@ export function CertificateCard({
 
             <VerificationTextField
               id={`${fieldIdPrefix}-issue-date`}
-              label="유효기간"
+              label="발급일"
               type="date"
               value={certificate.issueDate}
               onChange={(value) => handleFieldChange("issueDate", value)}
+              required={isPrimary}
+              disabled={disabled}
+            />
+
+            <VerificationTextField
+              id={`${fieldIdPrefix}-expiry-date`}
+              label="유효기간"
+              type="date"
+              value={certificate.expiryDate}
+              onChange={(value) => handleFieldChange("expiryDate", value)}
               required={isPrimary}
               disabled={disabled}
             />

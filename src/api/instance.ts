@@ -1,18 +1,18 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import Cookies from 'js-cookie';
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import Cookies from "js-cookie";
 
-const JWT_TOKEN_KEY = 'ACCESS_TOKEN';
+const JWT_TOKEN_KEY = "ACCESS_TOKEN";
 
 export const instance: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_SERVER_URL,
+  baseURL: "",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   withCredentials: true,
 });
 
 export const userInstance = axios.create({
-  baseURL: '/api', 
+  baseURL: "/api",
   withCredentials: true,
 });
 

@@ -5,6 +5,7 @@ export interface VerificationCertificateData {
   type: string;
   number: string;
   issueDate: string;
+  expiryDate: string;
   name: string;
   file: File | null;
   fileId?: number;

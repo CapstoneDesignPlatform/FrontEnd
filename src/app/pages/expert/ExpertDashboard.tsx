@@ -210,6 +210,9 @@ function SelectedBidRow({
   onToggleContact: () => void;
 }) {
   const canViewContact = Boolean(bid.clientContact);
+  const detailPath = `/expert/jobs/${encodeURIComponent(
+    bid.announcementCode ?? String(bid.projectId),
+  )}`;
 
   return (
     <Fragment>
@@ -233,7 +236,7 @@ function SelectedBidRow({
               size="sm"
               className="h-7 px-2 text-xs"
             >
-              <Link to={`/expert/jobs/${bid.projectId}`}>상세</Link>
+              <Link to={detailPath}>상세</Link>
             </Button>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">

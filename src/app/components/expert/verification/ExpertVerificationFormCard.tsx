@@ -14,6 +14,7 @@ import type {
 import {
   MANAGEMENT_CONSULTANT_CERTIFICATE_TYPE,
   MULTIPLE_CERTIFICATE_REQUIRED_TYPE,
+  QUALIFICATION_CERTIFICATE_REQUIREMENTS,
   QUALIFICATION_TYPE_OPTIONS,
 } from "./verificationConstants";
 
@@ -114,6 +115,8 @@ function CertificateSection({
     qualificationType === MULTIPLE_CERTIFICATE_REQUIRED_TYPE
       ? [MANAGEMENT_CONSULTANT_CERTIFICATE_TYPE]
       : undefined;
+  const qualificationRequirement =
+    QUALIFICATION_CERTIFICATE_REQUIREMENTS[qualificationType];
 
   return (
     <section className="space-y-4">
@@ -141,9 +144,9 @@ function CertificateSection({
           onChange={onQualificationTypeChange}
           disabled={isPending}
         />
-        {qualificationType === MULTIPLE_CERTIFICATE_REQUIRED_TYPE ? (
+        {qualificationRequirement ? (
           <p className="mt-2 text-[12px] text-blue-700">
-            전문경영진단은 경영지도사(재무관리) 등록증을 2개 이상 등록해야 합니다.
+            {qualificationRequirement.helperText}
           </p>
         ) : null}
         {!qualificationType ? (

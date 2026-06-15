@@ -94,9 +94,14 @@ export function AdminFeeStats() {
   const [endDate, setEndDate] = useState("2026-04-30");
   const [viewType, setViewType] = useState<ViewType>("individual");
 
-  const totalCount = records.reduce((sum, r) => sum + r.count, 0);
-  const totalSupply = records.reduce((sum, r) => sum + r.supplyAmount, 0);
-  const totalVat = records.reduce((sum, r) => sum + r.vat, 0);
+  const filtered = records.filter((r) => {
+    if (startDate && r.processedAt < startDate) return false;
+    if (endDate && r.processedAt > endDate) return false;
+    return true;
+  });
+  const totalCount = filtered.reduce((sum, r) => sum + r.count, 0);
+  const totalSupply = filtered.reduce((sum, r) => sum + r.supplyAmount, 0);
+  const totalVat = filtered.reduce((sum, r) => sum + r.vat, 0);
 
   const handleExport = () => {
     import("xlsx").then((XLSX) => {
@@ -317,7 +322,7 @@ export function AdminFeeStats() {
                 </tr>
               </thead>
               <tbody>
-                {records.map((r, i) => (
+                {filtered.map((r, i) => (
                   <tr
                     key={r.id}
                     className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}

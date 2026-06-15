@@ -100,7 +100,15 @@ const records: MembershipRecord[] = [
 ];
 
 export function AdminMembershipManage() {
-  const [inputDate, setInputDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const filtered = records.filter((r) => {
+    if (r.paidAt === "-") return true;
+    if (startDate && r.paidAt < startDate) return false;
+    if (endDate && r.paidAt > endDate) return false;
+    return true;
+  });
 
   const handleExport = () => {
     import("xlsx").then((XLSX) => {
@@ -209,13 +217,18 @@ export function AdminMembershipManage() {
 
       {/* 입금일자 조회 */}
       <div className="flex items-center gap-3 bg-white border border-gray-200 rounded px-4 py-3">
-        <label className="text-xs font-medium whitespace-nowrap">
-          입금일자
-        </label>
+        <label className="text-xs font-medium whitespace-nowrap">기간</label>
         <Input
           type="date"
-          value={inputDate}
-          onChange={(e) => setInputDate(e.target.value)}
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="h-7 text-xs w-36"
+        />
+        <span className="text-gray-400 text-xs">~</span>
+        <Input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
           className="h-7 text-xs w-36"
         />
         <Button
@@ -263,7 +276,7 @@ export function AdminMembershipManage() {
               </tr>
             </thead>
             <tbody>
-              {records.map((r, i) => (
+              {filtered.map((r, i) => (
                 <tr
                   key={r.id}
                   className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}

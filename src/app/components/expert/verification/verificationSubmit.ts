@@ -3,10 +3,7 @@ import type {
   VerificationBusinessLicenseData,
   VerificationCertificateData,
 } from "./types";
-import {
-  MANAGEMENT_CONSULTANT_CERTIFICATE_TYPE,
-  MULTIPLE_CERTIFICATE_REQUIRED_TYPE,
-} from "./verificationConstants";
+import { QUALIFICATION_CERTIFICATE_REQUIREMENTS } from "./verificationConstants";
 
 interface ExpertVerificationFormValues {
   businessLicense: VerificationBusinessLicenseData;
@@ -23,6 +20,7 @@ export function isCertificateStarted(
       certificate.type.trim() ||
       certificate.number.trim() ||
       certificate.issueDate ||
+      certificate.expiryDate ||
       certificate.name.trim(),
   );
 }
@@ -33,9 +31,16 @@ export function validateExpertVerificationForm({
   qualificationType,
 }: ExpertVerificationFormValues) {
   const primaryCertificate = certificates[0];
+  const normalizedQualificationType = qualificationType.trim();
+  const qualificationRequirement =
+    QUALIFICATION_CERTIFICATE_REQUIREMENTS[normalizedQualificationType];
 
-  if (!qualificationType.trim()) {
+  if (!normalizedQualificationType) {
     return "자격 종류를 선택해주세요.";
+  }
+
+  if (!qualificationRequirement) {
+    return "지원하지 않는 자격 종류입니다. 다시 선택해주세요.";
   }
 
   if (!primaryCertificate?.file && !primaryCertificate?.fileId) {
@@ -55,6 +60,10 @@ export function validateExpertVerificationForm({
   }
 
   if (!primaryCertificate.issueDate) {
+    return "발급일을 입력해주세요.";
+  }
+
+  if (!primaryCertificate.expiryDate) {
     return "유효기간을 입력해주세요.";
   }
 
@@ -75,13 +84,6 @@ export function validateExpertVerificationForm({
   }
 
   const startedCertificates = certificates.filter(isCertificateStarted);
-  const needsMultipleCertificates =
-    qualificationType.trim() === MULTIPLE_CERTIFICATE_REQUIRED_TYPE;
-
-  if (needsMultipleCertificates && startedCertificates.length < 2) {
-    return "전문경영진단은 등록증을 2개 이상 등록해야 합니다.";
-  }
-
   const incompleteCertificate = certificates.find(
     (certificate) =>
       isCertificateStarted(certificate) &&
@@ -89,6 +91,7 @@ export function validateExpertVerificationForm({
         !certificate.type.trim() ||
         !certificate.number.trim() ||
         !certificate.issueDate ||
+        !certificate.expiryDate ||
         !certificate.name.trim()),
   );
 
@@ -96,14 +99,13 @@ export function validateExpertVerificationForm({
     return "추가된 등록증의 필수 정보를 모두 입력해주세요.";
   }
 
-  if (
-    needsMultipleCertificates &&
-    startedCertificates.some(
-      (certificate) =>
-        certificate.type.trim() !== MANAGEMENT_CONSULTANT_CERTIFICATE_TYPE,
-    )
-  ) {
-    return "전문경영진단은 경영지도사(재무관리) 등록증만 2개 이상 등록할 수 있습니다.";
+  const matchingCertificateCount = startedCertificates.filter(
+    (certificate) =>
+      certificate.type.trim() === qualificationRequirement.certificateType,
+  ).length;
+
+  if (matchingCertificateCount < qualificationRequirement.minCount) {
+    return qualificationRequirement.message;
   }
 
   return null;
@@ -131,6 +133,7 @@ export function buildSubmitVerificationPayload({
         licenseType: certificate.type,
         licenseNumber: certificate.number,
         issueDate: certificate.issueDate,
+        expiryDate: certificate.expiryDate,
         file: certificate.file,
         fileId: certificate.fileId,
         holderName: certificate.name || undefined,

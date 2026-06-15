@@ -254,7 +254,7 @@ function MyBidTable({ bids, getStatusColor, onCopyContact }: MyBidTableProps) {
         <tbody className="divide-y divide-slate-100 bg-white">
           {bids.map((bid) => {
             const canViewContact = bid.status === "선정됨" && bid.clientContact;
-            const canEditBid = bid.status === "대기 중";
+            const canEditBid = false;
             const isContactOpen = expandedContactBidId === bid.id;
 
             return (
@@ -312,7 +312,11 @@ function MyBidTable({ bids, getStatusColor, onCopyContact }: MyBidTableProps) {
                         size="sm"
                         className="h-7 px-2 text-xs"
                       >
-                        <Link to={`/expert/jobs/${bid.projectId}/bid`}>
+                        <Link
+                          to={`/expert/jobs/${encodeURIComponent(
+                            bid.announcementCode ?? String(bid.projectId),
+                          )}/bid`}
+                        >
                           입찰 수정
                         </Link>
                       </Button>

@@ -219,13 +219,13 @@ export function ProjectListExpert() {
                 실시간 의뢰 목록
               </CardTitle>
               <CardDescription>
-                "입찰 가능" 상태에서만 입찰이 가능하며, 이미 입찰한 경우 수정이 가능합니다.
+                "입찰 가능" 상태에서만 입찰할 수 있으며, 이미 입찰한 공고는 완료 상태로 표시됩니다.
               </CardDescription>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2 text-xs text-slate-500">
                 <SlidersHorizontal className="h-4 w-4" />
-                <span className="md:hidden">핵심 열만 표시됩니다.</span>
+                <span className="md:hidden">유형, 핵심조건, 자산, 상태, 액션만 표시됩니다.</span>
                 <span className="hidden md:inline">
                   원하는 기준으로 의뢰를 정렬할 수 있습니다.
                 </span>

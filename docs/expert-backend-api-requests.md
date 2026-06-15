@@ -1,6 +1,6 @@
-# 전문가 프론트 기준 백엔드 API 작업 요청서
+# 전문가 API 백엔드 논의 필요 항목
 
-이 문서는 현재 전문가 프론트 플로우와 `0511 전문가 API 명세서`를 기준으로 백엔드에 확인하거나 추가 요청해야 할 API 작업을 정리한 문서입니다.
+이 문서는 `Bid_BE4` 기준으로 프론트에서 억지로 맞추기보다 백엔드와 정책을 먼저 확정해야 하는 항목을 정리합니다.
 
 ## 전제
 
@@ -21,22 +21,62 @@
 ### 현재 프론트 사용 API
 
 ```http
-POST /api/expert/job-posts/{job_post_id}/bids
-Content-Type: application/json
+GET /api/expert/me/verification-status
 ```
 
-Request:
+현재 응답의 `verification_request.status`는 `is_verified` 기반 boolean입니다.
 
 ```json
 {
-  "bid_amount": 3000000
+  "verification_request": {
+    "id": 1,
+    "status": false
+  }
 }
 ```
 
-### 입찰 수정 API
+프론트는 임시로 아래처럼 해석하고 있습니다.
+
+| 백엔드 값 | 프론트 임시 해석 |
+| --- | --- |
+| `status: true` | `APPROVED` |
+| `status: false`, `id: null` | `NOT_APPLIED` |
+| `status: false`, `id 있음` | `PENDING` |
+
+문제는 `REJECTED`를 구분할 수 없다는 점입니다. 관리자 승인/반려 플로우까지 사용할 경우 아래처럼 enum 상태를 별도 필드로 내려주는 방향을 요청합니다.
+
+```json
+{
+  "verification_request": {
+    "id": 1,
+    "status": false,
+    "verification_status": "REJECTED",
+    "rejected_reason": "서류 식별이 어렵습니다."
+  }
+}
+```
+
+요청:
+
+- `verification_status`: `NOT_SUBMITTED | PENDING | APPROVED | REJECTED`
+- 가능하면 프론트 표준값에 맞춰 `NOT_SUBMITTED` 대신 `NOT_APPLIED`도 검토
+- `REJECTED`일 때 반려 사유 필드 제공
+
+## 2. 입찰 수정 API 제공 여부 확정 필요
+
+현재 BE4에는 입찰 생성 API만 있습니다.
 
 ```http
-PATCH /api/expert/job-posts/{job_post_id}/bids
+POST /api/expert/job-posts/{announcementCode}/bids
+```
+
+프론트는 현재 중복 제출을 막기 위해 이미 입찰한 공고에서는 `입찰 완료`로 표시하고 수정 버튼을 비활성화했습니다.
+
+서비스 정책상 입찰가 수정이 필요하다면 아래 API를 백엔드에서 제공해야 합니다.
+
+```http
+PATCH /api/expert/job-posts/{announcementCode}/bids
+Content-Type: application/json
 ```
 
 Request:
@@ -61,7 +101,7 @@ Request:
 - 동일 전문가의 중복 입찰 정책 확정
 - 입찰 금액은 0보다 큰 숫자만 허용
 
-## 2. 내 입찰 목록 API 명세 확정 필요
+## 3. 전문가 프로필 응답 확장 여부 결정 필요
 
 현재 프론트의 `내 입찰 목록` 페이지와 `마이페이지 > 선정된 의뢰 목록`에서 사용합니다.
 
@@ -122,13 +162,8 @@ GET /api/expert/me/bids
 
 ```json
 {
-  "has_my_bid": true,
-  "my_bid": {
-    "id": 1,
-    "bid_amount": 3000000,
-    "status": "PENDING",
-    "submitted_at": "2026-05-11T10:30:00"
-  }
+  "issue_date": "2024-01-01",
+  "expiry_date": "2029-01-01"
 }
 ```
 

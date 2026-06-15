@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import { Download } from "lucide-react";
-import { exportToExcel } from "../../utils/exportExcel";
 
 interface NotificationMember {
   id: number;
@@ -13,11 +13,16 @@ interface NotificationMember {
   email: string;
   grade: "special" | "business" | "free";
   memberStatus: "active" | "suspended";
-  appliedCount: number;
   usedCount: number;
   remainingCount: number;
   serviceStatus: "continue" | "suspended";
 }
+
+const GRADE_LIMIT: Record<string, number | "무제한"> = {
+  special: "무제한",
+  business: 10,
+  free: 3,
+};
 
 export function AdminNotificationManage() {
   const [members, setMembers] = useState<NotificationMember[]>([
@@ -30,7 +35,6 @@ export function AdminNotificationManage() {
       email: "expert1@example.com",
       grade: "special",
       memberStatus: "active",
-      appliedCount: 10,
       usedCount: 7,
       remainingCount: 3,
       serviceStatus: "continue",
@@ -44,7 +48,6 @@ export function AdminNotificationManage() {
       email: "expert2@example.com",
       grade: "business",
       memberStatus: "active",
-      appliedCount: 20,
       usedCount: 15,
       remainingCount: 5,
       serviceStatus: "suspended",
@@ -58,7 +61,6 @@ export function AdminNotificationManage() {
       email: "expert3@example.com",
       grade: "free",
       memberStatus: "active",
-      appliedCount: 5,
       usedCount: 5,
       remainingCount: 0,
       serviceStatus: "continue",
@@ -72,7 +74,6 @@ export function AdminNotificationManage() {
       email: "expert4@example.com",
       grade: "business",
       memberStatus: "suspended",
-      appliedCount: 8,
       usedCount: 3,
       remainingCount: 5,
       serviceStatus: "suspended",
@@ -86,12 +87,14 @@ export function AdminNotificationManage() {
       email: "expert5@example.com",
       grade: "special",
       memberStatus: "active",
-      appliedCount: 15,
       usedCount: 10,
       remainingCount: 5,
       serviceStatus: "continue",
     },
   ]);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [addCounts, setAddCounts] = useState<Record<number, string>>({});
 
   const handleToggleService = (id: number) => {
     setMembers((prev) =>
@@ -107,13 +110,22 @@ export function AdminNotificationManage() {
     );
   };
 
+  const handleSave = () => {
+    setMembers((prev) =>
+      prev.map((m) => {
+        const add = parseInt(addCounts[m.id] ?? "0") || 0;
+        return { ...m, remainingCount: m.remainingCount + add };
+      }),
+    );
+    setAddCounts({});
+    setIsEditing(false);
+  };
+
   const handleExport = () => {
     import("xlsx").then((XLSX) => {
       const gradeLabel = (g: string) =>
         g === "special" ? "스페셜" : g === "business" ? "비즈니스" : "무료";
       const wb = XLSX.utils.book_new();
-
-      // 시트1: 전체 관리 목록 (모든 컬럼)
       const ws1 = XLSX.utils.aoa_to_sheet([
         [
           "번호",
@@ -136,7 +148,7 @@ export function AdminNotificationManage() {
           m.businessNumber,
           m.email,
           gradeLabel(m.grade),
-          m.appliedCount,
+          GRADE_LIMIT[m.grade],
           m.usedCount,
           m.remainingCount,
           m.serviceStatus === "continue" ? "계속" : "정지",
@@ -146,28 +158,6 @@ export function AdminNotificationManage() {
         wch,
       }));
       XLSX.utils.book_append_sheet(wb, ws1, "사용관리목록");
-
-      // 시트2: 요약 통계
-      const ws2 = XLSX.utils.aoa_to_sheet([
-        ["항목", "값"],
-        ["전체 회원", `${members.length}명`],
-        ["서비스 계속", `${continueCount}명`],
-        ["서비스 정지", `${suspendedCount}명`],
-        ["총 신청건수", members.reduce((s, m) => s + m.appliedCount, 0)],
-        ["총 사용건수", members.reduce((s, m) => s + m.usedCount, 0)],
-        ["총 잔여건수", members.reduce((s, m) => s + m.remainingCount, 0)],
-        ["", ""],
-        ["등급별 현황", ""],
-        ["스페셜", `${members.filter((m) => m.grade === "special").length}명`],
-        [
-          "비즈니스",
-          `${members.filter((m) => m.grade === "business").length}명`,
-        ],
-        ["무료", `${members.filter((m) => m.grade === "free").length}명`],
-      ]);
-      ws2["!cols"] = [{ wch: 18 }, { wch: 15 }];
-      XLSX.utils.book_append_sheet(wb, ws2, "요약통계");
-
       XLSX.writeFile(
         wb,
         `알림서비스사용관리_${new Date().toISOString().slice(0, 10)}.xlsx`,
@@ -238,6 +228,7 @@ export function AdminNotificationManage() {
             <thead>
               <tr className="bg-gray-100">
                 {[
+                  ...(isEditing ? ["추가건수"] : []),
                   "번호",
                   "회원번호",
                   "대표자",
@@ -266,6 +257,23 @@ export function AdminNotificationManage() {
                   key={m.id}
                   className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                 >
+                  {isEditing && (
+                    <td className="border-b border-r border-gray-200 px-2 py-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="0"
+                        value={addCounts[m.id] ?? ""}
+                        onChange={(e) =>
+                          setAddCounts((prev) => ({
+                            ...prev,
+                            [m.id]: e.target.value,
+                          }))
+                        }
+                        className="h-6 text-xs w-16"
+                      />
+                    </td>
+                  )}
                   <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
                     {i + 1}
                   </td>
@@ -296,9 +304,8 @@ export function AdminNotificationManage() {
                     </span>
                   </td>
                   <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
-                    {m.appliedCount}
+                    {GRADE_LIMIT[m.grade]}
                   </td>
-
                   <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
                     {m.usedCount}
                   </td>
@@ -326,6 +333,28 @@ export function AdminNotificationManage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* 수정/저장 버튼 */}
+      <div className="flex justify-end gap-2 pt-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs px-6"
+          onClick={() => {
+            setIsEditing(!isEditing);
+            setAddCounts({});
+          }}
+        >
+          {isEditing ? "취소" : "수정"}
+        </Button>
+        <Button
+          size="sm"
+          className="bg-[#009689] hover:bg-[#007d71] text-xs px-6"
+          onClick={handleSave}
+        >
+          저장
+        </Button>
       </div>
     </div>
   );

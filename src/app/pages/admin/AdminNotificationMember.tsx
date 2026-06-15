@@ -287,6 +287,17 @@ export function AdminNotificationMember() {
           </table>
         </div>
       </div>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button variant="outline" size="sm" className="text-xs px-6">
+          수정
+        </Button>
+        <Button
+          size="sm"
+          className="bg-[#009689] hover:bg-[#007d71] text-xs px-6"
+        >
+          저장
+        </Button>
+      </div>
     </div>
   );
 }

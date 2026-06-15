@@ -8,6 +8,7 @@ import { Checkbox } from "../components/ui/checkbox";
 import { CheckCircle2, User, FileText, X, Eye, EyeOff } from "lucide-react";
 import { TERMS_DATA, TermType } from "../../data/terms";
 import { toast } from "sonner";
+import { persistAuthTokens } from "../../api/authTokens";
 import { userInstance } from "../../api/instance";
 
 // ─── 타입 정의 ────────────────────────────────────────────────────────────
@@ -96,7 +97,14 @@ export function Register() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [agreements, setAgreements] = useState({ termsOfService: false, privacyPolicy: false, marketing: false });
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "", phone: "" });
+  const [formData, setFormData] = useState({
+    businessName: "",
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+  });
 
   useEffect(() => {
     if (isSocial) {
@@ -121,17 +129,36 @@ export function Register() {
     if (!userType) return;
     setIsLoading(true);
     try {
+      if (userType === "expert" && !isSocialSignup && !formData.businessName.trim()) {
+        toast.error("전문가 회원가입은 상호명이 필요합니다.");
+        return;
+      }
+
       const payload = {
         userType: userType.toUpperCase() as "CLIENT" | "EXPERT",
         name: isSocialSignup ? pendingSocial?.name : formData.name,
         email: isSocialSignup ? pendingSocial?.email : formData.email,
         phone: isSocialSignup ? "01000000000" : formData.phone,
         password: isSocialSignup ? `SOCIAL_${pendingSocial?.socialId}` : formData.password,
+        ...(userType === "expert"
+          ? {
+              businessName:
+                formData.businessName || pendingSocial?.name || formData.name,
+            }
+          : {}),
       };
 
       const res = await userInstance.post("/auth/signup", payload);
       if (res.data.success) {
+        const hasAccessToken = persistAuthTokens(res.data.data ?? res.data);
         if (isSocialSignup) sessionStorage.removeItem("pendingSocialUser");
+
+        if (userType === "expert" && !hasAccessToken) {
+          toast.success("회원가입이 완료되었습니다. 로그인 후 전문가 인증을 진행해주세요.");
+          navigate("/login?next=/expert/verification/apply");
+          return;
+        }
+
         setUser({ type: userType, name: payload.name || "" });
         setStep(4);
       }
@@ -246,12 +273,25 @@ export function Register() {
             {/* 3단계: 정보 입력 */}
             {step === 3 && !isSocial && (
               <form onSubmit={(e) => { e.preventDefault(); handleSignupSubmit(false); }} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">이름</Label>
-                  <Input id="name" name="name" placeholder="홍길동" value={formData.name} onChange={handleChange} required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">이메일</Label>
+	                <div className="space-y-2">
+	                  <Label htmlFor="name">이름</Label>
+	                  <Input id="name" name="name" placeholder="홍길동" value={formData.name} onChange={handleChange} required />
+	                </div>
+                  {userType === "expert" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="businessName">상호명</Label>
+                      <Input
+                        id="businessName"
+                        name="businessName"
+                        placeholder="케이법무법인"
+                        value={formData.businessName}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  )}
+	                <div className="space-y-2">
+	                  <Label htmlFor="email">이메일</Label>
                   <Input id="email" name="email" type="email" placeholder="example@email.com" value={formData.email} onChange={handleChange} required />
                 </div>
                 <div className="space-y-2">

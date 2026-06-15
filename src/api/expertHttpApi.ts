@@ -7,11 +7,14 @@ import type {
   MyBidsResponseDto,
 } from "../types/expert";
 import { apiClient } from "./apiClient";
+import { persistAuthTokens } from "./authTokens";
 import {
   mapBidDtoToVM,
+  mapCreateBidResponseDtoToVM,
   mapCreateBidRequestToDto,
   mapExpertProfileDtoToVM,
   mapExpertProfileVMToUpdateDto,
+  mapExpertSignupResponseToProfileVM,
   mapExpertSignupRequestToDto,
   mapJobPostDetailDtoToVM,
   mapJobPostListDtoToVM,
@@ -21,12 +24,21 @@ import type { ExpertApi } from "./expertApiTypes";
 export const expertHttpApi: ExpertApi = {
   async registerExpert(payload) {
     const dto = mapExpertSignupRequestToDto(payload);
-    const response = await apiClient.post<ExpertSignupResponseDto>(
-      "/auth/signup/expert",
-      { body: dto },
-    );
+    const response =
+      (await apiClient.post<ExpertSignupResponseDto | undefined>(
+        "/auth/signup",
+        { body: dto },
+      )) ?? {};
+    const hasAccessToken = persistAuthTokens(response);
 
-    return mapExpertProfileDtoToVM(response);
+    return {
+      hasAccessToken,
+      loginRequired:
+        !hasAccessToken ||
+        response.loginRequired === true ||
+        response.login_required === true,
+      profile: mapExpertSignupResponseToProfileVM(response, payload),
+    };
   },
 
   async getExpertJobs(query = { page: 1, size: 20, sort: "posted_at_desc" as const }) {
@@ -52,21 +64,16 @@ export const expertHttpApi: ExpertApi = {
   async createBid(payload) {
     const dto = mapCreateBidRequestToDto(payload);
     const response = await apiClient.post<CreateBidResponseDto>(
-      `/expert/job-posts/${payload.jobPostId}/bids`,
+      `/expert/job-posts/${encodeURIComponent(payload.announcementCode)}/bids`,
       { body: { bid_amount: dto.bid_amount } },
     );
 
-    return mapBidDtoToVM(response.bid);
+    return mapCreateBidResponseDtoToVM(response);
   },
 
   async updateBid(payload) {
-    const dto = mapCreateBidRequestToDto(payload);
-    const response = await apiClient.patch<CreateBidResponseDto>(
-      `/expert/job-posts/${payload.jobPostId}/bids`,
-      { body: { bid_amount: dto.bid_amount } },
-    );
-
-    return mapBidDtoToVM(response.bid);
+    void payload;
+    throw new Error("입찰 수정 API는 아직 백엔드에서 제공되지 않습니다.");
   },
 
   async getMyBids() {

@@ -45,6 +45,7 @@ export function ProjectDetailExpert() {
   const hasMyBid = project.hasMyBid === true;
   const bidStatus = getExpertBidAvailability(project);
   const canBid = canBidOnExpertJob(project);
+  const bidPath = `/expert/jobs/${encodeURIComponent(project.announcementCode)}/bid`;
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -82,12 +83,12 @@ export function ProjectDetailExpert() {
           <Button asChild variant="outline" className="h-8 px-3 text-xs md:h-9 md:text-sm">
             <Link to="/expert/jobs">목록으로</Link>
           </Button>
-          {canBid ? (
+          {canBid && !hasMyBid ? (
             <Button
               className="h-8 bg-blue-600 px-3 text-xs hover:bg-blue-700 md:h-9 md:text-sm"
-              onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
+              onClick={() => navigate(bidPath)}
             >
-              {hasMyBid ? "입찰 수정" : "입찰 시작"}
+              입찰 시작
             </Button>
           ) : (
             <Button
@@ -96,7 +97,7 @@ export function ProjectDetailExpert() {
               className="h-8 px-3 text-xs md:h-9 md:text-sm"
               disabled
             >
-              입찰 마감
+              {hasMyBid ? "입찰 완료" : "입찰 마감"}
             </Button>
           )}
         </div>
@@ -226,13 +227,13 @@ export function ProjectDetailExpert() {
             </CardContent>
           </Card>
 
-          {canBid ? (
+          {canBid && !hasMyBid ? (
             <Button
               className="h-9 w-full bg-blue-600 text-sm hover:bg-blue-700 md:h-10 md:text-base"
               size="lg"
-              onClick={() => navigate(`/expert/jobs/${project.id}/bid`)}
+              onClick={() => navigate(bidPath)}
             >
-              {hasMyBid ? "입찰 수정하기" : "지금 입찰하기"}
+              지금 입찰하기
             </Button>
           ) : (
             <Button
@@ -242,7 +243,7 @@ export function ProjectDetailExpert() {
               variant="outline"
               disabled
             >
-              입찰 마감
+              {hasMyBid ? "입찰 완료" : "입찰 마감"}
             </Button>
           )}
         </div>

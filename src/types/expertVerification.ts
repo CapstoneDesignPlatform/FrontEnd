@@ -4,6 +4,11 @@ export type ExpertVerificationStatus =
   | "APPROVED"
   | "REJECTED";
 
+export type ExpertVerificationStatusDto =
+  | ExpertVerificationStatus
+  | "NOT_SUBMITTED"
+  | boolean;
+
 export interface ExpertVerificationRequest {
   id: number | null;
   expertProfileId?: number;
@@ -12,7 +17,6 @@ export interface ExpertVerificationRequest {
   licenseNumber: string | null;
   issueDate: string | null;
   companyName: string | null;
-  portfolio?: string;
   submittedAt?: string;
   reviewedAt?: string;
   rejectedReason?: string;
@@ -32,7 +36,7 @@ export interface ExpertVerificationFile {
   verificationRequestId: number;
   fileId: number;
   fileName: string;
-  fileType: "LICENSE" | "BUSINESS_LICENSE" | "PORTFOLIO" | "ETC";
+  fileType: "LICENSE" | "BUSINESS_LICENSE" | "ETC";
   uploadedAt: string;
 }
 
@@ -64,6 +68,7 @@ export interface UploadFileResponseDto {
 export interface RegisterCertificateRequestDto {
   certificate_name: string;
   certificate_number: string;
+  expiry_date: string;
   issue_date: string;
   owner_name?: string;
   file_id: number;
@@ -76,6 +81,7 @@ export interface RegisterCertificateResponseDto {
   certificate_type_code: string;
   certificate_number: string;
   issue_date: string;
+  expiry_date: string;
   expired_at: string | null;
   owner_name: string | null;
 }
@@ -98,14 +104,14 @@ export interface RegisterBusinessRegistrationResponseDto {
 export interface VerificationRequestDto {
   id: number | null;
   expert_profile_id?: number;
-  status: ExpertVerificationStatus;
-  license_type: string | null;
-  license_number: string | null;
-  issue_date: string | null;
-  company_name: string | null;
-  portfolio?: string | null;
+  status: ExpertVerificationStatusDto;
+  specialty?: string | null;
+  license_number?: string | null;
+  issue_date?: string | null;
+  company_name?: string | null;
   certificates?: VerificationCertificateDto[];
   business_license?: VerificationBusinessLicenseDto | null;
+  business_registration_info?: VerificationBusinessLicenseDto | null;
   submitted_at?: string | null;
   reviewed_at?: string | null;
   rejected_reason?: string | null;
@@ -116,11 +122,12 @@ export interface ExpertVerificationStatusResponseDto {
 }
 
 export interface VerificationCertificateDto {
-  license_type?: string;
   license_number?: string;
   certificate_name?: string;
   certificate_number?: string;
-  issue_date: string;
+  issue_date?: string;
+  expiry_date?: string | null;
+  expired_at?: string | null;
   holder_name?: string;
   owner_name?: string;
   file_id?: number;
@@ -139,11 +146,7 @@ export interface VerificationBusinessLicenseDto {
 }
 
 export interface CreateVerificationRequestDto {
-  license_type: string;
-  license_number: string;
-  issue_date: string;
-  company_name: string;
-  portfolio?: string;
+  specialty: string;
 }
 
 export interface ExpertVerificationStatusVM {
@@ -154,7 +157,6 @@ export interface ExpertVerificationStatusVM {
   licenseNumber: string;
   issueDate: string;
   companyName: string;
-  portfolio?: string;
   certificates?: VerificationCertificateVM[];
   businessLicense?: VerificationBusinessLicenseVM;
   submittedAt?: string;
@@ -166,6 +168,7 @@ export interface VerificationCertificateVM {
   licenseType: string;
   licenseNumber: string;
   issueDate: string;
+  expiryDate: string;
   fileId?: number;
   holderName?: string;
   fileName?: string;
@@ -183,6 +186,7 @@ export interface SubmitExpertVerificationCertificate {
   licenseType: string;
   licenseNumber: string;
   issueDate: string;
+  expiryDate: string;
   file?: File | null;
   fileId?: number;
   holderName?: string;
@@ -203,7 +207,6 @@ export interface SubmitExpertVerificationRequest {
   licenseNumber: string;
   issueDate: string;
   companyName: string;
-  portfolio?: string;
   certificates?: SubmitExpertVerificationCertificate[];
   businessLicense?: SubmitExpertVerificationBusinessLicense;
 }

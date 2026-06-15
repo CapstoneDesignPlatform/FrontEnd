@@ -23,8 +23,18 @@ import {
   MapPin,
   IdCard,
 } from "lucide-react";
-import { useState } from "react";
-import { exportToExcel } from "../../utils/exportExcel";
+import { useState, useEffect } from "react";
+import {
+  getExpertDetail,
+  getExpertCertificates,
+  getExpertBusinessInfo,
+  updateExpertVerificationStatus,
+} from "../../../api/admin/expertApi";
+import type {
+  AdminExpertDetail as ExpertDetailType,
+  AdminExpertCertificate,
+  AdminExpertBusinessInfo,
+} from "../../../api/admin/expertApi";
 
 interface PersonalInfo {
   name: string;
@@ -296,26 +306,60 @@ export function AdminExpertApproval() {
 
   const expert = allExperts.find((e) => e.id === id) ?? allExperts[0];
 
-  const handleApprove = () => {
+  const [apiDetail, setApiDetail] = useState<ExpertDetailType | null>(null);
+  const [apiCertificates, setApiCertificates] = useState<
+    AdminExpertCertificate[]
+  >([]);
+  const [apiBusinessInfo, setApiBusinessInfo] =
+    useState<AdminExpertBusinessInfo | null>(null);
+
+  useEffect(() => {
+    const userId = Number(id);
+    if (!userId) return;
+    Promise.all([
+      getExpertDetail(userId),
+      getExpertCertificates(userId),
+      getExpertBusinessInfo(userId).catch(() => ({ data: null })),
+    ])
+      .then(([detailRes, certRes, bizRes]) => {
+        setApiDetail(detailRes.data);
+        setApiCertificates(certRes.data ?? []);
+        setApiBusinessInfo(bizRes.data);
+      })
+      .catch(() => {});
+  }, [id]);
+
+  const handleApprove = async () => {
+    if (
+      !confirm(
+        `${apiDetail?.email ?? expert.personalInfo.name} 전문가를 승인하시겠습니까?`,
+      )
+    )
+      return;
     setIsProcessing(true);
-    setTimeout(() => {
-      alert(`${expert.personalInfo.name} 전문가를 승인했습니다.`);
-      setIsProcessing(false);
+    try {
+      await updateExpertVerificationStatus(Number(id), "APPROVED");
+      alert("승인이 완료되었습니다.");
       navigate("/admin/experts");
-    }, 1000);
+    } catch {
+      alert("승인 처리 중 오류가 발생했습니다.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleReject = () => {
-    const reason = prompt("거절 사유를 입력해주세요:");
-    if (reason) {
-      setIsProcessing(true);
-      setTimeout(() => {
-        alert(
-          `${expert.personalInfo.name} 전문가를 거절했습니다.\n사유: ${reason}`,
-        );
-        setIsProcessing(false);
-        navigate("/admin/experts");
-      }, 1000);
+  const handleReject = async () => {
+    const reason = prompt("반려 사유를 입력해주세요:");
+    if (!reason) return;
+    setIsProcessing(true);
+    try {
+      await updateExpertVerificationStatus(Number(id), "REJECTED", reason);
+      alert("반려 처리가 완료되었습니다.");
+      navigate("/admin/experts");
+    } catch {
+      alert("반려 처리 중 오류가 발생했습니다.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
