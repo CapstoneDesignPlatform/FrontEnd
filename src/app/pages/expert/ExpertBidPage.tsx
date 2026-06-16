@@ -196,18 +196,6 @@ export function ExpertBidPage() {
         </div>
       ) : null}
 
-      {isEditingBid ? (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-          <div>
-            <p className="font-semibold text-amber-950">이미 입찰한 의뢰입니다.</p>
-            <p className="mt-1">
-              마감된 의뢰는 입찰을 새로 제출하거나 기존 입찰을 수정할 수 없습니다.
-            </p>
-          </div>
-        </div>
-      ) : null}
-
       <form onSubmit={handleSubmit} className="space-y-5">
         <Card className="border-slate-200 shadow-sm">
           <CardHeader>
