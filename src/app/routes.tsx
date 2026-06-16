@@ -266,10 +266,16 @@ const adminExpertDetailPage = page(
   () => import("./pages/admin/AdminExpertDetail"),
   ({ AdminExpertDetail }) => AdminExpertDetail,
 );
+
 const adminCommunityPage = page(
   () => import("./pages/admin/AdminCommunity"),
   ({ AdminCommunity }) => AdminCommunity,
 );
+const adminCommunityDetailPage = page(
+  () => import("./pages/admin/AdminCommunityDetail"),
+  ({ AdminCommunityDetail }) => AdminCommunityDetail,
+);
+
 const adminClientListPage = page(
   () => import("./pages/admin/AdminClientList"),
   ({ AdminClientList }) => AdminClientList,
@@ -400,6 +406,7 @@ export const router = createBrowserRouter([
           { path: "experts/approval/:id", lazy: adminExpertApprovalPage },
           { path: "experts/detail/:id", lazy: adminExpertDetailPage },
           { path: "community", lazy: adminCommunityPage },
+          { path: "community/:id", lazy: adminCommunityDetailPage },
           { path: "clients", lazy: adminClientListPage },
           { path: "clients/:id", lazy: adminClientDetailPage },
           { path: "settings", lazy: adminSettingsPage },

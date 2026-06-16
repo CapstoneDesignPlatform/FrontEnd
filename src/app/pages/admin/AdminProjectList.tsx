@@ -6,7 +6,8 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Download } from "lucide-react";
-import { exportToExcel } from "../../utils/exportExcel";
+
+import { downloadAnnouncementListExcel } from "../../../api/admin/excelApi";
 
 type ProjectStatus =
   | "all"
@@ -134,79 +135,7 @@ export function AdminProjectList() {
     return true;
   });
 
-  const handleExport = () => {
-    import("xlsx").then((XLSX) => {
-      const wb = XLSX.utils.book_new();
-
-      // 시트1: 현재 필터 적용된 목록
-      const ws1 = XLSX.utils.aoa_to_sheet([
-        [
-          "의뢰번호",
-          "의뢰인",
-          "대표자",
-          "사업자",
-          "연락처",
-          "구분",
-          "의뢰 내용",
-          "상태",
-          "입찰",
-          "종료상태",
-        ],
-        ...filtered.map((p) => [
-          p.code,
-          p.clientName,
-          p.company,
-          "-",
-          "-",
-          p.clientType === "member" ? "회원" : "비회원",
-          p.title,
-          statusMap[p.status].label,
-          p.bidCount,
-          "-",
-        ]),
-      ]);
-      ws1["!cols"] = [20, 12, 15, 14, 14, 8, 30, 10, 8, 10].map((wch) => ({
-        wch,
-      }));
-      XLSX.utils.book_append_sheet(wb, ws1, "의뢰현황목록");
-
-      // 시트2: 상태별 집계
-      const statusSummary = statusOptions
-        .filter((s) => s.value !== "all")
-        .map((s) => [
-          s.label,
-          allProjects.filter((p) => p.status === s.value).length,
-          allProjects.filter(
-            (p) => p.status === s.value && p.clientType === "member",
-          ).length,
-          allProjects.filter(
-            (p) => p.status === s.value && p.clientType === "guest",
-          ).length,
-          allProjects
-            .filter((p) => p.status === s.value)
-            .reduce((sum, p) => sum + p.bidCount, 0),
-        ]);
-      const ws2 = XLSX.utils.aoa_to_sheet([
-        ["상태", "건수", "회원", "비회원", "총입찰수"],
-        ...statusSummary,
-        [
-          "합계",
-          allProjects.length,
-          allProjects.filter((p) => p.clientType === "member").length,
-          allProjects.filter((p) => p.clientType === "guest").length,
-          allProjects.reduce((sum, p) => sum + p.bidCount, 0),
-        ],
-      ]);
-      ws2["!cols"] = [12, 8, 8, 8, 10].map((wch) => ({ wch }));
-      XLSX.utils.book_append_sheet(wb, ws2, "상태별집계");
-
-      XLSX.writeFile(
-        wb,
-        `의뢰현황_${new Date().toISOString().slice(0, 10)}.xlsx`,
-      );
-    });
-  };
-
+  const handleExport = () => downloadAnnouncementListExcel();
   return (
     <div className="space-y-3">
       {/* 헤더 */}

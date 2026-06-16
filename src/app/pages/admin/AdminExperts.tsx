@@ -4,6 +4,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Download } from "lucide-react";
 import { getExpertList } from "../../../api/admin/expertApi";
+import { downloadExpertListExcel } from "../../../api/admin/excelApi";
 
 interface Expert {
   id: number;
@@ -114,49 +115,7 @@ export function AdminExperts() {
     return true;
   });
 
-  const handleExport = () => {
-    import("xlsx").then((XLSX) => {
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet([
-        [
-          "회원번호",
-          "업체명",
-          "평점",
-          "대표자명",
-          "연락처",
-          "이메일",
-          "자격증",
-          "사업자등록번호",
-          "등급",
-          "신청시작일",
-          "신청마감일",
-          "상태",
-        ],
-        ...filtered.map((e) => [
-          e.memberNumber,
-          e.company,
-          e.rating > 0 ? e.rating.toFixed(1) : "-",
-          e.representative,
-          e.phone,
-          e.email,
-          e.license,
-          e.businessNumber,
-          gradeMap[e.grade],
-          e.startDate ?? "-",
-          e.endDate ?? "-",
-          statusMap[e.status].label,
-        ]),
-      ]);
-      ws["!cols"] = [15, 18, 6, 10, 14, 22, 12, 16, 10, 12, 12, 8].map(
-        (wch) => ({ wch }),
-      );
-      XLSX.utils.book_append_sheet(wb, ws, "전문가회원관리");
-      XLSX.writeFile(
-        wb,
-        `전문가회원관리_${new Date().toISOString().slice(0, 10)}.xlsx`,
-      );
-    });
-  };
+  const handleExport = () => downloadExpertListExcel();
 
   if (loading)
     return (

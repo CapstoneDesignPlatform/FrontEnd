@@ -2,27 +2,41 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Building2, Lock } from "lucide-react";
 
-const ADMIN_SECRET = "1234";
-
 export function AdminLogin() {
   const navigate = useNavigate();
+
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const [shake, setShake] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_SECRET) {
-      sessionStorage.setItem("admin-auth", "true");
-      navigate("/admin/projects");
-    } else {
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ adminId: 11, password }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        import("js-cookie").then((Cookies) => {
+          Cookies.default.set("ACCESS_TOKEN", data.data.accessToken, {
+            path: "/",
+          });
+        });
+        sessionStorage.setItem("admin-auth", "true");
+        navigate("/admin/projects");
+      } else {
+        setError(true);
+        setShake(true);
+        setPassword("");
+        setTimeout(() => setShake(false), 500);
+      }
+    } catch {
       setError(true);
-      setShake(true);
-      setPassword("");
-      setTimeout(() => setShake(false), 500);
     }
   };
-
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="w-full max-w-sm">
