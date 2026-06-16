@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { Download, ArrowLeft } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { useState, useEffect } from "react";
+import { downloadExpertDetailExcel } from "../../../api/admin/excelApi";
 import {
   getExpertDetail,
   getExpertCertificates,
@@ -79,27 +80,7 @@ export function AdminExpertDetail() {
       : []),
   ];
 
-  const handleExport = () => {
-    import("xlsx").then((XLSX) => {
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet([
-        ["항목", "내용"],
-        ["이름", apiBusinessInfo?.representativeName ?? "-"],
-        ["이메일", apiDetail?.email ?? "-"],
-        ["전문분야", apiDetail?.expertField ?? "-"],
-        ["상호", apiBusinessInfo?.companyName ?? "-"],
-        ["사업자번호", apiBusinessInfo?.businessNumber ?? "-"],
-        ["면허종류", cert?.certificateTypeCode ?? "-"],
-        ["현재상태", currentStatus],
-      ]);
-      ws["!cols"] = [{ wch: 16 }, { wch: 50 }];
-      XLSX.utils.book_append_sheet(wb, ws, "전문가정보");
-      XLSX.writeFile(
-        wb,
-        `전문가_${apiBusinessInfo?.representativeName ?? userId}_${new Date().toISOString().slice(0, 10)}.xlsx`,
-      );
-    });
-  };
+  const handleExport = () => downloadExpertDetailExcel(userId);
 
   return (
     <div className="space-y-4">
