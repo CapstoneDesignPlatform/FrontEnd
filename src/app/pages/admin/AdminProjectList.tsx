@@ -6,7 +6,7 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Download } from "lucide-react";
-import { exportToExcel } from "../../utils/exportExcel";
+
 import { downloadAnnouncementListExcel } from "../../../api/admin/excelApi";
 
 type ProjectStatus =

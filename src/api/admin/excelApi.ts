@@ -1,41 +1,52 @@
-import { instance } from "../instance";
+import { userInstance } from "../instance";
 
 const downloadExcel = async (url: string, filename: string) => {
-  const response = await instance.get(url, { responseType: "blob" });
-  const link = document.createElement("a");
-  link.href = window.URL.createObjectURL(new Blob([response.data]));
-  link.setAttribute("download", filename);
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+  const response = await userInstance.get(url, {
+    responseType: "blob",
+    validateStatus: () => true,
+  });
+
+  const contentType = response.headers["content-type"] ?? "";
+
+  const blob = new Blob([response.data], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url2 = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url2;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url2);
 };
 
 export const downloadExpertListExcel = () =>
   downloadExcel(
-    "/api/admin/excel/experts",
+    "/admin/excel/experts",
     `전문가목록_${new Date().toISOString().slice(0, 10)}.xlsx`,
   );
 
 export const downloadExpertDetailExcel = (userId: number) =>
   downloadExcel(
-    `/api/admin/excel/experts/${userId}`,
+    `/admin/excel/experts/${userId}`,
     `전문가상세_${userId}_${new Date().toISOString().slice(0, 10)}.xlsx`,
   );
 
 export const downloadClientListExcel = () =>
   downloadExcel(
-    "/api/admin/excel/clients",
+    "/admin/excel/clients",
     `의뢰인목록_${new Date().toISOString().slice(0, 10)}.xlsx`,
   );
 
 export const downloadAnnouncementListExcel = () =>
   downloadExcel(
-    "/api/admin/excel/announcements",
+    "/admin/excel/announcements",
     `의뢰현황_${new Date().toISOString().slice(0, 10)}.xlsx`,
   );
 
 export const downloadAnnouncementDetailExcel = (code: string) =>
   downloadExcel(
-    `/api/admin/excel/announcements/${code}`,
+    `/admin/excel/announcements/${code}`,
     `의뢰상세_${code}_${new Date().toISOString().slice(0, 10)}.xlsx`,
   );

@@ -1,5 +1,4 @@
-// src/api/admin/expertApi.ts
-import { instance } from "../instance";
+import { userInstance } from "../instance";
 
 export interface AdminExpertSummary {
   userId: number;
@@ -41,27 +40,27 @@ export interface AdminExpertBusinessInfo {
 }
 
 export const getExpertList = async (page = 0, size = 20) => {
-  const response = await instance.get("/api/admin/experts", {
+  const response = await userInstance.get("/admin/experts", {
     params: { page, size },
   });
   return response.data;
 };
 
 export const getExpertDetail = async (userId: number) => {
-  const response = await instance.get(`/api/admin/experts/${userId}`);
+  const response = await userInstance.get(`/admin/experts/${userId}`);
   return response.data;
 };
 
 export const getExpertCertificates = async (userId: number) => {
-  const response = await instance.get(
-    `/api/admin/experts/${userId}/certificates`,
+  const response = await userInstance.get(
+    `/admin/experts/${userId}/certificates`,
   );
   return response.data;
 };
 
 export const getExpertBusinessInfo = async (userId: number) => {
-  const response = await instance.get(
-    `/api/admin/experts/${userId}/business-registration-info`,
+  const response = await userInstance.get(
+    `/admin/experts/${userId}/business-registration-info`,
   );
   return response.data;
 };
@@ -71,8 +70,8 @@ export const updateExpertVerificationStatus = async (
   verificationStatus: string,
   rejectReason?: string,
 ) => {
-  const response = await instance.patch(
-    `/api/admin/experts/${userId}/verification-status`,
+  const response = await userInstance.patch(
+    `/admin/experts/${userId}/verification-status`,
     {
       verificationStatus,
       rejectReason,
