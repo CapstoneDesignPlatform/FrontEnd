@@ -1,7 +1,7 @@
 # Expert API Contract v2
 
 이 문서는 `serviceplatform` 전문가 파트 프론트엔드와 백엔드 연동을 위한 API 계약입니다.
-`/Users/imin-yeong/Downloads/expert-api-contract-v2.md`를 기준으로 현재 프로젝트 코드에 맞게 정리했습니다.
+`/Users/imin-yeong/Downloads/expert-api-contract-v2.md`를 기준으로 현재 의뢰 코드에 맞게 정리했습니다.
 
 ## Frontend API Mode
 
@@ -21,7 +21,7 @@ VITE_API_BASE_URL=/api
 ## API Namespace
 
 ```text
-POST   /api/auth/signup/expert
+POST   /api/auth/signup
 GET    /api/expert/me/profile
 PATCH  /api/expert/me/profile
 GET    /api/expert/me/verification-status
@@ -30,8 +30,8 @@ GET    /api/expert/me/bids
 GET    /api/expert/me/dashboard                # optional
 
 GET    /api/expert/job-posts
-GET    /api/expert/job-posts/{job_post_id}
-POST   /api/expert/job-posts/{job_post_id}/bids
+GET    /api/expert/job-posts/{announcement_code}
+POST   /api/expert/job-posts/{announcement_code}/bids
 
 POST   /api/files
 GET    /api/files/{file_id}/download-url        # optional
@@ -39,7 +39,7 @@ GET    /api/files/{file_id}/download-url        # optional
 
 ## Shared Rules
 
-- `POST /api/auth/signup/expert`를 제외한 전문가 API는 인증된 전문가 사용자 기준입니다.
+- `POST /api/auth/signup`를 제외한 전문가 API는 인증된 전문가 사용자 기준입니다.
 - `expert_profile_id`는 request body/query에서 받지 않고 서버의 auth context에서 추론합니다.
 - 인증되지 않은 요청은 `401 UNAUTHORIZED`를 반환합니다.
 - 전문가 권한이 없거나 승인 전 제한된 API 접근은 `403 FORBIDDEN` 또는 `403 EXPERT_NOT_APPROVED`를 반환합니다.
@@ -57,10 +57,9 @@ type ExpertVerificationStatus =
   | "REJECTED";
 
 type JobPostStatusCode =
-  | "BIDDING"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "CLOSED";
+  | "ACTIVE"
+  | "CLOSED"
+  | "CANCELLED";
 
 type BidStatusCode =
   | "PENDING"
@@ -117,17 +116,19 @@ type JobPostTypeCode =
 ### 1. Expert Signup
 
 ```http
-POST /api/auth/signup/expert
+POST /api/auth/signup
 ```
 
 Request:
 
 ```json
 {
+  "userType": "EXPERT",
   "name": "홍길동",
   "email": "expert@example.com",
-  "password": "password",
-  "phone": "010-0000-0000"
+  "phone": "01012345678",
+  "password": "Password1!",
+  "businessName": "케이법무법인"
 }
 ```
 
@@ -139,26 +140,27 @@ Response:
     "id": 101,
     "name": "홍길동",
     "email": "expert@example.com",
-    "phone": "010-0000-0000"
+    "phone": "01012345678"
   },
   "expert_profile": {
     "id": 1,
     "user_id": 101,
-    "company_name": "",
-    "license_type": null,
-    "expertise_areas": [],
-    "portfolio": "",
-    "verification_status": "NOT_APPLIED",
+    "company_name": "케이법무법인",
     "is_verified": false,
     "stats": {
       "active_bids": 0,
-      "won_projects": 0,
+      "selected_count": 0,
       "completed_projects": 0,
       "total_earned": 0
     }
   }
 }
 ```
+
+토큰 정책:
+
+- 자동 로그인 정책이면 `accessToken`/`refreshToken` 또는 인증 쿠키를 함께 발급합니다.
+- 자동 로그인하지 않는 정책이면 `loginRequired: true`를 명확히 반환합니다.
 
 ### 2. Get My Expert Profile
 
@@ -180,14 +182,10 @@ Response:
     "id": 1,
     "user_id": 101,
     "company_name": "케이법무법인",
-    "license_type": "경영지도사",
-    "expertise_areas": ["건설업 인허가"],
-    "portfolio": "신규 면허 120건 수행",
-    "verification_status": "APPROVED",
     "is_verified": true,
     "stats": {
       "active_bids": 4,
-      "won_projects": 2,
+      "selected_count": 2,
       "completed_projects": 8,
       "total_earned": 24500000
     }
@@ -207,9 +205,7 @@ Request:
 {
   "name": "전문가",
   "phone": "010-1234-5678",
-  "company_name": "케이법무법인",
-  "expertise_areas": ["건설업 인허가"],
-  "portfolio": "신규 면허 120건 수행"
+  "company_name": "케이법무법인"
 }
 ```
 
@@ -218,7 +214,8 @@ Response: `GET /api/expert/me/profile`과 동일합니다.
 정책:
 
 - `email`은 이 API에서 수정하지 않습니다.
-- `license_type`, `license_number`, `issue_date`, 인증 첨부 파일은 인증 심사 플로우에서 관리합니다.
+- `license_type`, `expertise_areas`, `portfolio`는 프로필 응답/수정 계약에서 제외합니다.
+- 자격 종류, 자격 번호, 발급일, 인증 첨부 파일은 인증 심사 플로우에서 관리합니다.
 
 ### 4. Get Expert Verification Status
 
@@ -233,14 +230,13 @@ Approved response:
   "verification_request": {
     "id": 1,
     "status": "APPROVED",
-    "license_type": "경영지도사",
+    "specialty": "경영지도사",
     "license_number": "EXP-2026-001",
     "issue_date": "2020-03-15",
     "company_name": "케이법무법인",
-    "portfolio": "건설업 신규 면허 120건",
     "certificates": [
       {
-        "license_type": "경영지도사",
+        "certificate_name": "경영지도사",
         "license_number": "EXP-2026-001",
         "issue_date": "2020-03-15",
         "holder_name": "홍길동",
@@ -269,11 +265,10 @@ Not applied response:
   "verification_request": {
     "id": null,
     "status": "NOT_APPLIED",
-    "license_type": null,
+    "specialty": null,
     "license_number": null,
     "issue_date": null,
     "company_name": null,
-    "portfolio": null,
     "certificates": [],
     "business_license": null,
     "submitted_at": null,
@@ -293,14 +288,10 @@ Request:
 
 ```json
 {
-  "license_type": "경영지도사",
-  "license_number": "EXP-2026-001",
-  "issue_date": "2020-03-15",
-  "company_name": "케이법무법인",
-  "portfolio": "건설업 신규 면허 120건",
+  "specialty": "경영지도사",
   "certificates": [
     {
-      "license_type": "경영지도사",
+      "certificate_name": "경영지도사",
       "license_number": "EXP-2026-001",
       "issue_date": "2020-03-15",
       "holder_name": "홍길동",
@@ -377,6 +368,7 @@ Response:
   "items": [
     {
       "id": 1,
+      "announcement_code": "01012345678AB",
       "company_id": 1,
       "company_name": "(주)건설개발",
       "title": "건설업 일반건설업(토목) 신규 면허 취득",
@@ -386,11 +378,12 @@ Response:
       "business_type": "법인 사업자",
       "classification": "신규 등록",
       "required_license": "일반건설업(토목공사업)",
-      "asset_scale_label": "50억원",
+      "capital": 5,
+      "capital_scale": 50,
       "bid_count": 5,
       "posted_at": "2026-04-01T09:00:00+09:00",
       "is_new": true,
-      "status": "BIDDING",
+      "status": "ACTIVE",
       "has_my_bid": false
     }
   ],
@@ -405,7 +398,7 @@ Response:
 ### 8. Get Expert Job Detail
 
 ```http
-GET /api/expert/job-posts/{job_post_id}
+GET /api/expert/job-posts/{announcement_code}
 ```
 
 Response는 `JobPostListItemDto`의 상세 정보에 `company`, `created_at`, `my_bid`를 추가합니다.
@@ -413,6 +406,7 @@ Response는 `JobPostListItemDto`의 상세 정보에 `company`, `created_at`, `m
 ```json
 {
   "id": 1,
+  "announcement_code": "01012345678AB",
   "company_id": 1,
   "company_name": "(주)건설개발",
   "title": "건설업 일반건설업(토목) 신규 면허 취득",
@@ -424,7 +418,7 @@ Response는 `JobPostListItemDto`의 상세 정보에 `company`, `created_at`, `m
   "posted_at": "2026-04-01T09:00:00+09:00",
   "created_at": "2026-04-01T09:00:00+09:00",
   "is_new": true,
-  "status": "BIDDING",
+  "status": "ACTIVE",
   "company": {
     "id": 1,
     "name": "(주)건설개발",
@@ -438,7 +432,7 @@ Response는 `JobPostListItemDto`의 상세 정보에 `company`, `created_at`, `m
 ### 9. Create Bid
 
 ```http
-POST /api/expert/job-posts/{job_post_id}/bids
+POST /api/expert/job-posts/{announcement_code}/bids
 ```
 
 Request:
@@ -453,24 +447,20 @@ Response:
 
 ```json
 {
-  "bid": {
-    "id": 1,
-    "job_post_id": 1,
-    "job_post_title": "건설업 일반건설업(토목) 신규 면허 취득",
-    "bid_amount": 2500000,
-    "status": "PENDING",
-    "submitted_at": "2026-04-15T10:00:00+09:00",
-    "total_bid_count": 6,
-    "client_contact": null
-  }
+  "id": 1,
+  "announcement_code": "01012345678AB",
+  "bid_amount": 2500000,
+  "status": "PENDING",
+  "submitted_at": "2026-04-15T10:00:00+09:00",
+  "total_bid_count": 6
 }
 ```
 
 정책:
 
 - request body에 `job_post_id` 또는 `expert_profile_id`를 포함하지 않습니다.
-- 같은 전문가가 같은 공고에 중복 입찰하면 `409 DUPLICATE_BID`를 반환합니다.
-- 공고 상태가 `BIDDING`이 아니면 `409 JOB_POST_CLOSED`를 반환합니다.
+- 같은 전문가가 같은 의뢰에 중복 입찰하면 `409 DUPLICATE_BID`를 반환합니다.
+- 의뢰 상태가 `BIDDING`이 아니면 `409 JOB_POST_CLOSED`를 반환합니다.
 
 ### 10. Get My Bids
 
@@ -485,7 +475,8 @@ Response:
   "items": [
     {
       "id": 1,
-      "job_post_id": 1,
+      "announcement_id": 1,
+      "announcement_code": "01012345678AB",
       "job_post_title": "건설업 일반건설업(토목) 신규 면허 취득",
       "bid_amount": 2500000,
       "status": "SELECTED",
@@ -512,8 +503,8 @@ Response:
 
 - HTTP adapter 경로는 `/api/expert/me/**` 기준입니다.
 - API의 `JobPostTypeCode`는 mapper에서 한글 라벨 ViewModel로 변환합니다.
-- 프로필 수정 payload는 `name`, `phone`, `company_name`, `expertise_areas`, `portfolio`만 보냅니다.
+- 프로필 수정 payload는 BE4 기준 `name`, `phone`, `company_name`만 보냅니다.
 - 인증 미신청 상태의 `verification_request.id === null`은 정상 케이스입니다.
 - 입찰 생성 payload는 `bid_amount`만 보냅니다.
 - 내 입찰의 `client_contact`는 문자열이 아니라 객체 또는 `null`입니다.
-
+- 공고 상세/입찰 생성 path에는 숫자 id가 아니라 `announcement_code`를 사용합니다.

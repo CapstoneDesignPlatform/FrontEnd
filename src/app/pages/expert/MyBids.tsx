@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search } from "lucide-react";
+import { ChevronDown, Copy, Mail, Phone, Search, UserRound } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { toast } from "sonner";
 import { AsyncStateCard } from "../../components/common/AsyncStateCard";
-import { MyBidCard } from "../../components/expert/MyBidCard";
 import { getMyBids } from "../../../api/expert";
 import type { MyBidItemVM } from "../../../types/expert";
 import { useAsyncData } from "../../hooks/useAsyncData";
+import { Badge } from "../../components/ui/badge";
 
 const emptyBids: MyBidItemVM[] = [];
 type BidStatusFilter = "all" | MyBidItemVM["status"];
@@ -22,16 +22,16 @@ export function MyBids() {
   });
   const bids = data ?? [];
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: MyBidItemVM["status"]) => {
     switch (status) {
       case "선정됨":
-        return "bg-green-100 text-green-700";
+        return "border-green-200 bg-green-50 text-green-700";
       case "대기 중":
-        return "bg-yellow-100 text-yellow-700";
+        return "border-amber-200 bg-amber-50 text-amber-700";
       case "거절됨":
-        return "bg-gray-100 text-gray-700";
+        return "border-slate-200 bg-slate-50 text-slate-500";
       default:
-        return "bg-blue-100 text-blue-700";
+        return "border-blue-200 bg-blue-50 text-blue-700";
     }
   };
 
@@ -57,10 +57,6 @@ export function MyBids() {
       (!normalizedSearchQuery || searchableText.includes(normalizedSearchQuery))
     );
   });
-  const activeBids = filteredBids.filter(
-    (bid) => bid.status === "대기 중" || bid.status === "선정됨",
-  );
-  const pastBids = filteredBids.filter((bid) => bid.status === "거절됨");
   const hasNoBids = !isLoading && !error && bids.length === 0;
   const hasNoFilteredResults =
     !isLoading && !error && bids.length > 0 && filteredBids.length === 0;
@@ -96,7 +92,7 @@ export function MyBids() {
           <p className="text-gray-600">제출한 입찰을 관리하고 상태를 확인하세요.</p>
         </div>
         <Button asChild>
-          <Link to="/expert/jobs">새 공고 찾기</Link>
+          <Link to="/expert/jobs">새 의뢰 찾기</Link>
         </Button>
       </div>
 
@@ -108,56 +104,10 @@ export function MyBids() {
         <AsyncStateCard message="입찰 내역을 불러오지 못했습니다." tone="danger" />
       ) : null}
 
-      {/* 통계 */}
-      <div className="grid grid-cols-3 gap-2 md:gap-4">
-        <Card>
-          <CardHeader className="px-2 pb-1 pt-3 text-center md:px-6 md:pb-3 md:pt-6 md:text-left">
-            <CardTitle className="whitespace-nowrap text-[11px] leading-tight tracking-[-0.04em] text-gray-600 md:text-sm md:tracking-normal">
-              활성 입찰
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 pb-3 text-center md:px-6 md:pb-6 md:text-left">
-            <div className="text-xl font-semibold leading-none md:text-2xl">
-              {pendingBidCount}
-            </div>
-            <p className="mt-1 text-[10px] leading-none text-gray-500 md:text-xs">
-              대기 중
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="px-2 pb-1 pt-3 text-center md:px-6 md:pb-3 md:pt-6 md:text-left">
-            <CardTitle className="whitespace-nowrap text-[11px] leading-tight tracking-[-0.04em] text-gray-600 md:text-sm md:tracking-normal">
-              선정된 의뢰
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 pb-3 text-center md:px-6 md:pb-6 md:text-left">
-            <div className="text-xl font-semibold leading-none md:text-2xl">
-              {selectedBidCount}
-            </div>
-            <p className="mt-1 text-[10px] leading-none text-gray-500 md:text-xs">
-              진행 중
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="px-2 pb-1 pt-3 text-center md:px-6 md:pb-3 md:pt-6 md:text-left">
-            <CardTitle className="whitespace-nowrap text-[11px] leading-tight tracking-[-0.04em] text-gray-600 md:text-sm md:tracking-normal">
-              입찰 성공률
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 pb-3 text-center md:px-6 md:pb-6 md:text-left">
-            <div className="text-xl font-semibold leading-none md:text-2xl">
-              {winRate}
-              %
-            </div>
-            <p className="mt-1 text-[10px] leading-none text-gray-500 md:text-xs">
-              전체 대비
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:grid-cols-3">
+        <SummaryMetric label="대기 중인 입찰" value={pendingBidCount} helper="대기 중" />
+        <SummaryMetric label="선정된 의뢰" value={selectedBidCount} helper="진행 중" />
+        <SummaryMetric label="입찰 성공률" value={`${winRate}%`} helper="전체 대비" />
       </div>
 
       <Card>
@@ -169,7 +119,7 @@ export function MyBids() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="h-10 bg-white pl-9"
-                placeholder="공고명, 입찰가, 상태로 검색"
+                placeholder="의뢰명, 입찰가, 상태로 검색"
               />
             </div>
             <p className="text-xs text-gray-500">
@@ -190,7 +140,7 @@ export function MyBids() {
                   onClick={() => setStatusFilter(option.value)}
                   className={`shrink-0 rounded-full px-3 ${
                     isActive
-                      ? "bg-teal-600 text-white hover:bg-teal-700"
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
                       : "bg-white text-gray-700"
                   }`}
                 >
@@ -209,29 +159,29 @@ export function MyBids() {
         </CardContent>
       </Card>
 
-      {/* 활성 입찰 */}
-      {activeBids.length > 0 && (
-        <div>
-          <h2 className="text-xl mb-4">활성 입찰</h2>
-          <div className="grid gap-4">
-            {activeBids.map((bid) => (
-              <MyBidCard
-                key={bid.id}
-                bid={bid}
-                variant="active"
-                getStatusColor={getStatusColor}
-                onCopyContact={handleCopyContact}
-              />
-            ))}
-          </div>
-        </div>
+      {filteredBids.length > 0 && (
+        <Card className="overflow-hidden border-slate-200 shadow-sm">
+          <CardHeader className="border-b bg-white px-4 py-3">
+            <CardTitle className="text-base">입찰 목록</CardTitle>
+            <p className="text-sm text-slate-500">
+              현재 입찰 중인 의뢰 목록입니다.
+            </p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <MyBidTable
+              bids={filteredBids}
+              getStatusColor={getStatusColor}
+              onCopyContact={handleCopyContact}
+            />
+          </CardContent>
+        </Card>
       )}
 
       {hasNoBids && (
         <AsyncStateCard
           action={
             <Button asChild>
-              <Link to="/expert/jobs">공고 찾아보기</Link>
+              <Link to="/expert/jobs">의뢰 찾아보기</Link>
             </Button>
           }
           message="입찰 내역이 없습니다."
@@ -248,24 +198,197 @@ export function MyBids() {
           message="검색 조건에 맞는 입찰 내역이 없습니다."
         />
       )}
-
-      {/* 이전 입찰 */}
-      {pastBids.length > 0 && (
-        <div>
-          <h2 className="text-xl mb-4">이전 입찰</h2>
-          <div className="grid gap-4">
-            {pastBids.map((bid) => (
-              <MyBidCard
-                key={bid.id}
-                bid={bid}
-                variant="past"
-                getStatusColor={getStatusColor}
-                onCopyContact={handleCopyContact}
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
+}
+
+function SummaryMetric({
+  helper,
+  label,
+  value,
+}: {
+  helper: string;
+  label: string;
+  value: number | string;
+}) {
+  return (
+    <div className="flex min-h-16 items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+      <div>
+        <p className="text-xs font-medium text-slate-500">{label}</p>
+        <p className="mt-1 text-xl font-semibold leading-none text-slate-950">
+          {value}
+        </p>
+      </div>
+      <span className="rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-500">
+        {helper}
+      </span>
+    </div>
+  );
+}
+
+interface MyBidTableProps {
+  bids: MyBidItemVM[];
+  getStatusColor: (status: MyBidItemVM["status"]) => string;
+  onCopyContact: (contact: string) => void;
+}
+
+function MyBidTable({ bids, getStatusColor, onCopyContact }: MyBidTableProps) {
+  const [expandedContactBidId, setExpandedContactBidId] = useState<
+    number | null
+  >(null);
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[920px] border-collapse text-sm">
+        <thead className="bg-slate-50 text-xs font-medium text-slate-500">
+          <tr>
+            <th className="w-[300px] border-b px-4 py-3 text-left">의뢰명</th>
+            <th className="w-[96px] border-b px-4 py-3 text-center">상태</th>
+            <th className="w-[130px] border-b px-4 py-3 text-left">내 입찰가</th>
+            <th className="w-[120px] border-b px-4 py-3 text-center">입찰일</th>
+            <th className="w-[90px] border-b px-4 py-3 text-center">경쟁</th>
+            <th className="w-[140px] border-b px-4 py-3 text-center">의뢰인 정보</th>
+            <th className="w-[120px] border-b px-4 py-3 text-center">관리</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100 bg-white">
+          {bids.map((bid) => {
+            const canViewContact = bid.status === "선정됨" && bid.clientContact;
+            const canEditBid = false;
+            const isContactOpen = expandedContactBidId === bid.id;
+
+            return (
+              <Fragment key={bid.id}>
+                <tr className="hover:bg-slate-50">
+                  <td className="max-w-[300px] px-4 py-3">
+                    <p className="truncate font-medium text-slate-950">
+                      {bid.projectTitle}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <Badge variant="outline" className={getStatusColor(bid.status)}>
+                      {bid.status}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 font-medium text-slate-950">
+                    {bid.myBid}
+                  </td>
+                  <td className="px-4 py-3 text-center text-slate-600">
+                    {formatShortDate(bid.bidDate)}
+                  </td>
+                  <td className="px-4 py-3 text-center text-slate-600">
+                    {bid.totalBids}명
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {canViewContact ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        aria-expanded={isContactOpen}
+                        onClick={() =>
+                          setExpandedContactBidId((currentId) =>
+                            currentId === bid.id ? null : bid.id,
+                          )
+                        }
+                      >
+                        의뢰인 정보
+                        <ChevronDown
+                          className={`h-3.5 w-3.5 transition-transform ${
+                            isContactOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </Button>
+                    ) : (
+                      <span className="text-slate-400">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {canEditBid ? (
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                      >
+                        <Link
+                          to={`/expert/jobs/${encodeURIComponent(
+                            bid.announcementCode ?? String(bid.projectId),
+                          )}/bid`}
+                        >
+                          입찰 수정
+                        </Link>
+                      </Button>
+                    ) : (
+                      <span className="text-slate-400">-</span>
+                    )}
+                  </td>
+                </tr>
+                {canViewContact && isContactOpen ? (
+                  <tr className="bg-blue-50/40">
+                    <td colSpan={7} className="px-4 py-3">
+                      <ClientContactPanel
+                        bid={bid}
+                        onCopyContact={onCopyContact}
+                      />
+                    </td>
+                  </tr>
+                ) : null}
+              </Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ClientContactPanel({
+  bid,
+  onCopyContact,
+}: {
+  bid: MyBidItemVM;
+  onCopyContact: (contact: string) => void;
+}) {
+  if (!bid.clientContact) return null;
+
+  const contactItems = [
+    { icon: UserRound, label: "담당자", value: bid.clientContact.name },
+    { icon: Phone, label: "전화", value: bid.clientContact.phone },
+    { icon: Mail, label: "이메일", value: bid.clientContact.email },
+  ].filter((item) => item.value);
+
+  return (
+    <div className="rounded-lg border border-blue-100 bg-white p-3 shadow-sm">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="grid flex-1 gap-2 md:grid-cols-3">
+          {contactItems.map(({ icon: Icon, label, value }) => (
+            <div key={label} className="flex min-w-0 items-center gap-2">
+              <Icon className="h-4 w-4 shrink-0 text-blue-700" />
+              <div className="min-w-0">
+                <p className="text-[11px] text-slate-500">{label}</p>
+                <p className="truncate text-sm font-medium text-slate-950">
+                  {value}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          className="h-8 bg-slate-950 px-3 text-xs text-white hover:bg-slate-800"
+          onClick={() => onCopyContact(bid.clientContact!.copyText)}
+        >
+          <Copy className="h-3.5 w-3.5" />
+          연락처 복사
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function formatShortDate(date: string) {
+  return date.length >= 10 ? date.slice(5, 10) : date;
 }

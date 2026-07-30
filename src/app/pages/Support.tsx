@@ -63,7 +63,7 @@ export function Support() {
         ].map((item, i) => (
           <Card key={i} className="border-none bg-white shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="pt-6 text-center space-y-3">
-              <div className="w-10 h-10 rounded-full bg-teal-50 mx-auto flex items-center justify-center text-teal-600">
+              <div className="w-10 h-10 rounded-full bg-blue-50 mx-auto flex items-center justify-center text-blue-600">
                 {item.icon}
               </div>
               <div>
@@ -81,14 +81,14 @@ export function Support() {
         <TabsList className="grid w-full grid-cols-2 h-14 bg-gray-100 p-1.5 rounded-2xl mb-8">
           <TabsTrigger 
             value="faq" 
-            className="rounded-xl text-base font-medium data-[state=active]:bg-white data-[state=active]:text-teal-600 data-[state=active]:shadow-sm"
+            className="rounded-xl text-base font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
           >
             <HelpCircle className="h-5 w-5 mr-2" />
             자주 묻는 질문
           </TabsTrigger>
           <TabsTrigger 
             value="inquiry" 
-            className="rounded-xl text-base font-medium data-[state=active]:bg-white data-[state=active]:text-teal-600 data-[state=active]:shadow-sm"
+            className="rounded-xl text-base font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
           >
             <MessageCircle className="h-5 w-5 mr-2" />
             1:1 문의하기
@@ -151,7 +151,7 @@ export function Support() {
                       <Label>문의 내용</Label>
                       <Textarea name="message" rows={6} value={inquiryForm.message} onChange={handleChange} required className="bg-gray-50 border-none rounded-xl resize-none" />
                     </div>
-                    <Button type="submit" className="w-full h-14 bg-teal-600 hover:bg-teal-700 text-lg font-bold rounded-2xl shadow-lg shadow-teal-100 transition-all">
+                    <Button type="submit" className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-lg font-bold rounded-2xl shadow-lg shadow-blue-100 transition-all">
                       <Send className="mr-2 h-5 w-5" />
                       문의 내용 제출하기
                     </Button>
@@ -165,7 +165,7 @@ export function Support() {
               <Card className="border-none shadow-sm bg-slate-800 text-white rounded-3xl">
                 <CardContent className="p-8 space-y-6">
                   <div className="flex items-center gap-3">
-                    <Headphones className="h-6 w-6 text-teal-400" />
+                    <Headphones className="h-6 w-6 text-blue-400" />
                     <h3 className="text-xl font-bold">고객센터 연결</h3>
                   </div>
                   <div className="space-y-1">

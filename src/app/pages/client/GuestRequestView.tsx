@@ -208,6 +208,8 @@ export function GuestRequestView() {
                   <tr className="border-b bg-gray-50 text-gray-500 text-sm">
                     <th className="px-4 py-3 text-left font-semibold">전문가</th>
                     <th className="px-4 py-3 text-left font-semibold">상호명</th>
+                    <th className="px-4 py-3 text-left font-semibold">전화번호</th>
+                    <th className="px-4 py-3 text-left font-semibold">이메일</th>
                     <th className="px-4 py-3 text-left font-semibold text-right">전문가 제시액</th>
                     <th className="px-4 py-3 text-left font-semibold text-right">최종 확정금액</th>
                     <th className="px-4 py-3 text-center font-semibold">상태</th>
@@ -222,6 +224,8 @@ export function GuestRequestView() {
                     >
                       <td className="px-4 py-3 text-sm font-medium">{bid.expertName}</td>
                       <td className="px-4 py-3 text-sm">{bid.companyName}</td>
+                      <td className="px-4 py-3 text-sm">{bid.phone}</td>
+                      <td className="px-4 py-3 text-sm">{bid.email}</td>
                       <td className="px-4 py-3 text-sm text-right">{formatCurrency(bid.proposedAmount)}</td>
                       <td className="px-4 py-3 text-sm text-right font-bold text-blue-600">
                         {bid.isSelected ? formatCurrency(bid.confirmedAmount) : "-"}

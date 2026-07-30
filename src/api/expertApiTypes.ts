@@ -1,10 +1,13 @@
 import type {
   CreateBidRequest,
   ExpertJobDetailVM,
-  ExpertJobListItemVM,
+  ExpertJobListQuery,
+  ExpertJobListResultVM,
   ExpertProfileFormVM,
+  ExpertSignupResultVM,
   ExpertSignupRequest,
   MyBidItemVM,
+  UpdateBidRequest,
 } from "../types/expert";
 import type {
   ExpertVerificationStatus,
@@ -15,10 +18,11 @@ import type {
 export interface ExpertApi {
   createBid(payload: CreateBidRequest): Promise<MyBidItemVM>;
   getExpertJobDetail(id: number | string): Promise<ExpertJobDetailVM>;
-  getExpertJobs(): Promise<ExpertJobListItemVM[]>;
+  getExpertJobs(query?: ExpertJobListQuery): Promise<ExpertJobListResultVM>;
   getExpertProfile(): Promise<ExpertProfileFormVM>;
   getMyBids(): Promise<MyBidItemVM[]>;
-  registerExpert(payload: ExpertSignupRequest): Promise<ExpertProfileFormVM>;
+  registerExpert(payload: ExpertSignupRequest): Promise<ExpertSignupResultVM>;
+  updateBid(payload: UpdateBidRequest): Promise<MyBidItemVM>;
   updateExpertProfile(profile: ExpertProfileFormVM): Promise<ExpertProfileFormVM>;
 }
 

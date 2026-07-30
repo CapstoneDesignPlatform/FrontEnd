@@ -7,7 +7,7 @@ function getApiMode(): ApiMode {
     return mode;
   }
 
-  return import.meta.env.DEV ? "mock" : "http";
+  return "http";
 }
 
 export const apiMode = getApiMode();

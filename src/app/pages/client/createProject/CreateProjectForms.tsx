@@ -1,51 +1,45 @@
-import type { ChangeEvent, FormEvent, ReactNode } from "react";
-import { HelpCircle } from "lucide-react"; // 아이콘 임포트
+import { useState, type FormEvent, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { HelpCircle } from "lucide-react";
+import Cookies from "js-cookie";
+import { toast } from "sonner";
 
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
-import {
-  industryLabels,
-  projectTabLabels,
-  tabGuides, // 가이드 데이터 임포트
-} from "./createProjectConfig";
-import type {
-  BaseProjectFormData,
-  BusinessType,
-  ConstructionLicenseData,
-  ConstructionOtherData,
-  ConstructionSurveyData,
-  CurrentIndustryType,
-  DiagnosisReason,
-  ElectricalPeriodicData,
-  LicenseBusinessType,
-  ProjectClassification,
-  ProjectTab,
-} from "./types";
+import { userInstance } from "../../../../api/instance";
 
-type FormSubmitHandler = (event: FormEvent<HTMLFormElement>) => void;
+import { tabGuides, industries } from "./createProjectConfig";
+import type { CurrentIndustryType } from "./types";
 
-const choiceButtonBaseClass = "h-auto py-4";
-const choiceButtonActiveClass =
-  "bg-[#009689] text-white border-[#009689] hover:bg-[#007d71]";
+// ─── 백엔드 API 규격 변환 맵핑 ───────────────────────────────────────────────
+const INDUSTRY_MAP: Record<string, string> = { construction: "CONSTRUCTION", electrical: "ELECTRICAL" };
+const PURPOSE_MAP:  Record<string, string> = { license: "REQUIRED_LICENSE", periodic: "PERIODIC_REPORT", survey: "SURVEY", other: "OTHER" };
+const OWNER_TYPE_MAP: Record<string, string> = { corporation: "CORPORATION", individual: "INDIVIDUAL", startup: "STARTUP" };
+const STATUS_MAP:   Record<string, string> = { construction: "CONSTRUCTION_RELATED", nonConstruction: "NON_CONSTRUCTION_RELATED", none: "NONE" };
+const REASON_MAP:   Record<string, string> = { capital: "CAPITAL_CHANGE", transfer: "TRANSFER", merger: "MERGER", other_manual: "OTHER" };
 
-// --- 헬퍼 컴포넌트: LabelGuide (물음표 툴팁) ---
-interface LabelGuideProps {
-  guide?: { title: string; items: string[] };
-}
+const PURPOSES = [
+  { label: "필요면허", value: "license"  },
+  { label: "실태조사", value: "survey"   },
+  { label: "기타",     value: "other"    },
+];
 
-function LabelGuide({ guide }: LabelGuideProps) {
+const ACTIVE = "bg-[#34499C] text-white border-[#34499C] hover:bg-[#2a3d84]";
+
+// ─── 공통 헬퍼 컴포넌트 ──────────────────────────────────────────────────────
+
+function LabelGuide({ guide }: { guide?: { title: string; items: string[] } }) {
   if (!guide) return null;
   return (
     <div className="group relative flex items-center">
-      <HelpCircle className="w-4 h-4 text-gray-400 cursor-help hover:text-[#009689] transition-colors" />
+      <HelpCircle className="w-4 h-4 text-gray-400 cursor-help hover:text-[#34499C] transition-colors" />
       <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-50 w-72 p-4 bg-white border border-gray-200 rounded-xl shadow-xl animate-in fade-in zoom-in duration-200">
-        <p className="text-sm font-bold text-[#009689] mb-2">{guide.title}</p>
+        <p className="text-sm font-bold text-[#34499C] mb-2">{guide.title}</p>
         <ul className="space-y-1">
           {guide.items.map((item, i) => (
             <li key={i} className="text-xs text-gray-600 flex gap-1.5 leading-relaxed">
-              <span className="text-[#009689]">•</span> {item}
+              <span className="text-[#34499C]">•</span> {item}
             </li>
           ))}
         </ul>
@@ -55,70 +49,25 @@ function LabelGuide({ guide }: LabelGuideProps) {
   );
 }
 
-// --- 공통 옵션 데이터 ---
-const licenseBusinessTypeOptions: Array<{ label: string; value: LicenseBusinessType }> = [
-  { label: "법인 사업자", value: "corporation" },
-  { label: "개인 사업자", value: "individual" },
-  { label: "창업 예정", value: "startup" },
-];
-
-const businessTypeOptions: Array<{ label: string; value: BusinessType }> = [
-  { label: "법인 사업자", value: "corporation" },
-  { label: "개인 사업자", value: "individual" },
-];
-
-const classificationOptions: Array<{ label: string; value: ProjectClassification }> = [
-  { label: "신규", value: "new" },
-  { label: "추가", value: "additional" },
-];
-
-const diagnosisReasonOptions: Array<{ label: string; value: DiagnosisReason }> = [
-  { label: "자본금 변동", value: "capital" },
-  { label: "양도", value: "transfer" },
-  { label: "합병", value: "merger" },
-  { label: "기타", value: "other_manual" },
-];
-
-// --- 공통 UI 컴포넌트 ---
-interface ChoiceButtonGroupProps<TValue extends string> {
-  columnsClassName: string;
-  options: Array<{ label: string; value: TValue }>;
-  value: TValue;
-  onChange: (value: TValue) => void;
-}
-
-function ChoiceButtonGroup<TValue extends string>({
-  columnsClassName,
-  options,
-  value,
-  onChange,
-}: ChoiceButtonGroupProps<TValue>) {
+function ChoiceButtonGroup({ columnsClassName, options, value, onChange }: any) {
   return (
     <div className={`grid gap-3 ${columnsClassName}`}>
-      {options.map((option) => (
+      {options.map((opt: any) => (
         <Button
-          key={option.value}
+          key={opt.value}
           type="button"
           variant="outline"
-          className={`${choiceButtonBaseClass} ${
-            value === option.value ? choiceButtonActiveClass : "hover:bg-gray-50"
-          }`}
-          onClick={() => onChange(option.value)}
+          className={`h-auto py-4 ${value === opt.value ? ACTIVE : "hover:bg-gray-50"}`}
+          onClick={() => onChange(opt.value)}
         >
-          {option.label}
+          {opt.label}
         </Button>
       ))}
     </div>
   );
 }
 
-interface FormSectionProps {
-  children: ReactNode;
-  label: string;
-  guide?: { title: string; items: string[] }; // 가이드 추가
-}
-
-function FormSection({ children, label, guide }: FormSectionProps) {
+function FormSection({ children, label, guide }: { children: ReactNode; label: string; guide?: any }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
@@ -132,49 +81,22 @@ function FormSection({ children, label, guide }: FormSectionProps) {
   );
 }
 
-function FormDivider() {
-  return <div className="border-t pt-6" />;
-}
-
-function SubmitButton({ label = "등록하기" }: { label?: string }) {
+function SectionDivider({ title }: { title: string }) {
   return (
-    <div className="pt-6 border-t">
-      <Button
-        type="submit"
-        className="w-full h-14 text-lg bg-[#009689] hover:bg-[#007d71]"
-        size="lg"
-      >
-        {label}
-      </Button>
+    <div className="flex items-center gap-3 pt-2">
+      <div className="h-px flex-1 bg-gray-200" />
+      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{title}</span>
+      <div className="h-px flex-1 bg-gray-200" />
     </div>
   );
 }
 
-interface AssetScaleFieldProps {
-  id: string;
-  value: string;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-  labelSuffix?: string;
-  disabledMessage?: string;
-  guide?: { title: string; items: string[] }; // 가이드 추가
-}
-
-function AssetScaleField({
-  id,
-  value,
-  onChange,
-  disabled = false,
-  labelSuffix,
-  disabledMessage,
-  guide,
-}: AssetScaleFieldProps) {
+function AssetScaleField({ id, value, onChange, disabled, labelSuffix, guide }: any) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Label htmlFor={id} className="text-base font-semibold">
-          자산 규모 {labelSuffix}
-          <span className="text-red-500">*</span>
+          자산 규모 {labelSuffix}<span className="text-red-500">*</span>
         </Label>
         <LabelGuide guide={guide} />
       </div>
@@ -184,359 +106,272 @@ function AssetScaleField({
           type="number"
           placeholder="숫자만 입력"
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           required={!disabled}
-          className="text-base py-6"
+          className="text-base py-6 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
         <span className="text-lg font-semibold text-gray-700 whitespace-nowrap">억원</span>
       </div>
-      {disabled ? (
-        <p className="text-sm text-amber-600">{disabledMessage ?? "현재 조건에서는 자산 규모를 입력할 수 없습니다."}</p>
-      ) : (
-        <p className="text-sm text-gray-500">현재 보유하고 있는 자산 규모를 입력해주세요 (예: 10억원 → 10 입력)</p>
-      )}
+      {disabled
+        ? <p className="text-sm text-amber-600">현재 조건에서는 자산 규모를 입력할 수 없습니다.</p>
+        : <p className="text-sm text-gray-500">현재 보유하고 있는 자산 규모를 입력해주세요 (예: 10억원 → 10 입력)</p>
+      }
     </div>
   );
 }
 
-// --- 1. 필요 면허 의뢰 폼 ---
-interface LicenseRequestFormProps {
-  data: ConstructionLicenseData;
-  onChange: (data: ConstructionLicenseData) => void;
-  onSubmit: FormSubmitHandler;
+function CurrentIndustryOption({ active, children, disabled, helperText, label, onSelect }: any) {
+  return (
+    <div className={`border-2 rounded-lg p-4 transition-all ${active ? "border-[#34499C] bg-blue-50" : "border-gray-200"} ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className="flex items-center justify-between gap-3">
+        <Button type="button" variant="outline" className={active ? ACTIVE : ""} onClick={onSelect} disabled={disabled}>
+          {label}
+        </Button>
+        {helperText && <p className="text-sm text-gray-500">{helperText}</p>}
+      </div>
+      {active && children}
+    </div>
+  );
 }
 
-export function LicenseRequestForm({ data, onChange, onSubmit }: LicenseRequestFormProps) {
-  const guide = tabGuides.license; // 데이터 연결
+// ─── 목적별 세부 필드 ─────────────────────────────────────────────────────────
 
-  const updateField = <TKey extends keyof ConstructionLicenseData>(
-    field: TKey,
-    value: ConstructionLicenseData[TKey],
-  ) => {
-    onChange({ ...data, [field]: value });
-  };
-
-  const selectCurrentIndustryType = (type: CurrentIndustryType) => {
-    onChange({
-      ...data,
-      currentIndustryType: type,
-      currentIndustryDetail: type === "none" ? "" : data.currentIndustryDetail,
-      assetScale: type === "none" ? "" : data.assetScale,
-    });
-  };
-
+function LicenseFields({ data, onChange }: any) {
+  const guide = tabGuides.license;
+  const set = (field: string, value: any) => onChange({ ...data, [field]: value });
+  const setIndustryType = (type: CurrentIndustryType) =>
+    onChange({ ...data, currentIndustryType: type, currentIndustryDetail: type === "none" ? "" : data.currentIndustryDetail, assetScale: type === "none" ? "" : data.assetScale });
   const isStartup = data.businessType === "startup";
-  const assetScaleDisabled = data.currentIndustryType === "none";
 
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      <FormSection label="사업자 유형" guide={guide}>
-        <ChoiceButtonGroup
-          columnsClassName="grid-cols-3"
-          options={licenseBusinessTypeOptions}
-          value={data.businessType}
-          onChange={(value) => updateField("businessType", value)}
-        />
-      </FormSection>
-
+    <>
       <FormSection label="구분" guide={guide}>
         <ChoiceButtonGroup
           columnsClassName="grid-cols-2 max-w-md"
-          options={classificationOptions}
+          options={[{ label: "신규", value: "new" }, { label: "추가", value: "additional" }]}
           value={data.classification}
-          onChange={(value) => updateField("classification", value)}
+          onChange={(v: any) => set("classification", v)}
         />
       </FormSection>
 
-      <FormDivider />
+      <SectionDivider title="면허 정보" />
 
       <FormSection label="필요 면허" guide={guide}>
-        <Input
-          id="requiredLicense"
-          placeholder="필요한 면허를 입력합니다."
-          value={data.requiredLicense}
-          onChange={(event) => updateField("requiredLicense", event.target.value)}
-          className="text-base py-6"
-          required
-        />
+        <Input placeholder="필요한 면허를 입력합니다." value={data.requiredLicense} onChange={(e) => set("requiredLicense", e.target.value)} className="text-base py-6" required />
         <p className="text-sm text-gray-500">예: 건설업 일반건설업(토목공사업), 전문건설업(실내건축공사업) 등</p>
       </FormSection>
-
-      <FormDivider />
 
       <FormSection label="현재 업종" guide={guide}>
         {isStartup && <p className="text-sm text-amber-600 mb-3">창업 예정 사업자는 자동으로 "없음"이 선택됩니다.</p>}
         <div className="space-y-3">
-          <CurrentIndustryOption
-            active={data.currentIndustryType === "construction"}
-            disabled={isStartup}
-            label="건설업 관련"
-            onSelect={() => selectCurrentIndustryType("construction")}
-          >
-            <Input
-              placeholder="상세 내용을 입력해주세요 (예: 토목공사업)"
-              value={data.currentIndustryDetail}
-              onChange={(event) => updateField("currentIndustryDetail", event.target.value)}
-              className="mt-2"
-              required
-            />
+          <CurrentIndustryOption active={data.currentIndustryType === "construction"} disabled={isStartup} label="건설업 관련" onSelect={() => setIndustryType("construction")}>
+            <Input placeholder="현재 보유하시고 계신 면허를 입력해주세요 (예: 토목공사업)" value={data.currentIndustryDetail} onChange={(e) => set("currentIndustryDetail", e.target.value)} className="mt-2" required />
           </CurrentIndustryOption>
-
-          <CurrentIndustryOption
-            active={data.currentIndustryType === "nonConstruction"}
-            disabled={isStartup}
-            label="비 건설업 관련"
-            onSelect={() => selectCurrentIndustryType("nonConstruction")}
-          >
-            <Input
-              placeholder="상세 내용을 입력해주세요 (예: 제조업, 서비스업 등)"
-              value={data.currentIndustryDetail}
-              onChange={(event) => updateField("currentIndustryDetail", event.target.value)}
-              className="mt-2"
-              required
-            />
+          <CurrentIndustryOption active={data.currentIndustryType === "nonConstruction"} disabled={isStartup} label="비 건설업 관련" onSelect={() => setIndustryType("nonConstruction")}>
+            <Input placeholder="상세 내용을 입력해주세요 (예: 제조업, 서비스업 등)" value={data.currentIndustryDetail} onChange={(e) => set("currentIndustryDetail", e.target.value)} className="mt-2" required />
           </CurrentIndustryOption>
-
-          <CurrentIndustryOption
-            active={data.currentIndustryType === "none"}
-            helperText="창업 예정은 '없음'을 선택해주세요."
-            label="없음"
-            onSelect={() => selectCurrentIndustryType("none")}
-          />
+          <CurrentIndustryOption active={data.currentIndustryType === "none"} helperText="창업 예정은 '없음'을 선택해주세요." label="없음" onSelect={() => setIndustryType("none")} />
         </div>
       </FormSection>
 
-      <FormDivider />
-
-      <AssetScaleField
-        id="assetScale"
-        value={data.assetScale}
-        onChange={(value) => updateField("assetScale", value)}
-        disabled={assetScaleDisabled}
-        guide={guide}
-      />
-
-      <SubmitButton />
-    </form>
+      <AssetScaleField id="licenseAsset" value={data.assetScale} onChange={(v: any) => set("assetScale", v)} disabled={data.currentIndustryType === "none"} guide={guide} />
+    </>
   );
 }
 
-// --- 2. 주기적 신고 폼 ---
-interface PeriodicReportFormProps {
-  data: ElectricalPeriodicData;
-  onChange: (data: ElectricalPeriodicData) => void;
-  onSubmit: FormSubmitHandler;
-}
-
-export function PeriodicReportForm({ data, onChange, onSubmit }: PeriodicReportFormProps) {
-  const guide = tabGuides.periodic;
-
+function PeriodicFields({ data, onChange }: any) {
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      <FormSection label="사업자 유형" guide={guide}>
-        <ChoiceButtonGroup
-          columnsClassName="grid-cols-2 max-w-md"
-          options={businessTypeOptions}
-          value={data.businessType}
-          onChange={(businessType) => onChange({ ...data, businessType })}
-        />
-      </FormSection>
-
-      <FormDivider />
-
-      <AssetScaleField
-        id="periodicAssetScale"
-        value={data.assetScale}
-        onChange={(assetScale) => onChange({ ...data, assetScale })}
-        guide={guide}
-      />
-
-      <SubmitButton />
-    </form>
+    <AssetScaleField id="periodicAsset" value={data.assetScale} onChange={(v: any) => onChange({ ...data, assetScale: v })} guide={tabGuides.periodic} />
   );
 }
 
-// --- 3. 실태 조사 의뢰 폼 ---
-interface SurveyRequestFormProps {
-  data: ConstructionSurveyData;
-  onChange: (data: ConstructionSurveyData) => void;
-  onSubmit: FormSubmitHandler;
-}
-
-export function SurveyRequestForm({ data, onChange, onSubmit }: SurveyRequestFormProps) {
+function SurveyFields({ data, onChange }: any) {
   const guide = tabGuides.survey;
-
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      <FormSection label="사업자 유형" guide={guide}>
-        <ChoiceButtonGroup
-          columnsClassName="grid-cols-2 max-w-md"
-          options={businessTypeOptions}
-          value={data.businessType}
-          onChange={(businessType) => onChange({ ...data, businessType })}
-        />
-      </FormSection>
-
-      <FormDivider />
-
+    <>
       <FormSection label="보유 면허" guide={guide}>
-        <Input
-          id="currentLicense"
-          placeholder="현재 보유하고 있는 면허를 입력해주세요"
-          value={data.currentLicense}
-          onChange={(event) => onChange({ ...data, currentLicense: event.target.value })}
-          className="text-base py-6"
-          required
-        />
+        <Input placeholder="현재 보유하고 있는 면허를 입력해주세요" value={data.currentLicense} onChange={(e) => onChange({ ...data, currentLicense: e.target.value })} className="text-base py-6" required />
       </FormSection>
-
-      <FormDivider />
-
-      <AssetScaleField
-        id="surveyAssetScale"
-        value={data.assetScale}
-        onChange={(assetScale) => onChange({ ...data, assetScale })}
-        guide={guide}
-      />
-
-      <SubmitButton />
-    </form>
+      <AssetScaleField id="surveyAsset" value={data.assetScale} onChange={(v: any) => onChange({ ...data, assetScale: v })} guide={guide} />
+    </>
   );
 }
 
-// --- 4. 기타 서비스 의뢰 폼 ---
-interface OtherRequestFormProps {
-  data: ConstructionOtherData;
-  industry: string;
-  onChange: (data: ConstructionOtherData) => void;
-  onSubmit: FormSubmitHandler;
-}
-
-export function OtherRequestForm({ data, industry, onChange, onSubmit }: OtherRequestFormProps) {
+function OtherFields({ data, industry, onChange }: any) {
   const guide = tabGuides.other;
-
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      <FormSection label="사업자 유형" guide={guide}>
-        <ChoiceButtonGroup
-          columnsClassName="grid-cols-2 max-w-md"
-          options={businessTypeOptions}
-          value={data.businessType}
-          onChange={(businessType) => onChange({ ...data, businessType })}
-        />
-      </FormSection>
-
-      <FormDivider />
-
+    <>
       <FormSection label="진단 사유" guide={guide}>
         <ChoiceButtonGroup
           columnsClassName="grid-cols-4"
-          options={diagnosisReasonOptions}
+          options={[{ label: "자본금 변동", value: "capital" }, { label: "양도", value: "transfer" }, { label: "합병", value: "merger" }, { label: "기타", value: "other_manual" }]}
           value={data.reason}
-          onChange={(reason) => onChange({ ...data, reason })}
+          onChange={(v: any) => onChange({ ...data, reason: v })}
         />
-        {data.reason === ("other_manual" as any) && (
+        {data.reason === "other_manual" && (
           <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-            <Label htmlFor="manualReason" className="text-sm font-medium text-gray-600 mb-2 block">
-              진단 사유 직접 입력
-            </Label>
+            <Label className="text-sm font-medium text-gray-600 mb-2 block">진단 사유 직접 입력</Label>
             <Input
-              id="manualReason"
-              placeholder="상세 사유를 입력해주세요 (예: 법인격 전환, 결산 등)"
-              value={(data as any).customReason || ""} 
-              onChange={(e) => onChange({ ...data, customReason: e.target.value } as any)}
-              className="text-base py-6 border-[#009689] focus-visible:ring-[#009689]"
+              placeholder="상세 사유를 입력해주세요"
+              value={data.customReason || ""}
+              onChange={(e) => onChange({ ...data, customReason: e.target.value })}
+              className="text-base py-6 border-[#34499C]"
               required
             />
           </div>
         )}
       </FormSection>
-
-      <FormDivider />
-
       <AssetScaleField
-        id="otherAssetScale"
-        labelSuffix={industry !== "construction" ? "(증자 이전) " : undefined}
+        id="otherAsset"
+        labelSuffix={industry !== "construction" ? "(증자 이전) " : ""}
         value={data.assetScale}
-        onChange={(assetScale) => onChange({ ...data, assetScale })}
+        onChange={(v: any) => onChange({ ...data, assetScale: v })}
         guide={guide}
       />
-
-      <SubmitButton />
-    </form>
+    </>
   );
 }
 
-// --- 5. 공통 베이스 폼 ---
-interface BaseProjectFormProps {
-  activeTab: ProjectTab;
-  data: BaseProjectFormData;
-  industry: string;
-  onCancel: () => void;
-  onChange: (data: BaseProjectFormData) => void;
-  onSubmit: FormSubmitHandler;
-}
+// ─── 초기 폼 데이터 ───────────────────────────────────────────────────────────
 
-export function BaseProjectForm({ activeTab, data, industry, onCancel, onChange, onSubmit }: BaseProjectFormProps) {
-  const guide = tabGuides[activeTab];
-  
-  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const field = event.target.name as keyof BaseProjectFormData;
-    onChange({ ...data, [field]: event.target.value });
+const defaultFormData = {
+  businessType:         "",
+  classification:       "",
+  requiredLicense:      "",
+  currentIndustryType:  "" as CurrentIndustryType,
+  currentIndustryDetail:"",
+  assetScale:           "",
+  currentLicense:       "",
+  reason:               "",
+  customReason:         "",
+};
+
+// ─── 메인 페이지 (단일 폼) ────────────────────────────────────────────────────
+
+export function CreateProject() {
+  const navigate = useNavigate();
+  const [industry, setIndustry]   = useState("");
+  const [purpose,  setPurpose]    = useState("");
+  const [formData, setFormData]   = useState(defaultFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 업종·목적 바뀌면 세부 필드 초기화
+  const handleIndustryChange = (v: string) => { setIndustry(v); setFormData(defaultFormData); };
+  const handlePurposeChange  = (v: string) => { setPurpose(v);  setFormData(defaultFormData); };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!industry || !purpose || isSubmitting) return;
+    setIsSubmitting(true);
+
+    const payload = {
+      clientInfoId:          Number(Cookies.get("CLIENT_INFO_ID") ?? 0),
+      industry:              INDUSTRY_MAP[industry] || industry.toUpperCase(),
+      purpose:               PURPOSE_MAP[purpose]   || purpose.toUpperCase(),
+      businessOwnerType:     OWNER_TYPE_MAP[formData.businessType],
+      assetSize:             Number(formData.assetScale) || 0,
+      category:              formData.classification?.toUpperCase() || null,
+      requiredLicense:       formData.requiredLicense       || null,
+      currentIndustryStatus: STATUS_MAP[formData.currentIndustryType] || null,
+      currentIndustryDetail: formData.currentIndustryDetail || null,
+      heldLicense:           formData.currentLicense        || null,
+      diagnosisReason:       REASON_MAP[formData.reason]    || null,
+      diagnosisReasonDetail: formData.customReason          || null,
+    };
+
+    try {
+      const res = await userInstance.post(
+        Cookies.get("ACCESS_TOKEN") ? "/announcements" : "/announcements/guest",
+        payload
+      );
+      if (res.data.success) {
+        const code = String(res.data.data.announcement_code || res.data.data.id);
+        navigate(`/client/project-success/${code}`);
+      }
+    } catch {
+      toast.error("게시 실패");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  const renderDetailFields = () => {
+    if (!purpose) return null;
+    const props = { data: formData, onChange: setFormData };
+    switch (purpose) {
+      case "license":  return <LicenseFields  {...props} />;
+      case "periodic": return <PeriodicFields {...props} />;
+      case "survey":   return <SurveyFields   {...props} />;
+      case "other":    return <OtherFields    {...props} industry={industry} />;
+      default:         return null;
+    }
+  };
+
+  const detailFields = renderDetailFields();
+
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <FormSection label="공고 제목" guide={guide}>
-        <Input
-          id="title"
-          name="title"
-          placeholder={`예) ${industryLabels[industry] ?? ""} ${projectTabLabels[activeTab]} 의뢰`}
-          value={data.title}
-          onChange={handleChange}
-          required
-        />
-      </FormSection>
+    <div className="max-w-100xl mx-auto py-10 px-6">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">의뢰 등록</h1>
 
-      <FormSection label="상세 설명" guide={guide}>
-        <Textarea
-          id="description"
-          name="description"
-          placeholder="상세 내용을 입력해주세요."
-          rows={6}
-          value={data.description}
-          onChange={handleChange}
-          required
-        />
-      </FormSection>
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-8">
 
-      <div className="grid md:grid-cols-2 gap-4 pt-4">
-        <FormSection label="예상 예산">
-          <Input id="budget" name="budget" type="number" value={data.budget} onChange={handleChange} />
+        {/* 업종 선택 */}
+        <FormSection label="업종">
+          <ChoiceButtonGroup
+            columnsClassName="grid-cols-2"
+            options={industries}
+            value={industry}
+            onChange={handleIndustryChange}
+          />
         </FormSection>
-        <FormSection label="완료 희망일">
-          <Input id="deadline" name="deadline" type="date" value={data.deadline} onChange={handleChange} required />
+
+        <SectionDivider title="의뢰 목적" />
+
+        {/* 의뢰 목적 */}
+        <FormSection label="목적">
+          <ChoiceButtonGroup
+            columnsClassName="grid-cols-3"
+            options={PURPOSES}
+            value={purpose}
+            onChange={handlePurposeChange}
+          />
         </FormSection>
-      </div>
 
-      <div className="flex gap-4 pt-6">
-        <Button type="submit" className="flex-1 h-14 bg-[#009689]">공고 게시하기</Button>
-        <Button type="button" variant="outline" className="flex-1 h-14" onClick={onCancel}>취소</Button>
-      </div>
-    </form>
-  );
-}
+        {/* 목적에 따른 세부 필드 */}
+        {detailFields && (
+          <>
+            <SectionDivider title="상세 정보" />
 
-// --- 기타 서브 컴포넌트 ---
-function CurrentIndustryOption({ active, children, disabled, helperText, label, onSelect }: any) {
-  return (
-    <div className={`border-2 rounded-lg p-4 transition-all ${active ? "border-[#009689] bg-teal-50" : "border-gray-200"} ${disabled ? "opacity-50" : ""}`}>
-      <div className="flex items-center justify-between gap-3">
-        <Button type="button" size="sm" variant="outline" className={active ? choiceButtonActiveClass : ""} onClick={onSelect} disabled={disabled}>{label}</Button>
-        {helperText && <p className="text-sm text-gray-500">{helperText}</p>}
-      </div>
-      {active && children}
+            {/* 사업자 유형 — 모든 목적에 공통 */}
+            <FormSection label="사업자 유형">
+              <ChoiceButtonGroup
+                columnsClassName={purpose === "license" ? "grid-cols-3" : "grid-cols-2 max-w-md"}
+                options={
+                  purpose === "license"
+                    ? [{ label: "법인 사업자", value: "corporation" }, { label: "개인 사업자", value: "individual" }, { label: "창업 예정", value: "startup" }]
+                    : [{ label: "법인 사업자", value: "corporation" }, { label: "개인 사업자", value: "individual" }]
+                }
+                value={formData.businessType}
+                onChange={(v: any) => setFormData({ ...formData, businessType: v })}
+              />
+            </FormSection>
+
+            {detailFields}
+          </>
+        )}
+
+        {/* 제출 버튼 */}
+        <div className="pt-2 border-t">
+          <Button
+            type="submit"
+            disabled={!industry || !purpose || isSubmitting}
+            className="w-full h-14 text-lg bg-[#34499C] hover:bg-[#2a3d84] disabled:opacity-40"
+          >
+            {isSubmitting ? "등록 중..." : "등록하기"}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

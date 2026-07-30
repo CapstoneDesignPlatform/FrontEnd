@@ -5,6 +5,7 @@ export interface VerificationCertificateData {
   type: string;
   number: string;
   issueDate: string;
+  expiryDate: string;
   name: string;
   file: File | null;
   fileId?: number;
@@ -22,9 +23,4 @@ export interface VerificationBusinessLicenseData {
   fileName: string;
   previewKind: VerificationPreviewKind | null;
   previewUrl: string;
-}
-
-export interface VerificationCareerData {
-  companyName: string;
-  portfolio: string;
 }

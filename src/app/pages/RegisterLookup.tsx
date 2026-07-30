@@ -15,10 +15,7 @@ export function ReservationLookup() {
     e.preventDefault();
 
     if (reservationCode) {
-      // 예약 코드 검증 (데모용)
       toast.success("예약 정보를 조회했습니다.");
-      // 실제로는 예약 상세 페이지로 이동
-      // navigate(`/reservation/${reservationCode}`);
     } else {
       toast.error("예약코드를 입력해주세요.");
     }
@@ -60,7 +57,7 @@ export function ReservationLookup() {
 
             <div className="text-center text-sm pt-4">
               <span className="text-gray-600">예약코드를 찾을 수 없으신가요? </span>
-              <Link to="/login" className="text-teal-600 hover:underline">
+              <Link to="/login" className="text-blue-600 hover:underline">
                 로그인하기
               </Link>
             </div>

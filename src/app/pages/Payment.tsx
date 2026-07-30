@@ -186,7 +186,7 @@ export function Payment() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">프로젝트</p>
+                  <p className="text-sm text-gray-600 mb-1">의뢰</p>
                   <p className="font-medium">{paymentInfo.projectTitle}</p>
                 </div>
 
@@ -230,7 +230,7 @@ export function Payment() {
                 </h4>
                 <ul className="text-sm text-gray-700 space-y-1">
                   <li>• 에스크로 결제 시스템</li>
-                  <li>• 프로젝트 완료 후 전문가에게 지급</li>
+                  <li>• 의뢰 완료 후 전문가에게 지급</li>
                   <li>• 안전한 암호화 통신</li>
                 </ul>
               </CardContent>

@@ -14,7 +14,6 @@ export function ExpertVerification() {
   const {
     businessLicense,
     canSubmit,
-    career,
     certificates,
     handleAddCertificate,
     handleDeleteCertificate,
@@ -24,10 +23,11 @@ export function ExpertVerification() {
     isApproved,
     isPending,
     isSubmitting,
-    setCareer,
+    qualificationType,
+    setQualificationType,
     verificationStatus,
   } = useExpertVerificationForm({
-    onSubmitted: () => navigate("/expert/verification/status?status=PENDING"),
+    onSubmitted: () => navigate("/expert/verification/status"),
     statusOverride: getStatusFromSearch(location.search),
   });
 
@@ -39,16 +39,16 @@ export function ExpertVerification() {
         <ExpertVerificationFormCard
           businessLicense={businessLicense}
           canSubmit={canSubmit}
-          career={career}
           certificates={certificates}
           isPending={isPending}
           isSubmitting={isSubmitting}
+          qualificationType={qualificationType}
           verificationStatus={verificationStatus}
           onAddCertificate={handleAddCertificate}
           onBusinessLicenseChange={handleUpdateBusinessLicense}
-          onCareerChange={setCareer}
           onCertificateChange={handleUpdateCertificate}
           onCertificateDelete={handleDeleteCertificate}
+          onQualificationTypeChange={setQualificationType}
           onSkip={() => navigate("/")}
           onSubmit={handleSubmit}
         />

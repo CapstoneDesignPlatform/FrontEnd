@@ -66,7 +66,7 @@ export function ProjectDetail() {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>프로젝트 설명</CardTitle>
+              <CardTitle>의뢰 설명</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 whitespace-pre-wrap">{project.description}</p>
@@ -87,7 +87,7 @@ export function ProjectDetail() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>프로젝트 정보</CardTitle>
+              <CardTitle>의뢰 정보</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-3">

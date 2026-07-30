@@ -8,11 +8,19 @@ export type JobPostTypeLabel = "필요 면허" | "실태 조사" | "주기적 �
 
 export type JobPostType = JobPostTypeLabel;
 
-export type JobPostStatusCode = "BIDDING" | "IN_PROGRESS" | "COMPLETED" | "CLOSED";
+export type JobPostStatusCode =
+  | "ACTIVE"
+  | "CANCELLED"
+  | "CLOSED"
+  | "BIDDING"
+  | "IN_PROGRESS"
+  | "COMPLETED";
 
 export type BidStatusCode = "PENDING" | "SELECTED" | "REJECTED";
 
 export type BidStatusLabel = "대기 중" | "선정됨" | "거절됨";
+
+export type JobPostSort = "posted_at_desc" | "posted_at_asc";
 
 export interface User {
   id: number;
@@ -26,9 +34,6 @@ export interface ExpertProfile {
   id: number;
   userId: number;
   companyName: string;
-  licenseType: string;
-  expertiseAreas: string[];
-  portfolio?: string;
   isVerified: boolean;
   verificationStatus: ExpertVerificationStatus;
 }
@@ -71,7 +76,8 @@ export interface Bid {
 
 export interface ExpertProfileStatsDto {
   active_bids: number;
-  won_projects: number;
+  selected_count?: number;
+  won_projects?: number;
   completed_projects: number;
   total_earned: number;
   total_earned_label?: string;
@@ -90,10 +96,7 @@ export interface ExpertProfileResponseDto {
     id: number;
     user_id: number;
     company_name: string;
-    license_type: string | null;
-    expertise_areas: string[];
-    portfolio: string | null;
-    verification_status: ExpertVerificationStatus;
+    verification_status?: ExpertVerificationStatus;
     is_verified: boolean;
     stats: ExpertProfileStatsDto;
   };
@@ -103,16 +106,15 @@ export interface UpdateExpertProfileRequestDto {
   name?: string;
   phone?: string;
   company_name?: string;
-  expertise_areas?: string[];
-  portfolio?: string;
 }
 
 export type ExpertProfileResponseUpdateDto = ExpertProfileResponseDto;
 
 export interface JobPostListItemDto {
   id: number;
-  company_id: number;
-  company_name: string;
+  announcement_code: string;
+  company_id: number | null;
+  company_name: string | null;
   title: string;
   industry: string;
   job_type: JobPostTypeCode;
@@ -123,11 +125,16 @@ export interface JobPostListItemDto {
   current_industry?: string | null;
   current_license?: string | null;
   reason?: string | null;
-  asset_scale_label?: string | null;
+  asset_scale_label?: number | string | null;
+  capital?: number | string | null;
+  capital_scale?: number | string | null;
   bid_count: number;
   posted_at: string;
+  deadline?: string | null;
+  due_date?: string | null;
+  job_post_deadline?: string | null;
   is_new: boolean;
-  status: JobPostStatusCode;
+  status?: JobPostStatusCode | null;
   has_my_bid?: boolean;
 }
 
@@ -172,17 +179,27 @@ export interface ClientContactDto {
 
 export interface MyBidItemDto {
   id: number;
-  job_post_id: number;
+  announcement_id?: number;
+  announcement_code?: string;
+  job_post_id?: number;
   job_post_title: string;
   bid_amount: number;
   status: BidStatusCode;
   submitted_at: string;
+  deadline?: string | null;
+  due_date?: string | null;
+  job_post_deadline?: string | null;
   total_bid_count: number;
   client_contact: ClientContactDto | null;
 }
 
 export interface CreateBidResponseDto {
-  bid: MyBidItemDto;
+  id: number;
+  announcement_code: string;
+  bid_amount: number;
+  status: BidStatusCode;
+  submitted_at: string;
+  total_bid_count: number;
 }
 
 export interface MyBidsResponseDto {
@@ -195,15 +212,23 @@ export interface MyBidsResponseDto {
 }
 
 export interface ExpertSignupRequestDto {
+  userType: "EXPERT";
   name: string;
   email: string;
   password: string;
   phone: string;
+  businessName: string;
 }
 
 export interface ExpertSignupResponseDto {
-  user: UserSummaryDto;
-  expert_profile: ExpertProfileResponseDto["expert_profile"];
+  accessToken?: string | null;
+  access_token?: string | null;
+  expert_profile?: ExpertProfileResponseDto["expert_profile"];
+  loginRequired?: boolean;
+  login_required?: boolean;
+  refreshToken?: string | null;
+  refresh_token?: string | null;
+  user?: UserSummaryDto;
 }
 
 export interface CompanySummaryVM {
@@ -215,6 +240,7 @@ export interface CompanySummaryVM {
 
 export interface ExpertJobListItemVM {
   id: number;
+  announcementCode: string;
   companyName?: string;
   title: string;
   industry: string;
@@ -229,23 +255,49 @@ export interface ExpertJobListItemVM {
   assetScale?: string;
   bids: number;
   postedDate: string;
+  deadline?: string;
   isNew: boolean;
   status?: string;
   hasMyBid?: boolean;
 }
 
+export interface ExpertJobListQuery {
+  page?: number;
+  size?: number;
+  sort?: JobPostSort;
+}
+
+export interface ExpertJobListResultVM {
+  hasNext: boolean;
+  items: ExpertJobListItemVM[];
+  page: number;
+  size: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 export interface ExpertJobDetailVM extends ExpertJobListItemVM {
   createdAt: string;
   company: CompanySummaryVM;
+  myBid?: ExpertJobMyBidVM;
+}
+
+export interface ExpertJobMyBidVM {
+  amount: number;
+  id: number;
+  status: BidStatusLabel;
+  submittedAt: string;
 }
 
 export interface MyBidItemVM {
   id: number;
   projectId: number;
+  announcementCode?: string;
   projectTitle: string;
   myBid: string;
   status: BidStatusLabel;
   bidDate: string;
+  deadline?: string;
   totalBids: number;
   clientContact?: ClientContactVM;
 }
@@ -265,9 +317,6 @@ export interface ExpertProfileFormVM {
   email: string;
   phone: string;
   companyName: string;
-  licenseType?: string;
-  expertiseAreas: string[];
-  portfolio?: string;
   verificationStatus: ExpertVerificationStatus;
   stats: {
     activeBids: number;
@@ -278,13 +327,22 @@ export interface ExpertProfileFormVM {
 }
 
 export interface CreateBidRequest {
-  jobPostId: number;
+  announcementCode: string;
   price: number;
 }
 
+export type UpdateBidRequest = CreateBidRequest;
+
 export interface ExpertSignupRequest {
+  companyName: string;
   name: string;
   email: string;
   password: string;
   phone: string;
+}
+
+export interface ExpertSignupResultVM {
+  hasAccessToken: boolean;
+  loginRequired: boolean;
+  profile: ExpertProfileFormVM;
 }

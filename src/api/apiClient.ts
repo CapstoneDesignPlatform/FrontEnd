@@ -1,3 +1,5 @@
+import { getStoredAccessToken } from "./authTokens";
+
 type QueryValue = string | number | boolean | null | undefined;
 
 export interface ApiErrorPayload {
@@ -40,6 +42,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function isApiEnvelope(value: unknown): value is {
+  data?: unknown;
+  message?: string;
+  success: boolean;
+} {
+  return isRecord(value) && typeof value.success === "boolean";
+}
+
 function getErrorMessage(payload: unknown, status: number) {
   if (isRecord(payload) && typeof payload.message === "string") {
     return payload.message;
@@ -53,7 +63,7 @@ function getErrorMessage(payload: unknown, status: number) {
 }
 
 function getDefaultAccessToken() {
-  return window.localStorage.getItem("serviceplatform.accessToken") ?? undefined;
+  return getStoredAccessToken() ?? undefined;
 }
 
 function isBodyInit(body: unknown): body is BodyInit {
@@ -141,6 +151,14 @@ export class ApiClient {
 
     if (!response.ok) {
       throw new ApiError(response.status, payload);
+    }
+
+    if (isApiEnvelope(payload)) {
+      if (!payload.success) {
+        throw new ApiError(response.ok ? 400 : response.status, payload);
+      }
+
+      return payload.data as T;
     }
 
     return payload as T;

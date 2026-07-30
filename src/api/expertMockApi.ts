@@ -4,10 +4,11 @@ import {
   mockExpertProfileDto,
   mockMyBidsDto,
 } from "../mocks/expert";
-import type { MyBidItemDto } from "../types/expert";
+import type { CreateBidResponseDto, MyBidItemDto } from "../types/expert";
 import {
   mapBidDtoToVM,
   mapCreateBidRequestToDto,
+  mapCreateBidResponseDtoToVM,
   mapExpertProfileDtoToVM,
   mapExpertProfileVMToUpdateDto,
   mapJobPostDetailDtoToVM,
@@ -27,20 +28,43 @@ export const expertMockApi: ExpertApi = {
       email: payload.email,
       phone: payload.phone,
     };
+    profileDto.expert_profile.company_name = payload.companyName;
     profileDto.expert_profile.verification_status = "NOT_APPLIED";
     profileDto.expert_profile.is_verified = false;
 
-    return mapExpertProfileDtoToVM(profileDto);
+    return {
+      hasAccessToken: true,
+      loginRequired: false,
+      profile: mapExpertProfileDtoToVM(profileDto),
+    };
   },
 
-  async getExpertJobs() {
-    return mapJobPostListDtoToVM(clone(mockExpertJobsDto));
+  async getExpertJobs(query = { page: 1, size: 20, sort: "posted_at_desc" as const }) {
+    const page = query.page ?? 1;
+    const size = query.size ?? 20;
+    const sortedItems = [...mockExpertJobsDto.items].sort((left, right) => {
+      const order = left.posted_at.localeCompare(right.posted_at);
+      return query.sort === "posted_at_asc" ? order : -order;
+    });
+    const startIndex = Math.max(page - 1, 0) * size;
+    const items = sortedItems.slice(startIndex, startIndex + size);
+
+    return mapJobPostListDtoToVM({
+      ...clone(mockExpertJobsDto),
+      items,
+      page,
+      size,
+      total_count: mockExpertJobsDto.items.length,
+      total_pages: Math.ceil(mockExpertJobsDto.items.length / size),
+      has_next: startIndex + size < mockExpertJobsDto.items.length,
+    });
   },
 
   async getExpertJobDetail(id) {
-    const numericId = Number(id);
     const listItem =
-      mockExpertJobsDto.items.find((job) => job.id === numericId) ??
+      mockExpertJobsDto.items.find(
+        (job) => job.announcement_code === id || job.id === Number(id),
+      ) ??
       mockExpertJobsDto.items[0];
 
     return mapJobPostDetailDtoToVM(
@@ -48,9 +72,11 @@ export const expertMockApi: ExpertApi = {
         ...mockExpertJobDetailDto,
         ...listItem,
         created_at: listItem.posted_at,
+        has_my_bid: listItem.has_my_bid === true,
+        my_bid: listItem.has_my_bid === true ? mockExpertJobDetailDto.my_bid : null,
         company: {
           ...mockExpertJobDetailDto.company,
-          id: listItem.company_id,
+          id: listItem.company_id ?? mockExpertJobDetailDto.company.id,
           name: listItem.company_name ?? mockExpertJobDetailDto.company.name,
         },
       }),
@@ -60,20 +86,42 @@ export const expertMockApi: ExpertApi = {
   async createBid(payload) {
     const dto = mapCreateBidRequestToDto(payload);
     const job =
-      mockExpertJobsDto.items.find((item) => item.id === payload.jobPostId) ??
+      mockExpertJobsDto.items.find(
+        (item) => item.announcement_code === payload.announcementCode,
+      ) ??
       mockExpertJobsDto.items[0];
-    const createdBidDto: MyBidItemDto = {
+    const createdBidDto: CreateBidResponseDto = {
       id: Date.now(),
-      job_post_id: payload.jobPostId,
-      job_post_title: job.title,
+      announcement_code: job.announcement_code,
       bid_amount: dto.bid_amount,
       status: "PENDING",
       submitted_at: new Date().toISOString(),
       total_bid_count: job.bid_count + 1,
+    };
+
+    return mapCreateBidResponseDtoToVM(createdBidDto);
+  },
+
+  async updateBid(payload) {
+    const dto = mapCreateBidRequestToDto(payload);
+    const job =
+      mockExpertJobsDto.items.find(
+        (item) => item.announcement_code === payload.announcementCode,
+      ) ??
+      mockExpertJobsDto.items[0];
+    const updatedBidDto: MyBidItemDto = {
+      id: mockExpertJobDetailDto.my_bid?.id ?? Date.now(),
+      announcement_id: job.id,
+      announcement_code: job.announcement_code,
+      job_post_title: job.title,
+      bid_amount: dto.bid_amount,
+      status: "PENDING",
+      submitted_at: new Date().toISOString(),
+      total_bid_count: job.bid_count,
       client_contact: null,
     };
 
-    return mapBidDtoToVM(createdBidDto);
+    return mapBidDtoToVM(updatedBidDto);
   },
 
   async getMyBids() {
@@ -97,9 +145,6 @@ export const expertMockApi: ExpertApi = {
     responseDto.expert_profile = {
       ...responseDto.expert_profile,
       company_name: updateDto.company_name ?? responseDto.expert_profile.company_name,
-      expertise_areas:
-        updateDto.expertise_areas ?? responseDto.expert_profile.expertise_areas,
-      portfolio: updateDto.portfolio ?? responseDto.expert_profile.portfolio,
       verification_status: profile.verificationStatus,
     };
 

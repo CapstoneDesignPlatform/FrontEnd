@@ -12,5 +12,6 @@ export const {
   getExpertProfile,
   getMyBids,
   registerExpert,
+  updateBid,
   updateExpertProfile,
 } = expertApi;

@@ -34,9 +34,25 @@ export const projectTabLabels: Record<ProjectTab, string> = {
   other: "기타",
 };
 
+export const fieldGuides: Record<string, { title: string; items: string[] }> = {
+  industry: {
+    title: "업종 선택",
+    items: ["의뢰하실 업종을 먼저 선택해주세요"],
+  },
+  purpose: {
+    title: "목적 선택",
+    items: ["의뢰를 맡기실 목적을 선택해주세요"],
+  },
+  businessType: {
+    title: "사업자 유형",
+    items: ["현재 사업자 유형을 선택해주세요"],
+  },
+  
+};
+
 export const tabGuides: Record<ProjectTab, { title: string; items: string[] }> = {
   license: {
-    title: "필요 면허 공고 가이드",
+    title: "필요 면허 의뢰 가이드",
     items: [
       "사업자 유형과 신규/추가 여부를 정확히 선택해주세요",
       "필요한 면허의 정확한 명칭과 종류를 기재해주세요",
@@ -45,14 +61,14 @@ export const tabGuides: Record<ProjectTab, { title: string; items: string[] }> =
     ],
   },
   periodic: {
-    title: "주기적 신고 공고 가이드",
+    title: "주기적 신고 의뢰 가이드",
     items: [
       "사업자 유형을 정확히 선택해주세요",
       "자산 규모를 정확히 입력해주세요",
     ],
   },
   survey: {
-    title: "실태 조사 공고 가이드",
+    title: "실태 조사 의뢰 가이드",
     items: [
       "사업자 유형을 정확히 선택해주세요",
       "현재 보유하고 있는 면허를 정확히 입력해주세요",
@@ -60,7 +76,7 @@ export const tabGuides: Record<ProjectTab, { title: string; items: string[] }> =
     ],
   },
   other: {
-    title: "기타 서비스 공고 가이드",
+    title: "기타 서비스 의뢰 가이드",
     items: [
       "사업자 유형을 정확히 선택해주세요",
       "진단이 필요한 사유를 선택해주세요 (자본금 변동, 양도, 합병)",
@@ -85,23 +101,27 @@ export const initialConstructionLicenseData: ConstructionLicenseData = {
   currentIndustryType: "none",
   currentIndustryDetail: "",
   assetScale: "",
+  capitalScale: "",
 };
 
 export const initialConstructionSurveyData: ConstructionSurveyData = {
   businessType: "corporation",
   currentLicense: "",
   assetScale: "",
+  capitalScale: "",
 };
 
 export const initialConstructionOtherData: ConstructionOtherData = {
   businessType: "corporation",
   reason: "capital",
   assetScale: "",
+  capitalScale: "",
 };
 
 export const initialElectricalPeriodicData: ElectricalPeriodicData = {
   businessType: "corporation",
   assetScale: "",
+  capitalScale: "",
 };
 
 export function getVisibleTabs(industry: string): ProjectTab[] {

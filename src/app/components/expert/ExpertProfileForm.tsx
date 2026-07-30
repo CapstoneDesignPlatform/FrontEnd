@@ -2,20 +2,13 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
 import type { ExpertProfileFormVM } from "../../../types/expert";
 
 interface ExpertProfileFormProps {
   isSubmitting?: boolean;
   profile: ExpertProfileFormVM;
   onChange: (
-    field: keyof Pick<
-      ExpertProfileFormVM,
-      | "name"
-      | "phone"
-      | "companyName"
-      | "portfolio"
-    >,
+    field: keyof Pick<ExpertProfileFormVM, "name" | "phone" | "companyName">,
     value: string,
   ) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -82,30 +75,6 @@ export function ExpertProfileForm({
                 required
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="licenseType">자격증 종류</Label>
-              <Input
-                id="licenseType"
-                value={profile.licenseType ?? "인증 신청 후 표시됩니다"}
-                disabled
-                readOnly
-              />
-              <p className="text-xs text-gray-500">
-                자격증 정보는 전문가 인증 심사 기준으로 관리합니다.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="portfolio">포트폴리오 / 실적</Label>
-            <Textarea
-              id="portfolio"
-              rows={4}
-              value={profile.portfolio ?? ""}
-              onChange={(e) => onChange("portfolio", e.target.value)}
-              disabled={isSubmitting}
-            />
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>

@@ -40,6 +40,7 @@ export function BusinessLicenseCard({
         <VerificationFileUpload
           disabled={disabled}
           fileName={license.fileName}
+          heightClassName="h-[110px]"
           inputId={fileInputId}
           previewAlt="사업자 등록증 미리보기"
           previewKind={license.previewKind}
@@ -49,6 +50,7 @@ export function BusinessLicenseCard({
             onChange({
               ...license,
               ...preview,
+              fileId: undefined,
             })
           }
         />

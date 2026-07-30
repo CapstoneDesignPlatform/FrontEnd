@@ -26,21 +26,25 @@ export interface ConstructionLicenseData {
   currentIndustryType: CurrentIndustryType;
   currentIndustryDetail: string;
   assetScale: string;
+  capitalScale: string;
 }
 
 export interface ConstructionSurveyData {
   businessType: BusinessType;
   currentLicense: string;
   assetScale: string;
+  capitalScale: string;
 }
 
 export interface ConstructionOtherData {
   businessType: BusinessType;
   reason: DiagnosisReason;
   assetScale: string;
+  capitalScale: string;
 }
 
 export interface ElectricalPeriodicData {
   businessType: BusinessType;
   assetScale: string;
+  capitalScale: string;
 }

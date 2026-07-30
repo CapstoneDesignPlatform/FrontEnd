@@ -22,8 +22,7 @@ export function ExpertVerificationHeader({
         <div>
           <CardTitle className="text-2xl">전문가 인증</CardTitle>
           <CardDescription className="mt-2 text-base">
-            전문가 인증을 완료해야 입찰과 프로젝트 수주 기능을 이용하실 수
-            있습니다.
+            전문가 인증을 완료하시면 입찰에 참여하실 수 있습니다.
           </CardDescription>
         </div>
 

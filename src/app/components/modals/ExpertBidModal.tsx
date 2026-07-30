@@ -12,11 +12,12 @@ interface ExpertBidModalProps {
   bid: any | null;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (bidId: number, amount: number) => void;
-  onCancel: (bidId: number) => void;
+  onConfirm?: (bidId: number, amount: number) => void;
+  onCancel?: (bidId: number) => void;
+  viewOnly?: boolean;
 }
 
-export function ExpertBidModal({ bid, isOpen, onClose, onConfirm, onCancel }: ExpertBidModalProps) {
+export function ExpertBidModal({ bid, isOpen, onClose, onConfirm, onCancel, viewOnly = false }: ExpertBidModalProps) {
   const [confirmAmount, setConfirmAmount] = useState<string>("");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
@@ -40,14 +41,14 @@ export function ExpertBidModal({ bid, isOpen, onClose, onConfirm, onCancel }: Ex
   const isButtonEnabled = rawAmount > 0 && !isLowerThanProposed;
 
   const handleFinalSubmit = () => {
-    onConfirm(bid.id, rawAmount); // 부모 상태 업데이트
+    onConfirm?.(bid.id, rawAmount);
     toast.success(`${bid.expertName} 전문가로 최종 확정되었습니다.`);
     setShowConfirmDialog(false);
     onClose();
   };
 
   const handleCancelSelection = () => {
-    onCancel(bid.id); // 부모 상태 업데이트
+    onCancel?.(bid.id);
     toast.info("전문가 선택이 취소되었습니다.");
     onClose();
   };
@@ -65,66 +66,71 @@ export function ExpertBidModal({ bid, isOpen, onClose, onConfirm, onCancel }: Ex
           <CardContent className="p-8">
             {/* 프로필 섹션 */}
             <div className="flex items-start gap-6 mb-8">
-              <div className="w-20 h-20 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 text-2xl font-bold shrink-0">{bid.expertName.charAt(0)}</div>
+              <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-2xl font-bold shrink-0">{bid.expertName.charAt(0)}</div>
               <div className="flex-1 pt-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h2 className="text-2xl font-bold text-gray-900">{bid.expertName}</h2>
                 </div>
                 <div className="flex flex-wrap gap-y-2 gap-x-6 text-gray-500 text-sm">
                   <div className="flex items-center gap-2"><Building2 className="w-4 h-4" />{bid.companyName}</div>
-                  <div className="flex items-center gap-2"><Phone className="w-4 h-4" />{bid.phone}</div>
-                  <div className="flex items-center gap-2"><Mail className="w-4 h-4" />{bid.email}</div>
+                  {viewOnly && bid.phone && (
+                    <div className="flex items-center gap-2"><Phone className="w-4 h-4" />{bid.phone}</div>
+                  )}
+                  {viewOnly && bid.email && (
+                    <div className="flex items-center gap-2"><Mail className="w-4 h-4" />{bid.email}</div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* 전문가 소개 섹션 (수정된 부분) */}
-            <div className="mb-10 text-gray-600 leading-relaxed whitespace-pre-wrap">
+            {/* 전문가 소개 */}
+            <div className={`text-gray-600 leading-relaxed whitespace-pre-wrap ${viewOnly ? "mb-4" : "mb-10"}`}>
               {bid.expertIntro || "등록된 전문가 소개 내용이 없습니다."}
             </div>
 
-            {/* 금액 입력부 */}
-            <div className="space-y-8 mb-10">
-              <div>
-                <p className="text-sm text-gray-400 mb-2 font-medium">제시한 금액</p>
-                <p className="text-3xl font-bold text-slate-800">₩ {bid.proposedAmount.toLocaleString()}</p>
-              </div>
-
-              <div className="space-y-4">
-                <label className="text-sm text-gray-500 font-medium">협의된 최종 금액을 입력해주세요.</label>
-                <div className="flex items-center gap-4">
-                  <div className="relative flex-1">
-                    <Input type="text" placeholder="숫자만 입력" className={`h-14 bg-gray-50 border-none text-lg px-6 rounded-2xl focus-visible:ring-2 ${isLowerThanProposed ? 'ring-2 ring-red-500' : 'focus-visible:ring-teal-500'}`} value={confirmAmount} onChange={handleAmountChange} />
+            {/* 금액 입력부 — viewOnly 시 숨김 */}
+            {!viewOnly && (
+              <>
+                <div className="space-y-8 mb-10">
+                  <div>
+                    <p className="text-sm text-gray-400 mb-2 font-medium">제시한 금액</p>
+                    <p className="text-3xl font-bold text-slate-800">₩ {bid.proposedAmount.toLocaleString()}</p>
                   </div>
-                  <span className="text-xl font-bold text-slate-700">원</span>
-                </div>
-                {isLowerThanProposed && <p className="text-red-500 text-sm flex items-center gap-1"><AlertCircle className="w-4 h-4" /> 전문가 제시액 이상 입력해야 합니다.</p>}
-              </div>
-            </div>
 
-            {/* 하단 버튼: 선택 여부에 따라 다르게 표시 */}
-            <div className="flex items-center gap-4">
-              <Button
-                className={`flex-[2] h-14 rounded-2xl text-lg font-bold shadow-sm transition-all ${
-                  isButtonEnabled ? "bg-teal-600 text-white hover:bg-teal-700" : "bg-white text-gray-400 border border-gray-200"
-                }`}
-                disabled={!isButtonEnabled}
-                onClick={() => setShowConfirmDialog(true)}
-              >
-                {bid.isSelected ? "가격 수정하기" : "최종 선택"}
-              </Button>
-              
-              <div className="flex flex-1 gap-2">
-                {bid.isSelected ? (
-                  <Button variant="ghost" className="flex-1 h-14 font-bold rounded-2xl text-red-500 hover:bg-red-50" onClick={handleCancelSelection}>선택 취소</Button>
-                ) : (
-                  <>
-                    <Button variant="ghost" className="flex-1 h-14 font-bold rounded-2xl">전화</Button>
-                    <Button variant="ghost" className="flex-1 h-14 font-bold rounded-2xl">메일</Button>
-                  </>
-                )}
-              </div>
-            </div>
+                  <div className="space-y-4">
+                    <label className="text-sm text-gray-500 font-medium">협의된 최종 금액을 입력해주세요.</label>
+                    <div className="flex items-center gap-4">
+                      <div className="relative flex-1">
+                        <Input type="text" placeholder="숫자만 입력" className={`h-14 bg-gray-50 border-none text-lg px-6 rounded-2xl focus-visible:ring-2 ${isLowerThanProposed ? 'ring-2 ring-red-500' : 'focus-visible:ring-blue-500'}`} value={confirmAmount} onChange={handleAmountChange} />
+                      </div>
+                      <span className="text-xl font-bold text-slate-700">원</span>
+                    </div>
+                    {isLowerThanProposed && <p className="text-red-500 text-sm flex items-center gap-1"><AlertCircle className="w-4 h-4" /> 전문가 제시액 이상 입력해야 합니다.</p>}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  {bid.isSelected && (
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-14 rounded-2xl text-lg font-bold border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
+                      onClick={handleCancelSelection}
+                    >
+                      취소하기
+                    </Button>
+                  )}
+                  <Button
+                    className={`flex-[2] h-14 rounded-2xl text-lg font-bold shadow-sm transition-all ${
+                      isButtonEnabled ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-white text-gray-400 border border-gray-200"
+                    }`}
+                    disabled={!isButtonEnabled}
+                    onClick={() => setShowConfirmDialog(true)}
+                  >
+                    {bid.isSelected ? "가격 수정하기" : "최종 선택"}
+                  </Button>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -137,7 +143,7 @@ export function ExpertBidModal({ bid, isOpen, onClose, onConfirm, onCancel }: Ex
             <p className="text-sm text-gray-500 mb-6">결제 전까지 가격 수정 및 취소가 가능합니다.</p>
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowConfirmDialog(false)}>취소</Button>
-              <Button className="flex-1 bg-teal-600 hover:bg-teal-700 text-white rounded-xl" onClick={handleFinalSubmit}>확인</Button>
+              <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl" onClick={handleFinalSubmit}>확인</Button>
             </div>
           </Card>
         </div>
