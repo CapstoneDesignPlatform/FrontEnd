@@ -19,13 +19,18 @@ export function Home() {
             <br />
             투명한 입찰 시스템으로 최적의 전문가를 만나보세요.
           </p>
-          <div className="flex gap-4 justify-center">
-            <Button asChild size="lg" variant="secondary">
-              <Link to="/client/start">
-                의뢰인으로 시작하기
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+          <div className="flex items-start gap-4 justify-center">
+            <div>
+              <Button asChild size="lg" variant="secondary">
+                <Link to="/client/start">
+                  기업진단 의뢰하기
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <p className="mt-2 whitespace-nowrap text-sm text-blue-100">
+                회원가입 없이 휴대폰 인증만으로 신청할 수 있습니다.
+              </p>
+            </div>
             <Button asChild size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/30">
               <Link to="/signup/expert">전문가로 시작하기</Link>
             </Button>
