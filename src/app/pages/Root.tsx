@@ -466,25 +466,25 @@ export function Root() {
             <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-4">
               {/* 각 링크를 이미지로 교체 */}
               <a href="https://www.law.go.kr" target="_blank" rel="noopener noreferrer">
-                <img src="src/assets/svg/국가법령정보센터.svg" alt="국가법령정보센터" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
+                <img src="/svg/국가법령정보센터.svg" alt="국가법령정보센터" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
               <a href="https://www.molit.go.kr" target="_blank" rel="noopener noreferrer">
-                <img src="src/assets/svg/국토교통부.svg" alt="국토교통부" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
+                <img src="/svg/국토교통부.svg" alt="국토교통부" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
               <a href="https://www.kicpa.or.kr" target="_blank" rel="noopener noreferrer" className="ml-6 mr-2">
-                <img src="src/assets/svg/한국공인회계사회.svg" alt="한국공인회계사회" className="h-6 opacity-70 hover:opacity-100 transition-opacity" />
+                <img src="/svg/한국공인회계사회.svg" alt="한국공인회계사회" className="h-6 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
               <a href="https://www.kacpta.or.kr" target="_blank" rel="noopener noreferrer">
-                <img src="src/assets/svg/한국세무사회.svg" alt="한국세무사회" className="h- opacity-70 hover:opacity-100 transition-opacity" />
+                <img src="/svg/한국세무사회.svg" alt="한국세무사회" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
               <a href="https://www.kmtca.or.kr/" target="_blank" rel="noopener noreferrer">
-                <img src="src/assets/svg/한국경영기술지도사회.svg" alt="한국경영기술지도사회" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
+                <img src="/svg/한국경영기술지도사회.svg" alt="한국경영기술지도사회" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
               <a href="https://www.cak.or.kr" target="_blank" rel="noopener noreferrer">
-                <img src="src/assets/svg/대한건설협회.svg" alt="대한건설협회" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
+                <img src="/svg/대한건설협회.svg" alt="대한건설협회" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
               <a href="https://www.kosca.or.kr/" target="_blank" rel="noopener noreferrer">
-                <img src="src/assets/svg/전문건설협회.svg" alt="전문건설협회" className="h-10 opacity-70 hover:opacity-100 transition-opacity" />
+                <img src="/svg/전문건설협회.svg" alt="전문건설협회" className="h-10 opacity-70 hover:opacity-100 transition-opacity" />
               </a>
             </div>
           </div>

@@ -8,6 +8,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { userInstance } from "../../../api/instance";
+import { buildCapitalPayload } from "./createProject/capitalPayload";
 
 import {
   tabGuides,
@@ -161,7 +162,7 @@ function AssetScaleField({ id, value, onChange, labelSuffix, guide, capitalId, c
             <span className={`text-lg font-semibold whitespace-nowrap ${capitalOptional ? "text-gray-400" : "text-gray-700"}`}>억원</span>
           </div>
           {capitalOptional
-            ? <p className="text-sm text-gray-400">* 현재 업종이 없는 경우에는 자본규모를 작성할 필요가 없습니다.</p>
+            ? <p className="text-sm text-gray-400">* 창업 예정 사업자는 자본 규모를 입력하지 않습니다.</p>
             : <p className="text-sm text-gray-500">현재 보유하고 있는 자본 규모를 입력해주세요</p>
           }
         </div>
@@ -234,7 +235,7 @@ function LicenseFields({ data, onChange }: { data: ConstructionLicenseData; onCh
       </FormSection>
 
       <AssetScaleField id="licenseAsset" value={data.assetScale} onChange={(v) => set("assetScale", v)}
-        guide={guide} capitalOptional={isStartup || data.currentIndustryType === "none"}
+        guide={guide} capitalOptional={isStartup}
         capitalId="licenseCapital" capitalValue={data.capitalScale} capitalOnChange={(v) => set("capitalScale", v)} />
     </>
   );
@@ -367,7 +368,11 @@ export function CreateProject() {
 
   const setCurrentBusinessType = (v: string) => {
     const bv = v as BusinessType;
-    if (purpose === "license")  setLicenseData({ ...licenseData, businessType: v as any });
+    if (purpose === "license") setLicenseData({
+      ...licenseData,
+      businessType: v as ConstructionLicenseData["businessType"],
+      ...(v === "startup" ? { currentIndustryType: "none" as const, currentIndustryDetail: "", capitalScale: "" } : {}),
+    });
     if (purpose === "periodic") setPeriodicData({ ...periodicData, businessType: bv });
     if (purpose === "survey")   setSurveyData({ ...surveyData, businessType: bv });
     if (purpose === "other")    setOtherData({ ...otherData, businessType: bv });
@@ -393,8 +398,6 @@ export function CreateProject() {
       return;
     }
 
-    setIsSubmitting(true);
-
     const currentData = purpose === "license" ? licenseData
       : purpose === "periodic" ? periodicData
       : purpose === "survey"   ? surveyData
@@ -402,13 +405,22 @@ export function CreateProject() {
 
     const isLoggedIn = !!Cookies.get("ACCESS_TOKEN");
 
+    let capitalFields: ReturnType<typeof buildCapitalPayload>;
+    try {
+      capitalFields = buildCapitalPayload(currentData);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "자본금과 자본 규모를 확인해주세요.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
     const payload = {
       clientInfoId,
       industry:              INDUSTRY_MAP[industry] || industry.toUpperCase(),
       purpose:               PURPOSE_MAP[purpose]   || purpose.toUpperCase(),
       businessOwnerType:     OWNER_TYPE_MAP[(currentData as any).businessType] ?? null,
-      capital:               Number((currentData as any).capitalScale) || 0,
-      capitalScale:          (currentData as any).businessType === "startup" ? null : (Number((currentData as any).assetScale) || 0),
+      ...capitalFields,
       category:              (currentData as any).classification?.toUpperCase() ?? null,
       requiredLicense:       (currentData as any).requiredLicense       || null,
       currentIndustryStatus: STATUS_MAP[(currentData as any).currentIndustryType] ?? null,
@@ -417,8 +429,6 @@ export function CreateProject() {
       diagnosisReason:       REASON_MAP[(currentData as any).reason]    ?? null,
       diagnosisReasonDetail: (currentData as any).customReason          || null,
     };
-
-    console.log("[Announcement] payload:", payload);
 
     try {
       const res = await userInstance.post(

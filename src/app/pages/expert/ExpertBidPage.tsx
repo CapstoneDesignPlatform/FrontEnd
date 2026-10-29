@@ -19,6 +19,7 @@ import {
 } from "../../components/expert/jobStatus";
 import { useAsyncAction } from "../../hooks/useAsyncAction";
 import { useAsyncData } from "../../hooks/useAsyncData";
+import { formatBidAmountInKorean, parseBidAmount } from "../../utils/bidAmount";
 
 const cautionItems = [
   '의뢰인이 진단보고서 수령 확정 상태이거나 이에 준하는 경우에 한해 용역수수료를 수취하며 "플랫폼"에서 정한 방식에 따라 중개수수료를 지급합니다.',
@@ -44,16 +45,14 @@ export function ExpertBidPage() {
     data: project,
     error,
     isLoading,
-  } = useAsyncData(loadProject, {
-    keepPreviousData: true,
-  });
+  } = useAsyncData(loadProject);
   const { isPending: isSubmittingBid, run: submitBid } = useAsyncAction(
     async (
       payload: CreateBidRequest,
       isEditing: boolean,
     ): Promise<SubmitBidResult> => {
       if (isEditing) {
-        throw new Error("입찰 수정 API는 아직 제공되지 않습니다.");
+        throw new Error("입찰 금액 수정 저장은 현재 지원되지 않습니다.");
       }
 
       const bid = await createBid(payload);
@@ -75,13 +74,28 @@ export function ExpertBidPage() {
   const projectBidAmount = project?.myBid?.amount;
 
   useEffect(() => {
-    if (!projectId) return;
-
     setBidAmount(projectBidAmount !== undefined ? String(projectBidAmount) : "");
+    setHasReadCautions(false);
+    setHasAgreedToBid(false);
   }, [projectId, projectBidAmount]);
+
+  const amount = parseBidAmount(bidAmount);
+  const koreanAmount = formatBidAmountInKorean(bidAmount);
+  const amountError = bidAmount === ""
+    ? ""
+    : amount === null
+      ? "금액은 9,999,999,999,999원 이하의 숫자만 입력해주세요."
+      : amount < 1
+        ? "입찰 금액은 1원 이상 입력해주세요."
+        : "";
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+
+    if (isLoading || project?.announcementCode !== id) {
+      toast.error("의뢰 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+      return;
+    }
 
     if (!project || !canBidOnExpertJob(project)) {
       toast.error("입찰이 마감된 의뢰입니다.");
@@ -90,15 +104,18 @@ export function ExpertBidPage() {
 
     const isEditingBid = project.hasMyBid === true || Boolean(project.myBid);
 
-    const amount = Number(bidAmount.trim());
+    if (amount === null || amount <= 0) {
+      toast.error(amountError || "입찰 금액은 1원 이상 숫자로 입력해주세요.");
+      return;
+    }
 
-    if (!Number.isFinite(amount) || amount <= 0) {
-      toast.error("입찰 금액은 1원 이상 숫자로 입력해주세요.");
+    if (isEditingBid && project.myBid?.status !== "대기 중") {
+      toast.error("현재 상태에서는 입찰을 수정할 수 없습니다.");
       return;
     }
 
     if (isEditingBid) {
-      toast.error("입찰 수정은 아직 지원되지 않습니다.");
+      toast.error("입찰 금액 수정 저장은 현재 지원되지 않습니다.");
       return;
     }
 
@@ -124,7 +141,7 @@ export function ExpertBidPage() {
     );
   }
 
-  if (isLoading && !project) {
+  if (isLoading || (project && project.announcementCode !== id)) {
     return (
       <div className="space-y-6">
         <AsyncStateCard message="입찰 정보를 불러오는 중입니다." />
@@ -137,8 +154,11 @@ export function ExpertBidPage() {
   const bidStatus = getExpertBidAvailability(project);
   const canBid = canBidOnExpertJob(project);
   const isEditingBid = project.hasMyBid === true || Boolean(project.myBid);
+  const canEditBid = !isEditingBid || project.myBid?.status === "대기 중";
+  const canEnterBid = canBid && canEditBid;
   const canSubmit =
-    canBid && !isEditingBid && hasReadCautions && hasAgreedToBid && !isSubmittingBid;
+    canEnterBid && !isEditingBid && amount !== null && amount > 0 &&
+    hasReadCautions && hasAgreedToBid && !isSubmittingBid;
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -146,7 +166,7 @@ export function ExpertBidPage() {
         <div>
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
-              {isEditingBid ? "입찰 완료" : "입찰 참여"}
+              {isEditingBid ? "입찰 수정" : "입찰 참여"}
             </Badge>
             <Badge variant="outline">{project.type}</Badge>
             <Badge
@@ -161,7 +181,7 @@ export function ExpertBidPage() {
             </Badge>
           </div>
           <h1 className="text-2xl font-semibold text-slate-950">
-            {isEditingBid ? "입찰 완료 공고" : "입찰 페이지"}
+            {isEditingBid ? "입찰 수정" : "입찰 페이지"}
           </h1>
         </div>
         <Button asChild variant="outline" size="sm">
@@ -188,9 +208,15 @@ export function ExpertBidPage() {
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
           <div>
-            <p className="font-semibold text-amber-950">이미 입찰한 의뢰입니다.</p>
+            <p className="font-semibold text-amber-950">
+              {canEnterBid ? "기존 입찰 금액을 불러왔습니다." : "입찰을 수정할 수 없습니다."}
+            </p>
             <p className="mt-1">
-              현재 백엔드에서 입찰 수정 API가 제공되지 않아 추가 제출을 막아두었습니다.
+              {canEnterBid
+                ? "금액을 입력하며 확인할 수 있지만, 현재 수정 저장은 지원되지 않습니다. 기존 입찰 금액은 그대로 유지됩니다."
+                : project.myBid
+                  ? "입찰 중인 의뢰의 대기 중인 입찰만 수정할 수 있습니다."
+                  : "기존 입찰 정보를 확인할 수 없습니다. 새로고침 후 다시 시도해주세요."}
             </p>
           </div>
         </div>
@@ -230,23 +256,39 @@ export function ExpertBidPage() {
               <Label htmlFor="bidAmount" className="text-sm font-semibold text-slate-900">
                 <span className="text-red-500">*</span> 입찰 금액
               </Label>
-              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
-                <Input
-                  id="bidAmount"
-                  inputMode="numeric"
-                  name="bidAmount"
-                  pattern="[0-9]*"
-                  placeholder="입찰할 금액 입력"
-                  type="text"
-                  value={bidAmount}
-                  onChange={(event) => setBidAmount(event.target.value)}
-                  disabled={!canBid || isSubmittingBid}
-                  className="max-w-sm bg-white"
-                />
-                <span className="text-sm font-medium text-slate-700">
-                  원 <span className="text-slate-500">(VAT 포함)</span>
-                </span>
+              <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex min-w-0 items-center gap-2 sm:max-w-sm sm:flex-1">
+                  <Input
+                    id="bidAmount"
+                    inputMode="numeric"
+                    name="bidAmount"
+                    pattern="[0-9]*"
+                    placeholder="입찰할 금액 입력"
+                    type="text"
+                    value={bidAmount}
+                    onChange={(event) => setBidAmount(event.target.value)}
+                    disabled={!canEnterBid || isSubmittingBid}
+                    aria-describedby="bidAmountKorean bidAmountError"
+                    aria-invalid={Boolean(amountError)}
+                    className="min-w-0 bg-white"
+                  />
+                  <span className="shrink-0 text-sm font-medium text-slate-700">
+                    원 <span className="text-slate-500">(VAT 포함)</span>
+                  </span>
+                </div>
+                <output
+                  id="bidAmountKorean"
+                  htmlFor="bidAmount"
+                  aria-live="polite"
+                  aria-atomic="true"
+                  className="min-w-0 rounded-md bg-slate-100 px-3 py-2 text-sm font-normal break-keep text-slate-500"
+                >
+                  {koreanAmount || (bidAmount ? "입력 금액을 확인해주세요" : "금액을 입력해주세요")}
+                </output>
               </div>
+              <p id="bidAmountError" className="mt-2 text-sm text-red-600">
+                {amountError}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -268,14 +310,14 @@ export function ExpertBidPage() {
             <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
               <AgreementCheckbox
                 checked={hasReadCautions}
-                disabled={!canBid || isSubmittingBid}
+                disabled={!canEnterBid || isSubmittingBid}
                 id="hasReadCautions"
                 label="각 항목의 모든 주의사항에 대해 이해하였습니다."
                 onCheckedChange={setHasReadCautions}
               />
               <AgreementCheckbox
                 checked={hasAgreedToBid}
-                disabled={!canBid || isSubmittingBid}
+                disabled={!canEnterBid || isSubmittingBid}
                 id="hasAgreedToBid"
                 label="위의 모든 내용에 대해 동의하며, 최종적으로 입찰에 참여합니다."
                 onCheckedChange={setHasAgreedToBid}
@@ -301,7 +343,7 @@ export function ExpertBidPage() {
                 ? "입찰 수정 중"
                 : "입찰 제출 중"
               : isEditingBid
-                ? "입찰 수정"
+                ? "수정 저장 준비 중"
                 : "입찰 참여"}
           </Button>
         </div>
