@@ -8,12 +8,12 @@ import { Checkbox } from "../components/ui/checkbox";
 import { CheckCircle2, User, FileText, X, Eye, EyeOff } from "lucide-react";
 import { TERMS_DATA, TermType } from "../../data/terms";
 import { toast } from "sonner";
-import { persistAuthTokens } from "../../api/authTokens";
+import { clearAuthTokens } from "../../api/authTokens";
 import { userInstance } from "../../api/instance";
 
 // ─── 타입 정의 ────────────────────────────────────────────────────────────
 type OutletContext = {
-  setUser: (user: { type: "client" | "expert"; name: string }) => void;
+  setUser: (user: { type: "client" | "expert"; name: string } | null) => void;
 };
 
 type PendingSocialUser = {
@@ -150,17 +150,11 @@ export function Register() {
 
       const res = await userInstance.post("/auth/signup", payload);
       if (res.data.success) {
-        const hasAccessToken = persistAuthTokens(res.data.data ?? res.data);
+        clearAuthTokens();
+        setUser(null);
         if (isSocialSignup) sessionStorage.removeItem("pendingSocialUser");
-
-        if (userType === "expert" && !hasAccessToken) {
-          toast.success("회원가입이 완료되었습니다. 로그인 후 전문가 인증을 진행해주세요.");
-          navigate("/login?next=/expert/verification/apply");
-          return;
-        }
-
-        setUser({ type: userType, name: payload.name || "" });
-        setStep(4);
+        toast.success("회원가입이 완료되었습니다.");
+        navigate("/", { replace: true });
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "회원가입에 실패했습니다.");
@@ -345,7 +339,7 @@ export function Register() {
                 <CheckCircle2 className="h-20 w-20 text-blue-600 mx-auto animate-bounce" />
                 <h3 className="text-2xl font-bold">회원가입이 완료되었습니다!</h3>
                 <p className="text-gray-500">이제 다양한 진단매치의 서비스를 이용하실 수 있습니다.</p>
-                <Button onClick={() => navigate(userType === "client" ? "/client/company-info" : "/expert/dashboard")} className="w-full" size="lg">시작하기</Button>
+                <Button onClick={() => navigate("/")} className="w-full" size="lg">시작하기</Button>
               </div>
             )}
           </CardContent>

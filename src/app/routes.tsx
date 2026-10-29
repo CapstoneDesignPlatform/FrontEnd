@@ -217,6 +217,11 @@ const expertBidPage = guardedPage(
   () => import("./pages/expert/ExpertBidPage"),
   ({ ExpertBidPage }) => ExpertBidPage,
 );
+const selectedJobManagePage = guardedPage(
+  expertActivityGuard,
+  () => import("./pages/expert/SelectedJobManage"),
+  ({ SelectedJobManage }) => SelectedJobManage,
+);
 const myBidsPage = guardedPage(
   expertActivityGuard,
   () => import("./pages/expert/MyBids"),
@@ -384,6 +389,8 @@ export const router = createBrowserRouter([
       { path: "expert/projects/:id/bid", lazy: expertBidPage },
       { path: "expert/jobs/:id", lazy: projectDetailExpertPage },
       { path: "expert/jobs/:id/bid", lazy: expertBidPage },
+      { path: "expert/jobs/:id/manage", lazy: selectedJobManagePage },
+      { path: "expert/projects/:id/manage", lazy: selectedJobManagePage },
       { path: "expert/my-bids", lazy: myBidsPage },
       { path: "expert/bids", lazy: myBidsPage },
       { path: "expert/profile", lazy: expertProfilePage },

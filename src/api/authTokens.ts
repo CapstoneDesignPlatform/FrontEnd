@@ -49,4 +49,5 @@ export function clearAuthTokens() {
   Cookies.remove(ACCESS_TOKEN_COOKIE_KEY);
   Cookies.remove(REFRESH_TOKEN_COOKIE_KEY);
   Cookies.remove("USER_ROLE");
+  Cookies.remove("CLIENT_INFO_ID");
 }

@@ -256,7 +256,7 @@ function MyBidTable({ bids, getStatusColor, onCopyContact }: MyBidTableProps) {
             const canViewContact = bid.status === "선정됨" && bid.clientContact;
             const announcementCode = bid.announcementCode?.trim();
             const detailPath = announcementCode
-              ? `/expert/jobs/${encodeURIComponent(announcementCode)}`
+              ? `/expert/jobs/${encodeURIComponent(announcementCode)}${bid.status === "선정됨" ? "/manage" : ""}`
               : null;
             const canEditBid = bid.status === "대기 중" && detailPath !== null;
             const isContactOpen = expandedContactBidId === bid.id;

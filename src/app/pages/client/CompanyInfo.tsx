@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react"; // 💡 useEffect 추가
+import { useState, useEffect, useRef } from "react"; // 💡 useEffect 추가
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
@@ -9,7 +9,9 @@ import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "sonner";
 import { Info } from "lucide-react";
 import { useFormFields } from "../../hooks/useFormFields";
-import { userInstance } from "../../../api/instance";
+import { apiClient, ApiError } from "../../../api/apiClient";
+import { getStoredAccessToken } from "../../../api/authTokens";
+import { isMissingCompany, requireClientInfoId } from "../../../api/companyInfoModel";
 import DaumPostcodeEmbed from "react-daum-postcode"; 
 import Cookies from "js-cookie"; 
 
@@ -29,26 +31,35 @@ export function CompanyInfo() {
   const { handleChange, values: formData, setValues } = useFormFields(initialCompanyInfoForm);
   const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
 
-  const isLoggedIn = !!Cookies.get("ACCESS_TOKEN");
+  const isLoggedIn = !!getStoredAccessToken();
+  const [checking, setChecking] = useState(isLoggedIn);
+  const [checkError, setCheckError] = useState('');
+  const [retryKey, setRetryKey] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const saveLock = useRef(false);
 
-  // ── 💡 [핵심 추가] 기존에 등록된 기업 정보가 있는지 진입할 때 체크 ──
   useEffect(() => {
-    if (isLoggedIn) {
-      const checkExistingCompany = async () => {
-        try {
-          const res = await userInstance.get("/client-info");
-          // 이미 기업 정보가 있다면 굳이 다시 받지 않고 의뢰 작성 페이지로 이동
-          if (res.data.success && res.data.data?.companyName) {
-            toast.info("기존에 등록된 기업 정보가 확인되어 의뢰 작성 페이지로 이동합니다.");
-            navigate("/client/create-project");
-          }
-        } catch (err: any) {
-          console.log("기존 기업 정보가 없습니다. 새로 등록을 진행합니다.");
-        }
-      };
-      checkExistingCompany();
-    }
-  }, [isLoggedIn, navigate]);
+    if (!isLoggedIn) return;
+    let active = true;
+    setChecking(true);
+    setCheckError('');
+    void apiClient.get<unknown>('/client-info').then(data => {
+      const id = requireClientInfoId(data);
+      if (!active) return;
+      Cookies.set('CLIENT_INFO_ID', String(id), { expires: 1 });
+      navigate('/client/create-project', { replace: true });
+    }).catch(error => {
+      if (!active) return;
+      if (error instanceof ApiError && isMissingCompany(error.status, error.message)) {
+        Cookies.remove('CLIENT_INFO_ID');
+        return;
+      }
+      setCheckError(error instanceof ApiError && [401, 403].includes(error.status)
+        ? '기업 정보를 조회할 권한이 없습니다. 의뢰인 계정의 로그인 상태를 확인해 주세요.'
+        : error instanceof Error ? error.message : '기업 정보를 조회하지 못했습니다. 다시 시도해 주세요.');
+    }).finally(() => { if (active) setChecking(false); });
+    return () => { active = false; };
+  }, [isLoggedIn, navigate, retryKey]);
 
   // 💡 1. 사업자등록번호 포매터 (000-00-00000)
   const formatBusinessNumber = (value: string) => {
@@ -79,13 +90,16 @@ export function CompanyInfo() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (checking || checkError || saveLock.current) return;
+    saveLock.current = true;
+    setSaving(true);
 
     const payload = {
       representativeName: formData.representative,
       contact: formData.phone,
       email: formData.email,
       companyName: formData.companyName,
-      businessNumber: formData.businessNumber,
+      businessNumber: formData.businessNumber || null,
       address: formData.address,
       website: formData.website,
       description: formData.description,
@@ -93,16 +107,19 @@ export function CompanyInfo() {
 
     try {
       const endpoint = isLoggedIn ? "/client-info" : "/client-info/guest";
-      const res = await userInstance.post(endpoint, payload);
-
-      if (res.data.success) {
-        const newId = res.data.data.id;
-        Cookies.set("CLIENT_INFO_ID", String(newId), { expires: 1 });
-        toast.success("기업 정보가 저장되었습니다!");
-        navigate("/client/create-project");
+      const data = await apiClient.post<unknown>(endpoint, { body: payload });
+      const newId = requireClientInfoId(data);
+      Cookies.set("CLIENT_INFO_ID", String(newId), { expires: 1 });
+      toast.success("기업 정보가 저장되었습니다!");
+      navigate("/client/create-project");
+    } catch (err) {
+      if (err instanceof ApiError && [401, 403].includes(err.status)) {
+        setCheckError('의뢰인 계정으로 다시 로그인한 후 진행해 주세요.');
       }
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "기업 정보 저장 중 오류가 발생했습니다.");
+      toast.error(err instanceof Error ? err.message : "기업 정보 저장 중 오류가 발생했습니다.");
+    } finally {
+      saveLock.current = false;
+      setSaving(false);
     }
   };
 
@@ -128,12 +145,12 @@ export function CompanyInfo() {
 
   return (
     <div className="max-w-3xl mx-auto py-8">
-      <Alert className="mb-6 border-blue-200 bg-blue-50">
+      {!isLoggedIn && <Alert className="mb-6 border-blue-200 bg-blue-50">
         <Info className="h-4 w-4 text-blue-600" />
         <AlertDescription className="text-blue-800">
           비회원으로도 의뢰를 등록하실 수 있습니다. 기업 정보를 입력하신 후 바로 의뢰를 작성해보세요.
         </AlertDescription>
-      </Alert>
+      </Alert>}
 
       <Card className="shadow-md">
         <CardHeader>
@@ -143,6 +160,8 @@ export function CompanyInfo() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {checking && <p role="status" className="mb-4 text-sm text-slate-500">기존 기업 정보를 확인하고 있습니다.</p>}
+          {checkError && <p role="alert" className="mb-4 text-sm text-red-600">{checkError} <button type="button" className="underline" onClick={() => setRetryKey(key => key + 1)}>다시 조회</button></p>}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -216,6 +235,7 @@ export function CompanyInfo() {
                   <div className="flex items-center justify-between mb-3 border-b pb-2">
                     <h3 className="font-semibold text-lg text-gray-800">주소 검색</h3>
                     <Button 
+                      type="button"
                       variant="ghost" 
                       size="sm" 
                       onClick={() => setIsPostcodeOpen(false)}
@@ -249,8 +269,8 @@ export function CompanyInfo() {
             </div>
 
             <div className="flex gap-4 pt-4">
-              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-                다음: 의뢰 작성하기
+              <Button type="submit" disabled={checking || !!checkError || saving} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                {saving ? "저장 중..." : "다음: 의뢰 작성하기"}
               </Button>
               <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/")}>
                 취소

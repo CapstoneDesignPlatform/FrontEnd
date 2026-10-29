@@ -1,163 +1,38 @@
-import { useParams, Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Calendar, DollarSign, MapPin, FileText, Users } from "lucide-react";
+import { useCallback } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
+import { getMyAnnouncementDetail } from '../../../api/clientAnnouncements';
+import { announcementStatus, announcementTitle, formatAmount } from '../../../api/clientAnnouncementsModel';
+import { SelectionCancellationNotice } from '../../components/common/SelectionCancellationNotice';
+import { RequestProgressCard } from '../../components/common/RequestProgressCard';
+import { useAsyncData } from '../../hooks/useAsyncData';
+import { BidSummary, QueryFeedback } from './AnnouncementViews';
 
 export function ProjectDetail() {
-  const { id } = useParams();
+  const { id = '' } = useParams();
+  return <DetailContent key={id} code={id} />;
+}
 
-  // 데모 데이터
-  const project = {
-    id: 1,
-    title: "식품 제조업 영업 면허 취득",
-    type: "필요 면허",
-    description:
-      "식품 제조 및 판매를 위한 영업 면허 취득이 필요합니다. 관련 법규 및 절차에 대한 전문적인 지식을 갖춘 전문가의 도움이 필요합니다.",
-    budget: "₩3,000,000",
-    deadline: "2026-05-15",
-    location: "서울특별시 강남구",
-    bids: 5,
-    status: "입찰 중",
-    requirements:
-      "- 식품 관련 면허 취득 경험 보유\n- 관련 법규에 대한 전문 지식\n- 최소 3년 이상의 경력",
-    createdAt: "2026-04-01",
-    company: {
-      name: "(주)홍길동푸드",
-      representative: "홍길동",
-      phone: "02-1234-5678",
-    },
-  };
+function DetailContent({ code }: { code: string }) {
+  const load = useCallback(() => getMyAnnouncementDetail(code), [code]);
+  const { data: project, error, isLoading, reload } = useAsyncData(load);
+  return <div className="space-y-6"><div className="flex flex-wrap justify-between gap-3"><h1 className="text-3xl">의뢰 상세</h1><div className="flex gap-2"><Button variant="outline" onClick={reload} disabled={isLoading}>새로고침</Button><Button variant="outline" asChild><Link to="/client/projects">목록으로</Link></Button></div></div>
+    <QueryFeedback loading={isLoading} error={error} retry={reload} />
+    {!isLoading && !error && project && <>
+      <RequestProgressCard status={project.status} progressStep={project.progress_step} />
+      <Card><CardHeader><Badge variant="outline" className="w-fit">{announcementStatus(project)}</Badge><CardTitle className="leading-relaxed">{announcementTitle(project)}</CardTitle><p className="text-sm text-slate-500 break-all">의뢰 코드: {project.announcement_code} · 등록일: {project.registered_at}</p></CardHeader></Card>
+      <div className="grid gap-6 lg:grid-cols-2"><InfoCard title="의뢰 정보" fields={[
+        ['업종', project.industry], ['의뢰 목적', project.purpose], ['필요 면허', project.required_license], ['사업자 유형', project.business_owner_type], ['현재 업종', project.current_industry], ['자본 규모', formatAmount(project.capital_scale, '억원')],
+      ]} /><InfoCard title="의뢰 기업 정보" fields={[
+        ['회사명', project.client_info.company_name], ['사업자등록번호', project.client_info.business_number], ['대표자', project.client_info.representative_name], ['주소', project.client_info.address], ['연락처', project.client_info.contact], ['이메일', project.client_info.email], ['설립일', project.client_info.founded_date], ['자본금', formatAmount(project.client_info.capital, '억원')],
+      ]} /></div>
+      <Card><CardHeader><CardTitle>입찰·선정 정보</CardTitle></CardHeader><CardContent className="space-y-3"><BidSummary bids={project.bids} /><SelectionCancellationNotice project={project} />{(project.progress_step ?? 0) < 3 && <p className="text-sm text-slate-500">현재 입찰 정보는 아래 입찰 비교·선정 화면에서 확인할 수 있습니다.</p>}<Button asChild><Link to={`/client/projects/${encodeURIComponent(code)}/bids`}>입찰 비교·선정</Link></Button></CardContent></Card>
+    </>}
+  </div>;
+}
 
-  return (
-    <div className="space-y-6">
-      {/* 헤더 */}
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-3">
-            <Badge variant="outline">{project.type}</Badge>
-            <Badge
-              className={
-                project.status === "입찰 중"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-700"
-              }
-            >
-              {project.status}
-            </Badge>
-          </div>
-          <h1 className="text-3xl mb-2">{project.title}</h1>
-          <p className="text-gray-600">등록일: {project.createdAt}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link to="/client/projects">목록으로</Link>
-          </Button>
-          {project.status === "입찰 중" && (
-            <Button asChild>
-              <Link to={`/client/projects/${id}/bids`}>입찰 확인하기</Link>
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* 주요 정보 */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>의뢰 설명</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 whitespace-pre-wrap">{project.description}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>필수 요구사항</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 whitespace-pre-wrap">{project.requirements}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* 사이드바 */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>의뢰 정보</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-3">
-                <DollarSign className="h-5 w-5 text-gray-600 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">예상 예산</p>
-                  <p className="font-medium">{project.budget}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Calendar className="h-5 w-5 text-gray-600 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">완료 희망일</p>
-                  <p className="font-medium">{project.deadline}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-gray-600 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">지역</p>
-                  <p className="font-medium">{project.location}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Users className="h-5 w-5 text-gray-600 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">받은 입찰</p>
-                  <p className="font-medium">{project.bids}개</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>의뢰 기업 정보</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div>
-                <p className="text-sm text-gray-600">회사명</p>
-                <p className="font-medium">{project.company.name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">대표자</p>
-                <p className="font-medium">{project.company.representative}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">연락처</p>
-                <p className="font-medium">{project.company.phone}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {project.status === "입찰 중" && (
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="pt-6">
-                <p className="text-sm text-blue-900 mb-3">
-                  현재 {project.bids}명의 전문가가 입찰했습니다.
-                </p>
-                <Button asChild className="w-full">
-                  <Link to={`/client/projects/${id}/bids`}>입찰 내역 확인</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+function InfoCard({ title, fields }: { title: string; fields: [string, string | null | undefined][] }) {
+  return <Card><CardHeader><CardTitle>{title}</CardTitle></CardHeader><CardContent><dl className="grid gap-4 sm:grid-cols-2">{fields.map(([label, value]) => <div key={label}><dt className="text-sm text-slate-500">{label}</dt><dd className="mt-1 break-words">{value || '미제공'}</dd></div>)}</dl></CardContent></Card>;
 }

@@ -8,6 +8,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { userInstance } from "../../../api/instance";
+import { getStoredAccessToken } from "../../../api/authTokens";
 import { buildCapitalPayload } from "./createProject/capitalPayload";
 
 import {
@@ -393,7 +394,7 @@ export function CreateProject() {
 
     // 회원: clientInfoId 필수 검증
     const clientInfoId = Number(Cookies.get("CLIENT_INFO_ID") ?? 0);
-    if (!!Cookies.get("ACCESS_TOKEN") && !clientInfoId) {
+    if (!!getStoredAccessToken() && !clientInfoId) {
       toast.error("기업 정보가 없습니다. 기업 정보를 먼저 등록해주세요.");
       return;
     }
@@ -403,7 +404,7 @@ export function CreateProject() {
       : purpose === "survey"   ? surveyData
       : otherData;
 
-    const isLoggedIn = !!Cookies.get("ACCESS_TOKEN");
+    const isLoggedIn = !!getStoredAccessToken();
 
     let capitalFields: ReturnType<typeof buildCapitalPayload>;
     try {

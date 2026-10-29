@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import Cookies from "js-cookie";
+import { isPublicAuthRequest, shouldExpireSession } from "./authRequestPolicy";
+import { clearAuthTokens, getStoredAccessToken } from "./authTokens";
 
-const JWT_TOKEN_KEY = "ACCESS_TOKEN";
 
 export const instance: AxiosInstance = axios.create({
   baseURL: "",
@@ -18,9 +18,9 @@ export const userInstance = axios.create({
 
 userInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-    const token = Cookies.get(JWT_TOKEN_KEY);
+    const token = getStoredAccessToken();
 
-    if (token && config.headers) {
+    if (token && config.headers && !isPublicAuthRequest(config.url)) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -34,10 +34,9 @@ userInstance.interceptors.request.use(
 userInstance.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      Cookies.remove('ACCESS_TOKEN');
-      Cookies.remove('USER_ROLE');
-      Cookies.remove('CLIENT_INFO_ID');
+    if (axios.isAxiosError(error) && error.response?.status === 401
+      && shouldExpireSession(error.config?.url ?? "", error.config?.headers?.Authorization, getStoredAccessToken())) {
+      clearAuthTokens();
       window.location.href = '/login';
     }
     return Promise.reject(error);

@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { CheckCircle2, Copy, Home } from "lucide-react";
 import { toast } from "sonner";
+import { getStoredAccessToken } from "../../../api/authTokens";
 
 export function ProjectSuccess() {
   const navigate = useNavigate();
   const { projectCode } = useParams<{ projectCode: string }>();
   const [copied, setCopied] = useState(false);
+  const isLoggedIn = !!getStoredAccessToken();
 
   const code = projectCode || "코드 확인 불가";
 
@@ -84,8 +86,8 @@ export function ProjectSuccess() {
               </ul>
             </div>
 
-            {/* 회원가입 권유 */}
-            <div className="bg-purple-50 rounded-lg p-4 text-left border border-purple-200">
+            {/* 비회원에게만 회원가입 안내 */}
+            {!isLoggedIn && <div className="bg-purple-50 rounded-lg p-4 text-left border border-purple-200">
               <h3 className="font-semibold text-purple-900 mb-2">💡 회원가입 하시겠어요?</h3>
               <p className="text-sm text-purple-800 mb-3">
                 회원가입 시 의뢰 관리, 전문가와의 소통, 알림 등의 기능을 이용하실 수 있습니다.
@@ -98,10 +100,11 @@ export function ProjectSuccess() {
               >
                 회원가입 하러 가기
               </Button>
-            </div>
+            </div>}
 
             {/* 메인으로 버튼 */}
-            <div className="pt-4">
+            <div className="pt-4 space-y-3">
+              {isLoggedIn && <Button onClick={() => navigate("/client/projects")} size="lg" className="w-full">내 의뢰 확인하기</Button>}
               <Button
                 onClick={() => navigate("/")}
                 size="lg"
