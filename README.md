@@ -1,0 +1,157 @@
+# 진단매치 FrontEnd
+
+기업진단이 필요한 의뢰인과 전문가를 연결하는 **진단매치**의 프론트엔드입니다. 의뢰인은 기업 정보와 진단 조건을 입력하고 전문가의 입찰을 비교하며, 전문가는 인증 신청·입찰·선정 의뢰 조회를 진행합니다. 관리자 화면에서는 회원·의뢰·전문가 인증 정보를 확인합니다.
+
+현재는 회사측 기업진단 입력 흐름과 개인 프론트엔드 개선사항을 통합한 개발 버전입니다. 화면 구현과 실제 API 연동이 완료된 범위는 다르며, 아래 구현 현황을 기준으로 확인해 주세요.
+
+## 기술 구성
+
+| 구분 | 사용 기술 |
+| --- | --- |
+| UI | React 18, TypeScript |
+| 개발·빌드 | Vite 6 |
+| 스타일 | Tailwind CSS 4 |
+| 컴포넌트 | Radix UI 기반 컴포넌트, Lucide React, Sonner |
+| 라우팅 | React Router |
+| API 통신 | Axios, Fetch 기반 공통 API 클라이언트 |
+| 엑셀 | SheetJS (`xlsx`) |
+| 테스트 | Node.js 기본 테스트 러너 |
+
+의존성 버전은 [package.json](./package.json)과 [package-lock.json](./package-lock.json)을 기준으로 합니다.
+
+## 로컬 실행
+
+Node.js와 npm이 필요합니다. 통합 작업에서 사용한 검증 환경은 **Node.js 24.12.0**입니다. 별도의 최소 Node.js 버전은 현재 저장소에 지정되어 있지 않습니다.
+
+```bash
+git clone git@github.com:CapstoneDesignPlatform/FrontEnd.git
+cd FrontEnd
+npm ci
+npm run dev
+```
+
+개발 서버 주소는 터미널에서 확인할 수 있습니다. 기본 주소는 `http://localhost:5173`이며, 포트가 사용 중이면 달라질 수 있습니다.
+
+### 실행 명령
+
+| 명령 | 설명 |
+| --- | --- |
+| `npm run dev` | Vite 개발 서버 실행 |
+| `npm run typecheck` | TypeScript 타입 검사 |
+| `npm run build` | `dist/`에 프로덕션 빌드 생성 |
+| `npm run preview` | 빌드 결과 로컬 미리보기 |
+| `node --experimental-strip-types --test tests/*.test.mjs` | 단위 테스트 실행 |
+
+`test`와 `lint` npm 스크립트는 아직 등록되어 있지 않습니다. 타입 검사와 빌드는 각각 실행해야 합니다.
+
+## API 연결과 환경 변수
+
+별도의 환경 파일이 없어도 기본 HTTP 모드로 실행됩니다. 개발 서버는 `/api` 요청을 [vite.config.ts](./vite.config.ts)에 지정된 백엔드로 프록시합니다. **기본 설정은 로컬 백엔드가 아닌 원격 서버를 사용하므로**, 등록·입찰 등을 테스트하기 전에 연결 대상을 확인해 주세요.
+
+로컬 백엔드를 사용하려면 `vite.config.ts`의 `server.proxy['/api'].target`을 해당 서버 주소로 바꾸세요. Vercel 배포의 API 연결 대상은 [vercel.json](./vercel.json)의 rewrite 설정으로 별도 관리합니다.
+
+필요한 경우 프로젝트 루트에 `.env.local`을 작성할 수 있습니다.
+
+```dotenv
+VITE_API_MODE=http
+VITE_API_BASE_URL=/api
+```
+
+| 변수 | 기본값 | 적용 범위 |
+| --- | --- | --- |
+| `VITE_API_MODE` | `http` | `http` 또는 `mock`. 전문가 API와 전문가 인증 API 구현을 선택 |
+| `VITE_API_BASE_URL` | `/api` | Fetch 기반 `apiClient`의 기본 경로 |
+
+- Axios의 `userInstance`는 `/api`를 사용하며, `VITE_API_BASE_URL`이 모든 요청에 적용되는 것은 아닙니다.
+- `mock` 모드는 전체 앱을 오프라인 데모로 바꾸지 않습니다. 일반 로그인·의뢰인·관리자 API 등은 별도 HTTP 요청을 사용합니다.
+- Mock 응답은 실제 저장이나 전체 거래 흐름의 지속성을 보장하지 않습니다.
+- 소셜 로그인 코드에는 `VITE_KAKAO_CLIENT_ID`, `VITE_NAVER_CLIENT_ID`, `VITE_GOOGLE_CLIENT_ID`, `VITE_REDIRECT_URI` 참조가 있습니다. 값을 입력하는 것만으로 플랫폼의 소셜 로그인 연동이 완료되는 것은 아닙니다.
+- `VITE_` 변수는 브라우저 코드에 포함됩니다. 서버 비밀키를 넣지 마세요. `.env.local`은 Git 추적 대상에서 제외됩니다.
+
+## 주요 화면과 구현 현황
+
+### 의뢰인
+
+- 법인·개인·창업 예정 상태에 따른 기업진단 입력
+- 건설·전기공사·정보통신·소방·산림·의약품·국가유산·기타 업종별 입력 UI
+- 자본금·현재 총자산 입력, 내용 확인 및 최종 등록 확인 모달
+- 기존 기업 정보 조회 시 기업 ID 복원, 조회 오류 구분 및 중복 저장 방지
+- 내 의뢰 목록·상세·입찰 비교 API 조회와 진행 상태 표시
+
+### 전문가
+
+- 전문가 가입·인증 신청 및 인증 상태 화면
+- 의뢰 목록·상세·입찰 참여·내 입찰 조회
+- 기존 입찰 금액 확인과 한글 금액 미리보기
+- 본인이 선정된 의뢰의 기업 정보·낙찰 금액·진행 상태 조회
+
+### 관리자
+
+- 회원·전문가·의뢰 관리 화면
+- 실제 신청자·자격증·사업자 정보 기반 인증 심사 조회
+- 심사 대상 ID 및 응답 검증, 조회된 심사 정보의 엑셀 다운로드
+
+위 항목은 프론트엔드 구현 범위입니다. 전체 기능의 운영 서버 검증 완료를 뜻하지 않습니다.
+
+### 미연동·제한 사항
+
+| 항목 | 현재 상태 |
+| --- | --- |
+| 비회원 휴대폰 인증·의뢰 등록·조회 | 인증 계약 연결 전까지 준비 중으로 차단 |
+| 희망 마감 시간 | 선택·검증 UI만 제공하며 서버에 저장되지 않는 미리보기 |
+| 전문가 선정 확정·선정 취소 | 후보 비교와 금액 확인까지만 제공, 확정·취소 저장 미지원 |
+| 입찰 금액 수정 | 기존 금액 조회·입력 미리보기 가능, 수정 저장 미지원 |
+| 관리자 승인·반려 | 원본 서류 열람 연결 전까지 차단 |
+| 신규 업종 상세·재무정보 | 서버 enum, 총자산 의미, 소수 단위 및 상세 필드 저장 계약 확인 필요 |
+| 결제·정산·알림·소셜 로그인·일부 운영 화면 | 화면이나 임시 동작이 존재하며, 전체 서버 연동 완료 기능으로 간주하지 않음 |
+
+필요한 백엔드 계약과 연동 완료 기준은 [API 요청 문서](./docs/backend-api-requests.md)에서 관리합니다. 특히 비회원 흐름과 회사측 신규 입력 항목은 API-011·API-012를 참고하세요.
+
+## 프로젝트 구조
+
+```text
+src/
+├── api/                 # HTTP/Mock API, 인증 처리, 응답 변환·검증
+├── app/
+│   ├── components/      # 공통 UI 및 역할별 컴포넌트
+│   ├── hooks/           # 비동기 조회·액션·폼 관련 훅
+│   ├── pages/           # 공통·의뢰인·전문가·관리자 화면
+│   ├── routes.tsx       # 라우트 및 화면 로딩 구성
+│   └── utils/           # 금액 표시·엑셀 등 유틸리티
+├── assets/              # 이미지·SVG
+├── data/                # 약관 등 정적 데이터
+├── mocks/               # Mock 응답 데이터
+├── styles/              # 전역 스타일·테마
+└── types/               # 공통 타입
+public/                  # 정적 공개 파일
+tests/                   # 단위 테스트
+docs/                    # API 계약·요청 및 작업 문서
+```
+
+화면 진입점은 `src/main.tsx`, 라우트 정의는 `src/app/routes.tsx`입니다. 실제 의뢰 작성 화면은 `src/app/pages/client/CreateProject.tsx`이며, 같은 폴더의 `createProject/`에는 설정·타입·변환 함수와 기존 폼 코드가 함께 있습니다. 수정 전 라우트와 import 관계를 확인해 주세요.
+
+## 검증 범위
+
+2026-11-05 통합 버전 기준:
+
+- 단위 테스트 **37개 통과**: 인증 요청 정책, 기업 ID, 의뢰 응답, 입찰 규칙, 선정 의뢰, 관리자 심사, 금액 변환 등
+- TypeScript 타입 검사 및 Vite 프로덕션 빌드 통과
+- 브라우저에서 창업 예정 → 건설 업종 선택 → 소수 자본금 입력 → 내용 확인 → 최종 모달 → 취소 흐름 확인
+
+실제 운영 계정의 등록·입찰·저장과 전체 업종·권한 조합의 E2E 검증은 별도로 필요합니다.
+
+## 협업 문서
+
+- [프론트엔드 작업 규칙](./AGENTS.md)
+- [기업진단 입력 흐름 및 통합 내역](./docs/JINDANMATCH_FRONTEND_UPDATE.md)
+- [백엔드 API 요청 기준 문서](./docs/backend-api-requests.md)
+- [전문가 API 계약](./docs/expert-api-contract.md)
+- [전문가 백엔드 API 요청](./docs/expert-backend-api-requests.md)
+- [프론트엔드 보완 계획](./docs/frontend-stabilization-review-2026-10-29.md)
+- [플랫폼 분석](./docs/platform-analysis-2026-10-29.md)
+
+문서의 작성 시점과 현재 코드를 함께 확인해 주세요. 백엔드 변경이 필요하면 임의로 계약을 가정하지 않고 API 요청 문서에 현재 동작·제안 계약·상태·완료 기준을 기록합니다.
+
+## 외부 구성요소
+
+사용한 UI 구성요소와 이미지의 출처는 [ATTRIBUTIONS.md](./ATTRIBUTIONS.md)를 참고하세요.
