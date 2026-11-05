@@ -198,13 +198,15 @@ export function JobTable({ projects }: JobTableProps) {
                       <Button asChild variant="outline" size="sm" className="h-7 px-1.5 text-xs md:px-2">
                         <Link to={detailPath}>상세</Link>
                       </Button>
-                      {canBid && !project.hasMyBid ? (
+                      {canBid ? (
                         <Button
                           asChild
                           size="sm"
                           className={`hidden md:inline-flex ${getBidActionButtonClassName(project.hasMyBid)}`}
                         >
-                          <Link to={bidPath}>입찰 시작</Link>
+                          <Link to={bidPath}>
+                            {project.hasMyBid ? "입찰 수정" : "입찰 시작"}
+                          </Link>
                         </Button>
                       ) : (
                         <Button
@@ -214,7 +216,7 @@ export function JobTable({ projects }: JobTableProps) {
                           className="hidden h-7 px-2 text-xs md:inline-flex"
                           disabled
                         >
-                          {project.hasMyBid ? "입찰 완료" : "입찰 마감"}
+                          입찰 마감
                         </Button>
                       )}
                     </div>

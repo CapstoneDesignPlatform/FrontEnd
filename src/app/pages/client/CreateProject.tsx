@@ -9,6 +9,8 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 import { userInstance } from "../../../api/instance";
+import { getStoredAccessToken } from "../../../api/authTokens";
+import { buildRequestFinancialPayload, normalizeFinancialInput, parseFinancialAmount } from "./createProject/requestFinancialPayload";
 
 import {
   tabGuides,
@@ -258,6 +260,7 @@ function SectionDivider({ title }: { title: string }) {
 
 function formatDecimalAmount(value: string): string {
   if (!value) return "";
+  if (!/^\d*(\.\d*)?$/.test(value)) return value;
   const hasDecimalPoint = value.includes(".");
   const [integerPart, decimalPart = ""] = value.split(".");
   const formattedInteger = Number(integerPart || "0").toLocaleString("ko-KR");
@@ -375,7 +378,7 @@ function DeadlineField({ date, period, hour, minute, onDateChange, onPeriodChang
   return (
     <div className="space-y-4">
       <div className="h-px bg-gray-200" />
-      <FormSection label="의뢰 마감" required>
+      <FormSection label="희망 의뢰 마감 (미리보기)" required={false} description="마감 시간 지정은 준비 중입니다. 아래 선택값은 등록 정보에 저장되지 않습니다.">
         <div className="grid grid-cols-1 items-end gap-3 lg:grid-cols-[minmax(240px,1.2fr)_minmax(330px,1fr)]">
         <div className="min-w-0 space-y-2">
           <Label className="text-sm text-gray-600">날짜</Label>
@@ -436,17 +439,7 @@ function DeadlineField({ date, period, hour, minute, onDateChange, onPeriodChang
   );
 }
 
-function parseDecimalAmount(value: string): string {
-  const cleaned = value.replace(/[^0-9.]/g, "");
-  if (!cleaned) return "";
-
-  const hasDecimalPoint = cleaned.includes(".");
-  const [integerPart, ...decimalParts] = cleaned.split(".");
-  const normalizedInteger = integerPart || (hasDecimalPoint ? "0" : "");
-  const decimalPart = decimalParts.join("").slice(0, 2);
-
-  return hasDecimalPoint ? `${normalizedInteger}.${decimalPart}` : normalizedInteger;
-}
+const parseDecimalAmount = normalizeFinancialInput;
 
 function normalizeBusinessSearch(value: string): string {
   return value.toLowerCase().replace(/[\s·.\-]/g, "");
@@ -461,7 +454,7 @@ function AssetScaleField({ id, value, onChange, labelSuffix, guide, capitalId, c
 }) {
   return (
     <div className="space-y-3">
-      <div className="flex gap-8">
+      <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
         {/* 자본금 */}
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-2">
@@ -472,6 +465,7 @@ function AssetScaleField({ id, value, onChange, labelSuffix, guide, capitalId, c
           </div>
           <div className="flex items-center gap-3">
             <Input id={capitalId} name="capital" autoComplete="on" type="text" inputMode="decimal" placeholder="숫자만 입력"
+              aria-label={hideTotalAssets ? "예정 자본금" : "자본금"}
               value={formatDecimalAmount(capitalValue)}
               onChange={(e) => capitalOnChange(parseDecimalAmount(e.target.value))} required
               className="py-6 text-center text-[18px] font-[400] leading-[27px]" />
@@ -489,6 +483,7 @@ function AssetScaleField({ id, value, onChange, labelSuffix, guide, capitalId, c
             </Label>
             <div className="flex items-center gap-3">
               <Input id={id} name="totalAssets" autoComplete="on" type="text" inputMode="decimal" placeholder="숫자만 입력"
+                aria-label="현재 총자산"
                 value={formatDecimalAmount(value)}
                 onChange={(e) => onChange(parseDecimalAmount(e.target.value))}
                 required className="py-6 text-center text-[18px] font-[400] leading-[27px]" />
@@ -619,12 +614,32 @@ export function CreateProject() {
   const [customDiagnosisDetails, setCustomDiagnosisDetails] = useState("");
   const [purpose,  setPurpose]  = useState<ProjectTab | "">("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitLock = useRef(false);
   const [isReviewing, setIsReviewing] = useState(false);
   const [showSubmitConfirmation, setShowSubmitConfirmation] = useState(false);
   const [deadlineDate, setDeadlineDate] = useState("");
   const [deadlinePeriod, setDeadlinePeriod] = useState("");
   const [deadlineHour, setDeadlineHour] = useState("");
   const [deadlineMinute, setDeadlineMinute] = useState("");
+  const confirmationRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!showSubmitConfirmation) return;
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const modal = confirmationRef.current;
+    modal?.querySelector<HTMLButtonElement>('button')?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !submitLock.current) { event.preventDefault(); setShowSubmitConfirmation(false); }
+      if (event.key !== 'Tab' || !modal) return;
+      const buttons = Array.from(modal.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+      if (!buttons.length) { event.preventDefault(); return; }
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('keydown', onKey); previous?.focus(); };
+  }, [showSubmitConfirmation]);
   const businessSectionRef = useRef<HTMLDivElement>(null);
   const diagnosisSectionRef = useRef<HTMLDivElement>(null);
   const financialSectionRef = useRef<HTMLDivElement>(null);
@@ -1076,14 +1091,16 @@ export function CreateProject() {
       toast.error("진단 목적을 선택해 주세요.");
       return;
     }
-    if (isSubmitting) return;
+    if (submitLock.current || isSubmitting) return;
+    if (!showSubmitConfirmation) { handleReview(e.currentTarget); return; }
+    if (!getStoredAccessToken()) { toast.error("비회원 의뢰는 휴대폰 인증 연결 후 이용할 수 있습니다."); return; }
 
     if (!currentBusinessStatus) {
       toast.error("현재 사업 상태를 선택해 주세요.");
       return;
     }
 
-    if (industry === "construction") {
+    {
       const validationMessage = getSelectionValidationMessage();
       if (validationMessage) {
         toast.error(validationMessage);
@@ -1097,14 +1114,9 @@ export function CreateProject() {
       : effectivePurpose === "survey"   ? surveyData
       : otherData;
 
-    if (Number((currentData as any).capitalScale) <= 0) {
-      toast.error(currentBusinessStatus === "startup" ? "예정 자본금은 0보다 큰 값을 입력해 주세요." : "자본금은 0보다 큰 값을 입력해 주세요.");
-      return;
-    }
-    if (currentBusinessStatus !== "startup" && Number((currentData as any).assetScale) <= 0) {
-      toast.error("현재 총자산은 0보다 큰 값을 입력해 주세요.");
-      return;
-    }
+    let financialPayload: ReturnType<typeof buildRequestFinancialPayload>;
+    try { financialPayload = buildRequestFinancialPayload(currentData, currentBusinessStatus); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "재무 정보를 확인해 주세요."); return; }
     const deadlineValidationMessage = getDeadlineValidationMessage();
     if (deadlineValidationMessage) {
       toast.error(deadlineValidationMessage);
@@ -1113,14 +1125,15 @@ export function CreateProject() {
 
     // 회원: clientInfoId 필수 검증
     const clientInfoId = Number(Cookies.get("CLIENT_INFO_ID") ?? 0);
-    if (!!Cookies.get("ACCESS_TOKEN") && !clientInfoId) {
+    if (!Number.isSafeInteger(clientInfoId) || clientInfoId <= 0) {
       toast.error("기업 정보가 없습니다. 기업 정보를 먼저 등록해주세요.");
       return;
     }
 
+    submitLock.current = true;
     setIsSubmitting(true);
 
-    const isLoggedIn = !!Cookies.get("ACCESS_TOKEN");
+    const isLoggedIn = !!getStoredAccessToken();
 
     const selectedBusinessLabel = constructionBusinesses.find((business) => business.value === registeredBusiness)?.label ?? registeredBusiness;
     const constructionClassification = constructionRegistrationType === "additional-business"
@@ -1145,8 +1158,7 @@ export function CreateProject() {
       industry:              INDUSTRY_MAP[industry] || industry.toUpperCase(),
       purpose:               PURPOSE_MAP[effectivePurpose] || effectivePurpose.toUpperCase(),
       businessOwnerType:     OWNER_TYPE_MAP[currentBusinessStatus] ?? null,
-      capital:               Number((currentData as any).capitalScale) || 0,
-      capitalScale:          currentBusinessStatus === "startup" ? null : (Number((currentData as any).assetScale) || 0),
+      ...financialPayload,
       category:              industry === "construction" ? constructionClassification : ((currentData as any).classification?.toUpperCase() ?? null),
       requiredLicense:       industry === "construction" && effectivePurpose === "license" ? selectedBusinessLabel : ((currentData as any).requiredLicense || null),
       currentIndustryStatus,
@@ -1166,27 +1178,33 @@ export function CreateProject() {
           : ((currentData as any).customReason || null),
     };
 
-    console.log("[Announcement] payload:", payload);
 
     try {
       const res = await userInstance.post(
         isLoggedIn ? "/announcements" : "/announcements/guest",
         payload,
       );
+      if (!res.data?.success) throw new Error(res.data?.message || "의뢰를 등록하지 못했습니다.");
       if (res.data.success) {
-        const code = String(res.data.data.announcement_code || res.data.data.id);
+        const code = res.data.data?.announcement_code;
+        if (typeof code !== "string" || !code.trim()) {
+          toast.info("등록 응답에서 의뢰 코드를 확인하지 못했습니다. 내 의뢰 목록을 확인해 주세요.");
+          navigate("/client/projects");
+          return;
+        }
         if (isLoggedIn) {
-          navigate(`/client/project-success/${code}`);
+          navigate(`/client/project-success/${encodeURIComponent(code)}`);
         } else {
           window.sessionStorage.setItem("guestLatestProjectId", code);
           navigate("/client/project-success");
         }
       }
     } catch (error: any) {
-      const msg = error.response?.data?.message || "의뢰 등록에 실패했습니다.";
+      const msg = error.response?.data?.message || error.message || "의뢰 등록에 실패했습니다.";
       console.error("[Announcement] 400 error:", error.response?.data);
       toast.error(msg);
     } finally {
+      submitLock.current = false;
       setIsSubmitting(false);
     }
   };
@@ -1197,8 +1215,8 @@ export function CreateProject() {
     : commonProjectPurpose === "survey" ? surveyData
     : otherData;
   const isFinancialInfoValid =
-    Number((activeFinancialData as any).capitalScale) > 0 &&
-    (currentBusinessStatus === "startup" || Number((activeFinancialData as any).assetScale) > 0);
+    parseFinancialAmount(activeFinancialData.capitalScale) !== null &&
+    (currentBusinessStatus === "startup" || parseFinancialAmount(activeFinancialData.assetScale) !== null);
 
   useEffect(() => {
     if (isFinancialInfoValid) return;
@@ -1210,6 +1228,7 @@ export function CreateProject() {
 
   const selectedDeadline = getDeadlineDate(deadlineDate, deadlinePeriod, deadlineHour, deadlineMinute);
   const getDeadlineValidationMessage = () => {
+    if (!deadlineDate && !deadlinePeriod && !deadlineHour && !deadlineMinute) return null;
     if (!selectedDeadline) return "의뢰 마감 날짜와 시간을 모두 선택해 주세요.";
     const now = new Date();
     if (selectedDeadline.getTime() < getMinimumSelectableDeadline(now).getTime()) {
@@ -1226,14 +1245,8 @@ export function CreateProject() {
       toast.error(validationMessage);
       return;
     }
-    if (Number((activeFinancialData as any).capitalScale) <= 0) {
-      toast.error(currentBusinessStatus === "startup" ? "예정 자본금은 0보다 큰 값을 입력해 주세요." : "자본금은 0보다 큰 값을 입력해 주세요.");
-      return;
-    }
-    if (currentBusinessStatus !== "startup" && Number((activeFinancialData as any).assetScale) <= 0) {
-      toast.error("현재 총자산은 0보다 큰 값을 입력해 주세요.");
-      return;
-    }
+    try { buildRequestFinancialPayload(activeFinancialData, currentBusinessStatus); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "재무 정보를 확인해 주세요."); return; }
     const deadlineValidationMessage = getDeadlineValidationMessage();
     if (deadlineValidationMessage) {
       toast.error(deadlineValidationMessage);
@@ -1399,10 +1412,11 @@ export function CreateProject() {
       <form onSubmit={handleSubmit} className={`bg-white rounded-2xl shadow-sm border border-gray-100 space-y-8 ${isReviewing ? "p-4 sm:p-6" : "p-8"}`}>
         {isReviewing ? (
           <div className="space-y-3">
+            <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">업종별 세부 조건 일부와 희망 마감은 아직 저장을 지원하지 않습니다. 기본 의뢰 정보 등록 후 상세 내용을 다시 확인해 주세요.</p>
             <ReviewCard title="사업 정보" rows={businessReviewRows} onEdit={() => editReviewSection(businessSectionRef, true)} />
             <ReviewCard title="진단 정보" rows={diagnosisReviewRows} onEdit={() => editReviewSection(diagnosisSectionRef, true)} />
             <ReviewCard title="재무 정보" rows={financialReviewRows} onEdit={() => editReviewSection(financialSectionRef)} />
-            <ReviewCard title="의뢰 마감 정보" rows={deadlineReviewRows} onEdit={() => editReviewSection(deadlineSectionRef)} />
+            <ReviewCard title="희망 마감 미리보기 · 저장되지 않음" rows={deadlineReviewRows} onEdit={() => editReviewSection(deadlineSectionRef)} />
             {otherReviewRows.length > 0 && (
               <ReviewCard title="기타 정보" rows={otherReviewRows} onEdit={() => editReviewSection(otherInfoSectionRef, true)} />
             )}
@@ -2029,6 +2043,7 @@ export function CreateProject() {
             }}
           >
             <div
+              ref={confirmationRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="submit-confirmation-title"
@@ -2043,7 +2058,7 @@ export function CreateProject() {
               </p>
               {selectedDeadline && (
                 <div className="mt-5 rounded-lg bg-blue-50 px-4 py-3">
-                  <p className="text-xs font-medium text-blue-700">의뢰 마감</p>
+                  <p className="text-xs font-medium text-blue-700">희망 마감 미리보기 · 저장되지 않음</p>
                   <p className="mt-1 font-semibold text-blue-900">{formatDeadline(selectedDeadline)}</p>
                 </div>
               )}

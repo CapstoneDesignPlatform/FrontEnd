@@ -1,29 +1,13 @@
-import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { CheckCircle2, ClipboardList, Home, Smartphone } from "lucide-react";
+import { CheckCircle2, ClipboardList, Home } from "lucide-react";
 
-const maskPhoneNumber = (value: string) => {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length !== 11) return "확인된 휴대폰 번호";
-  return `${digits.slice(0, 3)}-****-${digits.slice(7)}`;
-};
+import { getStoredAccessToken } from "../../../api/authTokens";
 
 export function ProjectSuccess() {
   const navigate = useNavigate();
-  const { projectCode } = useParams<{ projectCode: string }>();
-  const verifiedPhone = window.sessionStorage.getItem("verifiedPhone") ?? "";
-
-  useEffect(() => {
-    if (verifiedPhone) {
-      window.sessionStorage.setItem("guestLookupVerifiedPhone", verifiedPhone);
-    }
-    if (projectCode) {
-      // 의뢰번호는 같은 세션의 조회 연결에만 사용하고 사용자 화면에는 표시하지 않는다.
-      window.sessionStorage.setItem("guestLatestProjectId", projectCode);
-    }
-  }, [projectCode, verifiedPhone]);
+  const isLoggedIn = !!getStoredAccessToken();
 
   return (
     <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-200px)]">
@@ -39,14 +23,7 @@ export function ProjectSuccess() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="rounded-lg border-2 border-blue-100 bg-blue-50 p-6">
-              <Smartphone className="mx-auto mb-3 h-8 w-8 text-blue-600" />
-              <p className="text-sm text-gray-600">의뢰 시 확인한 휴대폰 번호</p>
-              <p className="mt-1 text-xl font-semibold text-blue-700">{maskPhoneNumber(verifiedPhone)}</p>
-              <p className="mt-3 break-keep text-sm text-gray-600">
-                의뢰 시 확인한 휴대폰 번호로 언제든지 진행 상황과 전문가 제안을 확인할 수 있습니다.
-              </p>
-            </div>
+            {!isLoggedIn && <p className="rounded-lg border border-blue-100 bg-blue-50 p-6 text-sm text-gray-600">비회원 휴대폰 조회 기능은 준비 중입니다.</p>}
 
             <div className="bg-blue-50 rounded-lg p-4 text-left">
               <h3 className="font-semibold text-blue-900 mb-2">다음 단계 안내</h3>
@@ -57,7 +34,7 @@ export function ProjectSuccess() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">2.</span>
-                  <span>나중에 다시 방문하면 의뢰한 휴대폰 번호로 카카오톡 새 확인번호를 받아주세요.</span>
+                  <span>회원은 로그인 후 내 의뢰 목록에서 진행 상황을 확인할 수 있습니다.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">3.</span>
@@ -65,12 +42,12 @@ export function ProjectSuccess() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">4.</span>
-                  <span>전문가를 선택한 후 직접 협상을 통해 최종 가격을 결정하세요.</span>
+                  <span>전문가 후보와 제안 금액을 비교할 수 있으며, 선정 확정 기능은 준비 중입니다.</span>
                 </li>
               </ul>
             </div>
 
-            <div className="bg-purple-50 rounded-lg p-4 text-left border border-purple-200">
+            {!isLoggedIn && <div className="bg-purple-50 rounded-lg p-4 text-left border border-purple-200">
               <h3 className="font-semibold text-purple-900 mb-2">💡 회원가입 하시겠어요?</h3>
               <p className="text-sm text-purple-800 mb-3">
                 회원가입 시 의뢰 관리, 전문가와의 소통, 알림 등의 기능을 이용하실 수 있습니다.
@@ -83,14 +60,14 @@ export function ProjectSuccess() {
               >
                 회원가입 하러 가기
               </Button>
-            </div>
+            </div>}
 
             <div className="grid gap-3 pt-4 sm:grid-cols-2">
               <Button variant="outline" size="lg" onClick={() => navigate("/")}>
                 <Home className="mr-2 h-5 w-5" />
                 메인으로
               </Button>
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate("/check-request")}>
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate(isLoggedIn ? "/client/projects" : "/check-request")}>
                 <ClipboardList className="mr-2 h-5 w-5" />
                 내 의뢰 확인하기
               </Button>

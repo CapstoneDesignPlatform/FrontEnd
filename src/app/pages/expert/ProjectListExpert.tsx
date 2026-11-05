@@ -219,7 +219,7 @@ export function ProjectListExpert() {
                 실시간 의뢰 목록
               </CardTitle>
               <CardDescription>
-                "입찰 가능" 상태에서만 입찰할 수 있으며, 이미 입찰한 공고는 완료 상태로 표시됩니다.
+                "입찰 가능" 상태에서만 입찰할 수 있으며, 이미 입찰한 공고는 "입찰 수정"에서 기존 금액을 확인할 수 있습니다.
               </CardDescription>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

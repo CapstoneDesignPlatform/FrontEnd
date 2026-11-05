@@ -42,9 +42,13 @@ export function ProjectDetailExpert() {
 
   if (!project) return null;
 
-  const hasMyBid = project.hasMyBid === true;
+  const hasMyBid = project.hasMyBid === true || Boolean(project.myBid);
   const bidStatus = getExpertBidAvailability(project);
   const canBid = canBidOnExpertJob(project);
+  const canOpenBid =
+    canBid && (!project.myBid || project.myBid.status === "대기 중");
+  const bidActionLabel = hasMyBid ? "입찰 수정" : "입찰 시작";
+  const disabledBidLabel = canBid ? "수정 불가" : "입찰 마감";
   const bidPath = `/expert/jobs/${encodeURIComponent(project.announcementCode)}/bid`;
 
   return (
@@ -83,12 +87,12 @@ export function ProjectDetailExpert() {
           <Button asChild variant="outline" className="h-8 px-3 text-xs md:h-9 md:text-sm">
             <Link to="/expert/jobs">목록으로</Link>
           </Button>
-          {canBid && !hasMyBid ? (
+          {canOpenBid ? (
             <Button
               className="h-8 bg-blue-600 px-3 text-xs hover:bg-blue-700 md:h-9 md:text-sm"
               onClick={() => navigate(bidPath)}
             >
-              입찰 시작
+              {bidActionLabel}
             </Button>
           ) : (
             <Button
@@ -97,7 +101,7 @@ export function ProjectDetailExpert() {
               className="h-8 px-3 text-xs md:h-9 md:text-sm"
               disabled
             >
-              {hasMyBid ? "입찰 완료" : "입찰 마감"}
+              {disabledBidLabel}
             </Button>
           )}
         </div>
@@ -227,13 +231,13 @@ export function ProjectDetailExpert() {
             </CardContent>
           </Card>
 
-          {canBid && !hasMyBid ? (
+          {canOpenBid ? (
             <Button
               className="h-9 w-full bg-blue-600 text-sm hover:bg-blue-700 md:h-10 md:text-base"
               size="lg"
               onClick={() => navigate(bidPath)}
             >
-              지금 입찰하기
+              {bidActionLabel}
             </Button>
           ) : (
             <Button
@@ -243,7 +247,7 @@ export function ProjectDetailExpert() {
               variant="outline"
               disabled
             >
-              {hasMyBid ? "입찰 완료" : "입찰 마감"}
+              {disabledBidLabel}
             </Button>
           )}
         </div>

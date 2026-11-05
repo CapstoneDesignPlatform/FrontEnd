@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
@@ -9,7 +9,9 @@ import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "sonner";
 import { Info } from "lucide-react";
 import { useFormFields } from "../../hooks/useFormFields";
-import { userInstance } from "../../../api/instance";
+import { apiClient, ApiError } from "../../../api/apiClient";
+import { getStoredAccessToken } from "../../../api/authTokens";
+import { isMissingCompany, requireClientInfoId } from "../../../api/companyInfoModel";
 import Cookies from "js-cookie"; 
 
 const REGIONS: Record<string, string[]> = {
@@ -56,34 +58,37 @@ export function CompanyInfo() {
   const [emailId, setEmailId] = useState("");
   const [emailDomain, setEmailDomain] = useState("");
   const [emailDomainOption, setEmailDomainOption] = useState("custom");
-  const verifiedPhone = window.sessionStorage.getItem("verifiedPhone") ?? "";
+  const [contactPhone, setContactPhone] = useState("");
 
-  const isLoggedIn = !!Cookies.get("ACCESS_TOKEN");
+  const isLoggedIn = !!getStoredAccessToken();
+  const [checking, setChecking] = useState(isLoggedIn);
+  const [checkError, setCheckError] = useState('');
+  const [retryKey, setRetryKey] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const saveLock = useRef(false);
 
   useEffect(() => {
-    if (!verifiedPhone) {
-      navigate("/client/start", { replace: true });
-    }
-  }, [navigate, verifiedPhone]);
-
-  // ── 💡 [핵심 추가] 기존에 등록된 기업 정보가 있는지 진입할 때 체크 ──
-  useEffect(() => {
-    if (verifiedPhone && isLoggedIn) {
-      const checkExistingCompany = async () => {
-        try {
-          const res = await userInstance.get("/client-info");
-          // 이미 기업 정보가 있다면 굳이 다시 받지 않고 의뢰 작성 페이지로 이동
-          if (res.data.success && res.data.data?.companyName) {
-            toast.info("기존에 등록된 기업 정보가 확인되어 의뢰 작성 페이지로 이동합니다.");
-            navigate("/client/create-project");
-          }
-        } catch (err: any) {
-          console.log("기존 기업 정보가 없습니다. 새로 등록을 진행합니다.");
-        }
-      };
-      checkExistingCompany();
-    }
-  }, [isLoggedIn, navigate, verifiedPhone]);
+    if (!isLoggedIn) return;
+    let active = true;
+    setChecking(true);
+    setCheckError('');
+    void apiClient.get<unknown>('/client-info').then(data => {
+      const id = requireClientInfoId(data);
+      if (!active) return;
+      Cookies.set('CLIENT_INFO_ID', String(id), { expires: 1 });
+      navigate('/client/create-project', { replace: true });
+    }).catch(error => {
+      if (!active) return;
+      if (error instanceof ApiError && isMissingCompany(error.status, error.message)) {
+        Cookies.remove('CLIENT_INFO_ID');
+        return;
+      }
+      setCheckError(error instanceof ApiError && [401, 403].includes(error.status)
+        ? '기업 정보를 조회할 권한이 없습니다. 의뢰인 계정의 로그인 상태를 확인해 주세요.'
+        : error instanceof Error ? error.message : '기업 정보를 조회하지 못했습니다. 다시 시도해 주세요.');
+    }).finally(() => { if (active) setChecking(false); });
+    return () => { active = false; };
+  }, [isLoggedIn, navigate, retryKey]);
 
   // 연락처 포매터 (010-0000-0000)
   const formatPhoneNumber = (value: string) => {
@@ -103,10 +108,9 @@ export function CompanyInfo() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!verifiedPhone) {
-      navigate("/client/start", { replace: true });
-      return;
-    }
+    if (checking || checkError || saveLock.current) return;
+    if (!isLoggedIn) { toast.error("비회원 의뢰는 휴대폰 인증 연결 후 이용할 수 있습니다."); return; }
+    if (!/^010\d{8}$/.test(contactPhone.replace(/\D/g, ""))) { toast.error("휴대폰 번호 11자리를 입력해 주세요."); return; }
 
     if (!formData.managerName.trim()) {
       setManagerNameError("담당자명을 입력해 주세요.");
@@ -124,11 +128,13 @@ export function CompanyInfo() {
     }
 
     setManagerNameError("");
+    saveLock.current = true;
+    setSaving(true);
 
     const selectedAddress = [formData.province, formData.district].filter(Boolean).join(" ");
     const payload = {
       managerName: formData.managerName.trim(),
-      contact: formatPhoneNumber(verifiedPhone),
+      contact: formatPhoneNumber(contactPhone),
       ...(formData.companyName.trim() && { companyName: formData.companyName.trim() }),
       ...(formData.representative.trim() && { representativeName: formData.representative.trim() }),
       ...(selectedAddress && { address: selectedAddress }),
@@ -137,31 +143,22 @@ export function CompanyInfo() {
 
     try {
       const endpoint = isLoggedIn ? "/client-info" : "/client-info/guest";
-      const res = await userInstance.post(endpoint, payload);
-
-      if (res.data.success) {
-        const newId = res.data.data.id;
-        Cookies.set("CLIENT_INFO_ID", String(newId), { expires: 1 });
-        toast.success("기업 정보가 저장되었습니다!");
-        navigate("/client/create-project");
+      const data = await apiClient.post<unknown>(endpoint, { body: payload });
+      const newId = requireClientInfoId(data);
+      Cookies.set("CLIENT_INFO_ID", String(newId), { expires: 1 });
+      toast.success("기업 정보가 저장되었습니다!");
+      navigate("/client/create-project");
+    } catch (err) {
+      if (err instanceof ApiError && [401, 403].includes(err.status)) {
+        setCheckError('의뢰인 계정으로 다시 로그인한 후 진행해 주세요.');
       }
-    } catch (err: any) {
-      const backendMessage = err.response?.data?.message;
-      const isGuestConnectionFailure = !isLoggedIn && (
-        !err.response ||
-        (err.response.status === 500 && !err.response.data)
-      );
-
-      toast.error(
-        backendMessage ||
-        (isGuestConnectionFailure
-          ? "서버에 연결할 수 없습니다. Backend 실행 상태를 확인해 주세요."
-          : "기업 정보 저장 중 오류가 발생했습니다."),
-      );
+      toast.error(err instanceof Error ? err.message : "기업 정보 저장 중 오류가 발생했습니다.");
+    } finally {
+      saveLock.current = false;
+      setSaving(false);
     }
   };
 
-  if (!verifiedPhone) return null;
 
   return (
     <div className="max-w-3xl mx-auto py-8">
@@ -182,6 +179,9 @@ export function CompanyInfo() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {checking && <p role="status" className="mb-4 text-sm text-slate-500">기존 기업 정보를 확인하고 있습니다.</p>}
+          {checkError && <p role="alert" className="mb-4 text-sm text-red-600">{checkError} <button type="button" className="underline" onClick={() => setRetryKey(key => key + 1)}>다시 조회</button></p>}
+          {!isLoggedIn && <p role="status" className="mb-4 text-sm text-amber-700">비회원 휴대폰 인증을 준비하고 있습니다. 회원으로 로그인하여 의뢰할 수 있습니다.</p>}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -228,11 +228,12 @@ export function CompanyInfo() {
                   id="phone" 
                   name="phone" 
                   type="tel" 
-                  value={formatPhoneNumber(verifiedPhone)}
-                  readOnly
-                  className="bg-gray-100 text-gray-700 cursor-not-allowed"
+                  value={formatPhoneNumber(contactPhone)}
+                  onChange={(event) => setContactPhone(formatPhoneNumber(event.target.value))}
+                  required
+                  maxLength={13}
                 />
-                <p className="text-xs text-green-700">✓ 확인된 휴대폰 번호 · 변경 불가</p>
+                <p className="text-xs text-gray-500">의뢰 관련 연락을 받을 휴대폰 번호를 입력해 주세요.</p>
               </div>
             </div>
 
@@ -342,7 +343,7 @@ export function CompanyInfo() {
             </div>
 
             <div className="flex gap-4 pt-4">
-              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+              <Button type="submit" disabled={checking || !!checkError || saving || !isLoggedIn} className="flex-1 bg-blue-600 hover:bg-blue-700">
                 다음: 의뢰 작성하기
               </Button>
               <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/")}>

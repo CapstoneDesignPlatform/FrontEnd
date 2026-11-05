@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { clearAuthTokens } from "../../api/authTokens";
+import { clearAuthTokens, getStoredAccessToken } from "../../api/authTokens";
 import Cookies from 'js-cookie';
 
 
@@ -197,13 +197,14 @@ export function Root() {
 
   // 새로고침 시 쿠키에 토큰이 있으면 유저 정보 복원
   useEffect(() => {
-    const token = Cookies.get("ACCESS_TOKEN");
+    const token = getStoredAccessToken();
     const role = Cookies.get("USER_ROLE");
     if (!token || !role) return;
 
+    let active = true;
     userInstance.get("/users/myInfo")
       .then((res) => {
-        if (res.data?.success) {
+        if (active && getStoredAccessToken() === token && res.data?.success) {
           setUser({
             type: role.toLowerCase() as "client" | "expert",
             name: res.data.data.name,
@@ -211,12 +212,10 @@ export function Root() {
         }
       })
       .catch(() => {
-        // 토큰 만료 등 → 쿠키 정리
-        Cookies.remove("ACCESS_TOKEN");
-        Cookies.remove("REFRESH_TOKEN");
-        Cookies.remove("USER_ROLE");
-        Cookies.remove("CLIENT_INFO_ID");
+        // Session expiration is handled only for the matching token by the interceptor.
+        // Network errors and stale account responses must not erase a new login.
       });
+    return () => { active = false; };
   }, []);
 
   const isClientRoute = location.pathname.startsWith("/client");
@@ -240,6 +239,7 @@ export function Root() {
     clearAuthTokens();
     Cookies.remove("CLIENT_INFO_ID");
     setUser(null);
+    navigate("/", { replace: true });
   };
 
   const handleMyRequestsNavigation = () => {
@@ -247,14 +247,6 @@ export function Root() {
 
     if (user?.type === "client") {
       navigate("/client/mypage");
-      return;
-    }
-
-    const verifiedPhone = window.sessionStorage.getItem("guestLookupVerifiedPhone");
-    const latestProjectId = window.sessionStorage.getItem("guestLatestProjectId");
-
-    if (verifiedPhone && latestProjectId) {
-      navigate(`/client/guest-request-view/${encodeURIComponent(latestProjectId)}`);
       return;
     }
 

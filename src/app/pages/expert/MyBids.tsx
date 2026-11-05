@@ -254,16 +254,29 @@ function MyBidTable({ bids, getStatusColor, onCopyContact }: MyBidTableProps) {
         <tbody className="divide-y divide-slate-100 bg-white">
           {bids.map((bid) => {
             const canViewContact = bid.status === "선정됨" && bid.clientContact;
-            const canEditBid = false;
+            const announcementCode = bid.announcementCode?.trim();
+            const detailPath = announcementCode
+              ? `/expert/jobs/${encodeURIComponent(announcementCode)}${bid.status === "선정됨" ? "/manage" : ""}`
+              : null;
+            const canEditBid = bid.status === "대기 중" && detailPath !== null;
             const isContactOpen = expandedContactBidId === bid.id;
 
             return (
               <Fragment key={bid.id}>
                 <tr className="hover:bg-slate-50">
                   <td className="max-w-[300px] px-4 py-3">
-                    <p className="truncate font-medium text-slate-950">
-                      {bid.projectTitle}
-                    </p>
+                    {detailPath ? (
+                      <Link
+                        to={detailPath}
+                        className="block truncate font-medium text-slate-950 hover:text-blue-600 hover:underline"
+                      >
+                        {bid.projectTitle}
+                      </Link>
+                    ) : (
+                      <p className="truncate font-medium text-slate-950">
+                        {bid.projectTitle}
+                      </p>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <Badge variant="outline" className={getStatusColor(bid.status)}>
@@ -312,11 +325,7 @@ function MyBidTable({ bids, getStatusColor, onCopyContact }: MyBidTableProps) {
                         size="sm"
                         className="h-7 px-2 text-xs"
                       >
-                        <Link
-                          to={`/expert/jobs/${encodeURIComponent(
-                            bid.announcementCode ?? String(bid.projectId),
-                          )}/bid`}
-                        >
+                        <Link to={`${detailPath}/bid`}>
                           입찰 수정
                         </Link>
                       </Button>

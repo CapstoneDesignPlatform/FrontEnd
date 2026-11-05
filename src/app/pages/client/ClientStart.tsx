@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom"; 
-import Cookies from "js-cookie"; 
+import { getStoredAccessToken } from "../../../api/authTokens";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -41,52 +41,14 @@ export function ClientStart() {
       return;
     }
 
-    setPhoneError("");
-    setVerificationCode("");
-    setVerificationError("");
-    setRemainingSeconds(180);
-    setTimerSession((session) => session + 1);
-    setShowVerification(true);
+    setPhoneError("휴대폰 인증은 준비 중입니다. 회원으로 로그인하여 의뢰해 주세요.");
   };
 
   const handleVerification = () => {
-    if (isVerificationExpired) return;
-
-    const phoneDigits = phoneNumber.replace(/\D/g, "");
-    if (phoneDigits.length !== 11) {
-      setPhoneError("휴대폰 번호 11자리를 정확히 입력해 주세요.");
-      setShowVerification(false);
-      return;
-    }
-
-    if (!phoneDigits.startsWith("010")) {
-      setPhoneError("010으로 시작하는 휴대폰 번호를 입력해 주세요.");
-      setShowVerification(false);
-      return;
-    }
-
-    if (verificationCode.length < 6) {
-      setVerificationError("6자리 확인번호를 입력해 주세요.");
-      return;
-    }
-
-    if (verificationCode !== "123456") {
-      setVerificationError("확인번호가 일치하지 않습니다.");
-      return;
-    }
-
-    setVerificationError("");
-    setShowVerification(false);
-    window.sessionStorage.setItem("verifiedPhone", phoneNumber.replace(/\D/g, ""));
-    navigate("/client/company-info");
+    setVerificationError("휴대폰 인증은 아직 지원되지 않습니다.");
   };
 
-  const handleVerificationResend = () => {
-    setVerificationCode("");
-    setVerificationError("");
-    setRemainingSeconds(180);
-    setTimerSession((session) => session + 1);
-  };
+  const handleVerificationResend = handleVerificationRequest;
 
   const formatRemainingTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -95,12 +57,8 @@ export function ClientStart() {
   };
 
   useEffect(() => {
-    const token = Cookies.get("ACCESS_TOKEN");
-    const clientInfoId = Cookies.get("CLIENT_INFO_ID");
-
-    // 클라이언트로 완전히 세팅된 경우만 바로 이동
-    if (token && clientInfoId) {
-      navigate("/client/create-project");
+    if (getStoredAccessToken()) {
+      navigate("/client/company-info", { replace: true });
     }
   }, [navigate]);
 
@@ -191,7 +149,7 @@ export function ClientStart() {
               </div>
               <CardTitle className="text-xl">휴대폰 번호로 간편 의뢰</CardTitle>
                 <CardDescription className="break-keep text-balance">
-                  회원가입 없이 휴대폰 번호만 확인하면 바로 기업진단을 의뢰할 수 있습니다.
+                  휴대폰 번호로 의뢰하는 기능은 준비 중입니다. 현재는 회원 로그인을 이용해 주세요.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 md:flex md:flex-1 md:flex-col md:space-y-0">
@@ -236,9 +194,9 @@ export function ClientStart() {
                   type="button"
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   variant="secondary"
-                  onClick={handleVerificationRequest}
+                  onClick={handleVerificationRequest} disabled
                 >
-                  카카오톡으로 확인번호 받기
+                  휴대폰 인증 준비 중
                 </Button>
                 <div className="hidden h-5 md:block" aria-hidden="true" />
               </div>

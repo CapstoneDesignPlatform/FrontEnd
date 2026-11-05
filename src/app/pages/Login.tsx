@@ -5,7 +5,8 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { toast } from "sonner";
-import { persistAuthTokens } from "../../api/authTokens";
+import { getRoleNextPath } from "../../api/authRequestPolicy";
+import { clearAuthTokens, getStoredAccessToken, persistAuthTokens } from "../../api/authTokens";
 import { userInstance } from "../../api/instance"; 
 import Cookies from "js-cookie";
 
@@ -39,14 +40,6 @@ const SOCIAL_CONFIGS = {
   },
 };
 
-function getSafeNextPath(nextPath: string | null) {
-  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
-    return null;
-  }
-
-  return nextPath;
-}
-
 export function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -58,6 +51,7 @@ export function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (isLoading) return;
     if (!email || !password) {
       toast.error("이메일과 비밀번호를 모두 입력해주세요.");
       return;
@@ -67,16 +61,17 @@ export function Login() {
 
     try {
       const response = await userInstance.post("auth/login", {
-        email,
+        email: email.trim(),
         password,
       });
 
       const { success, data, message } = response.data;
 
+      if (!success) throw new Error(message || "로그인하지 못했습니다.");
       if (success) {
+        if (!data?.accessToken || !["CLIENT", "EXPERT"].includes(data.role)) throw new Error("로그인 응답을 확인할 수 없습니다.");
+        clearAuthTokens();
         persistAuthTokens(data);
-        Cookies.set("ACCESS_TOKEN", data.accessToken, { expires: 1 });
-        Cookies.set("REFRESH_TOKEN", data.refreshToken, { expires: 7 });
         Cookies.set("USER_ROLE", data.role, { expires: 1 });
         if (data.clientInfoId) {
           Cookies.set("CLIENT_INFO_ID", String(data.clientInfoId), { expires: 1 });
@@ -95,6 +90,7 @@ export function Login() {
           // myInfo 실패 시 이메일 앞부분으로 폴백
         }
 
+        if (getStoredAccessToken() !== data.accessToken) return;
         setUser({
           type: userType,
           name: userName,
@@ -103,12 +99,12 @@ export function Login() {
         toast.success(message || "로그인에 성공했습니다.");
 
         navigate(
-          getSafeNextPath(searchParams.get("next")) ??
+          getRoleNextPath(searchParams.get("next"), userType) ??
             (userType === "client" ? "/client/mypage" : "/expert/dashboard"),
         );
       }
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "로그인 중 오류가 발생했습니다.";
+      const errorMsg = error.response?.data?.message || error.message || "로그인 중 오류가 발생했습니다.";
       toast.error(errorMsg);
     } finally {
       setIsLoading(false);

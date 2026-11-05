@@ -24,8 +24,8 @@ const maskPhoneNumber = (value: string) => {
 export function CheckRequest() {
   const navigate = useNavigate();
   const verificationInputRef = useRef<HTMLInputElement>(null);
-  const sessionVerifiedPhone = window.sessionStorage.getItem("guestLookupVerifiedPhone") ?? "";
-  const latestGuestProjectId = window.sessionStorage.getItem("guestLatestProjectId");
+  const sessionVerifiedPhone = "";
+  const latestGuestProjectId = null;
   const [selectedMethod, setSelectedMethod] = useState<LookupMethod>(sessionVerifiedPhone ? "phone" : null);
   const [phoneNumber, setPhoneNumber] = useState(() => formatPhoneNumber(sessionVerifiedPhone));
   const [phoneError, setPhoneError] = useState("");
@@ -62,28 +62,11 @@ export function CheckRequest() {
       return;
     }
 
-    // 조회할 때마다 이전 인증 상태와 확인번호를 폐기하고 새 인증 절차를 시작한다.
-    setPhoneError("");
-    setVerificationCode("");
-    setVerificationError("");
-    setIsVerified(false);
-    setVerificationRequested(true);
+    setPhoneError("휴대폰 인증과 비회원 의뢰 조회는 준비 중입니다.");
   };
 
   const handleVerification = () => {
-    if (verificationCode.length !== 6) {
-      setVerificationError("6자리 확인번호를 입력해 주세요.");
-      return;
-    }
-    // 실제 카카오 인증 API 연결 전까지 기존 연습용 확인번호 검증 방식을 사용한다.
-    if (verificationCode !== "123456") {
-      setVerificationError("확인번호가 일치하지 않습니다.");
-      return;
-    }
-    setVerificationError("");
-    setVerificationRequested(false);
-    setIsVerified(true);
-    window.sessionStorage.setItem("guestLookupVerifiedPhone", phoneDigits);
+    setVerificationError("휴대폰 인증과 비회원 의뢰 조회는 아직 지원되지 않습니다.");
   };
 
   return (
@@ -153,7 +136,7 @@ export function CheckRequest() {
           <Card className="max-w-lg mx-auto">
             <CardHeader>
               <CardTitle>{isVerified ? "비회원 의뢰 목록" : "휴대폰 번호 확인"}</CardTitle>
-              {!isVerified && <CardDescription>의뢰 시 사용한 휴대폰 번호로 새 확인번호를 받아주세요.</CardDescription>}
+              {!isVerified && <CardDescription>휴대폰 인증과 비회원 의뢰 조회는 준비 중입니다. 회원 의뢰는 로그인 후 확인해 주세요.</CardDescription>}
             </CardHeader>
             <CardContent className="space-y-6">
               {isVerified ? (
@@ -213,7 +196,7 @@ export function CheckRequest() {
                   </div>
 
                   {!verificationRequested ? (
-                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">카카오톡으로 확인번호 받기</Button>
+                    <Button type="submit" disabled className="w-full bg-blue-600 hover:bg-blue-700">휴대폰 조회 준비 중</Button>
                   ) : (
                     <div className="space-y-4">
                       <p className="text-sm text-blue-600">카카오톡으로 새 확인번호를 보내드렸습니다.</p>
