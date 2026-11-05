@@ -369,6 +369,7 @@ export const router = createBrowserRouter([
         path: "client/create-project/:industry/:tab?",
         lazy: createProjectPage,
       },
+      { path: "client/project-success", lazy: projectSuccessPage },
       { path: "client/project-success/:projectCode", lazy: projectSuccessPage },
       { path: "client/projects", lazy: projectListPage },
       { path: "client/projects/:id", lazy: projectDetailPage },

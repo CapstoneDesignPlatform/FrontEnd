@@ -1,32 +1,13 @@
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { CheckCircle2, Copy, Home } from "lucide-react";
-import { toast } from "sonner";
+import { CheckCircle2, ClipboardList, Home } from "lucide-react";
+
 import { getStoredAccessToken } from "../../../api/authTokens";
 
 export function ProjectSuccess() {
   const navigate = useNavigate();
-  const { projectCode } = useParams<{ projectCode: string }>();
-  const [copied, setCopied] = useState(false);
   const isLoggedIn = !!getStoredAccessToken();
-
-  const code = projectCode || "코드 확인 불가";
-
-  const handleCopyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      toast.success("의뢰 코드가 복사되었습니다!");
-      
-      setTimeout(() => {
-        setCopied(false);
-      }, 2000);
-    } catch (err) {
-      toast.error("복사에 실패했습니다. 다시 시도해주세요.");
-    }
-  };
 
   return (
     <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-200px)]">
@@ -38,55 +19,34 @@ export function ProjectSuccess() {
             </div>
             <CardTitle className="text-3xl">의뢰가 성공적으로 등록되었습니다!</CardTitle>
             <CardDescription className="text-base mt-2">
-              전문가들이 곧 입찰을 시작할 예정입니다.
+              전문가들이 곧 제안을 시작할 예정입니다.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* 의뢰 코드 */}
-            <div className="bg-gray-50 rounded-lg p-6 border-2 border-gray-200">
-              <p className="text-sm text-gray-600 mb-2">의뢰 코드</p>
-              <div className="flex items-center justify-center gap-3">
-                <code className="text-2xl font-mono font-bold text-blue-600 tracking-wider">
-                  {code}
-                </code>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopyCode}
-                  className="h-10 w-10"
-                >
-                  <Copy className={`h-5 w-5 ${copied ? 'text-green-600' : ''}`} />
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500 mt-3">
-                이 코드로 의뢰 진행 상황을 확인하실 수 있습니다.
-              </p>
-            </div>
+            {!isLoggedIn && <p className="rounded-lg border border-blue-100 bg-blue-50 p-6 text-sm text-gray-600">비회원 휴대폰 조회 기능은 준비 중입니다.</p>}
 
-            {/* 안내 메시지 */}
             <div className="bg-blue-50 rounded-lg p-4 text-left">
               <h3 className="font-semibold text-blue-900 mb-2">다음 단계 안내</h3>
               <ul className="text-sm text-blue-800 space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">1.</span>
-                  <span>전문가들이 입찰을 시작하면 이메일로 알림을 받으실 수 있습니다.</span>
+                  <span>전문가 제안과 진행 상황은 내 의뢰 확인하기에서 확인할 수 있습니다.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">2.</span>
-                  <span>의뢰 코드를 보관하시면 언제든지 진행 상황을 확인하실 수 있습니다.</span>
+                  <span>회원은 로그인 후 내 의뢰 목록에서 진행 상황을 확인할 수 있습니다.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">3.</span>
-                  <span>입찰이 시작되면 최저가 순으로 3~5명의 전문가를 확인하실 수 있습니다.</span>
+                  <span>전문가 제안이 등록되면 제안 내용과 진행 단계를 확인할 수 있습니다.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">4.</span>
-                  <span>전문가를 선택하신 후 직접 협상을 통해 최종 가격을 결정하세요.</span>
+                  <span>전문가 후보와 제안 금액을 비교할 수 있으며, 선정 확정 기능은 준비 중입니다.</span>
                 </li>
               </ul>
             </div>
 
-            {/* 비회원에게만 회원가입 안내 */}
             {!isLoggedIn && <div className="bg-purple-50 rounded-lg p-4 text-left border border-purple-200">
               <h3 className="font-semibold text-purple-900 mb-2">💡 회원가입 하시겠어요?</h3>
               <p className="text-sm text-purple-800 mb-3">
@@ -102,16 +62,14 @@ export function ProjectSuccess() {
               </Button>
             </div>}
 
-            {/* 메인으로 버튼 */}
-            <div className="pt-4 space-y-3">
-              {isLoggedIn && <Button onClick={() => navigate("/client/projects")} size="lg" className="w-full">내 의뢰 확인하기</Button>}
-              <Button
-                onClick={() => navigate("/")}
-                size="lg"
-                className="w-full"
-              >
+            <div className="grid gap-3 pt-4 sm:grid-cols-2">
+              <Button variant="outline" size="lg" onClick={() => navigate("/")}>
                 <Home className="mr-2 h-5 w-5" />
                 메인으로
+              </Button>
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate(isLoggedIn ? "/client/projects" : "/check-request")}>
+                <ClipboardList className="mr-2 h-5 w-5" />
+                내 의뢰 확인하기
               </Button>
             </div>
           </CardContent>

@@ -32,14 +32,57 @@ import { clearDemoExpertApproval } from "../demoAccess";
 
 type LayoutVariant = "contained" | "full";
 
-const INDUSTRIES = [
-  { label: "건설업", value: "construction" },
-  { label: "전기공사업", value: "electrical" },
-  { label: "정보통신공사업", value: "information" },
-  { label: "소방시설공사업", value: "fire" },
-  { label: "의약품도매상", value: "pharmaceutical" },
-  { label: "기타", value: "other" },
-];
+const RELATED_ORGANIZATIONS = [
+  {
+    name: "국가법령정보센터",
+    image: "/svg/국가법령정보센터.svg",
+    href: "https://www.law.go.kr",
+    imageClassName: "h-12",
+  },
+  {
+    name: "국토교통부",
+    image: "/svg/국토교통부.svg",
+    href: "https://www.molit.go.kr",
+    imageClassName: "h-12",
+  },
+  {
+    name: "한국공인회계사회",
+    image: "/svg/한국공인회계사회.svg",
+    href: "https://www.kicpa.or.kr",
+    imageClassName: "h-6",
+    linkClassName: "ml-6 mr-2",
+  },
+  {
+    name: "한국세무사회",
+    image: "/svg/한국세무사회.svg",
+    href: "https://www.kacpta.or.kr",
+    imageClassName: "h-12",
+  },
+  {
+    name: "한국경영기술지도사회",
+    image: "/svg/한국경영기술지도사회.svg",
+    href: "https://www.kmtca.or.kr/",
+    imageClassName: "h-12",
+  },
+  {
+    name: "대한건설협회",
+    image: "/svg/대한건설협회.svg",
+    href: "https://www.cak.or.kr",
+    imageClassName: "h-12",
+  },
+  {
+    name: "대한전문건설협회",
+    image: "/svg/전문건설협회.svg",
+    href: "https://www.kosca.or.kr/",
+    imageClassName: "h-10",
+  },
+] satisfies Array<{
+  name: string;
+  image: string;
+  href?: string;
+  imageClassName: string;
+  linkClassName?: string;
+}>;
 
 function getLayoutVariant({
   isAdminRoute,
@@ -199,6 +242,17 @@ export function Root() {
     navigate("/", { replace: true });
   };
 
+  const handleMyRequestsNavigation = () => {
+    setNavValue("");
+
+    if (user?.type === "client") {
+      navigate("/client/mypage");
+      return;
+    }
+
+    navigate("/check-request");
+  };
+
   return (
     <div
       className={`min-h-screen bg-gray-50 ${
@@ -349,19 +403,29 @@ export function Root() {
                           </NavigationMenuContent>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                          <NavigationMenuTrigger
-                            className="text-sm px-3 py-1.5"
-                            onClick={() => { navigate("/client/create-project"); setNavValue(""); }}
-                          >
+                          <NavigationMenuTrigger className="text-sm px-3 py-1.5">
                             견적 요청
                           </NavigationMenuTrigger>
                           <NavigationMenuContent>
-                            <ul className="w-36 p-1">
-                              {INDUSTRIES.map((industry) => (
-                                <li key={industry.value}>
-                                  <Link to={`/client/create-project/${industry.value}`} className="block px-3 py-1.5 text-sm rounded-sm hover:bg-accent transition-colors" onClick={() => setNavValue("")}>{industry.label}</Link>
-                                </li>
-                              ))}
+                            <ul className="w-44 p-1">
+                              <li>
+                                <Link
+                                  to="/client/start"
+                                  className="block rounded-sm px-3 py-1.5 text-sm transition-colors hover:bg-accent"
+                                  onClick={() => setNavValue("")}
+                                >
+                                  기업진단 의뢰하기
+                                </Link>
+                              </li>
+                              <li>
+                                <button
+                                  type="button"
+                                  className="block w-full rounded-sm px-3 py-1.5 text-left text-sm transition-colors hover:bg-accent"
+                                  onClick={handleMyRequestsNavigation}
+                                >
+                                  내 의뢰 확인하기
+                                </button>
+                              </li>
                             </ul>
                           </NavigationMenuContent>
                         </NavigationMenuItem>
@@ -461,31 +525,34 @@ export function Root() {
         <div className="border-b border-gray-100">
           <div className="container mx-auto px-4 py-4">
             <h3 className="text-center text-xs font-medium text-gray-400 mb-4"> {/* mb-6에서 4로 줄임 */}
-              관련 기관
+              관련 기관 바로 가기
             </h3>
             <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-4">
-              {/* 각 링크를 이미지로 교체 */}
-              <a href="https://www.law.go.kr" target="_blank" rel="noopener noreferrer">
-                <img src="/svg/국가법령정보센터.svg" alt="국가법령정보센터" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
-              </a>
-              <a href="https://www.molit.go.kr" target="_blank" rel="noopener noreferrer">
-                <img src="/svg/국토교통부.svg" alt="국토교통부" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
-              </a>
-              <a href="https://www.kicpa.or.kr" target="_blank" rel="noopener noreferrer" className="ml-6 mr-2">
-                <img src="/svg/한국공인회계사회.svg" alt="한국공인회계사회" className="h-6 opacity-70 hover:opacity-100 transition-opacity" />
-              </a>
-              <a href="https://www.kacpta.or.kr" target="_blank" rel="noopener noreferrer">
-                <img src="/svg/한국세무사회.svg" alt="한국세무사회" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
-              </a>
-              <a href="https://www.kmtca.or.kr/" target="_blank" rel="noopener noreferrer">
-                <img src="/svg/한국경영기술지도사회.svg" alt="한국경영기술지도사회" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
-              </a>
-              <a href="https://www.cak.or.kr" target="_blank" rel="noopener noreferrer">
-                <img src="/svg/대한건설협회.svg" alt="대한건설협회" className="h-12 opacity-70 hover:opacity-100 transition-opacity" />
-              </a>
-              <a href="https://www.kosca.or.kr/" target="_blank" rel="noopener noreferrer">
-                <img src="/svg/전문건설협회.svg" alt="전문건설협회" className="h-10 opacity-70 hover:opacity-100 transition-opacity" />
-              </a>
+              {RELATED_ORGANIZATIONS.map((organization) => {
+                const image = (
+                  <img
+                    src={organization.image}
+                    alt={organization.name}
+                    className={`${organization.imageClassName} opacity-70 hover:opacity-100 transition-opacity`}
+                  />
+                );
+
+                return organization.href ? (
+                  <a
+                    key={organization.name}
+                    href={organization.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={organization.linkClassName}
+                  >
+                    {image}
+                  </a>
+                ) : (
+                  <div key={organization.name} className={organization.linkClassName}>
+                    {image}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
