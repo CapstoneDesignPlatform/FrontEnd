@@ -105,8 +105,6 @@ VITE_API_BASE_URL=/api
 | 신규 업종 상세·재무정보 | 서버 enum, 총자산 의미, 소수 단위 및 상세 필드 저장 계약 확인 필요 |
 | 결제·정산·알림·소셜 로그인·일부 운영 화면 | 화면이나 임시 동작이 존재하며, 전체 서버 연동 완료 기능으로 간주하지 않음 |
 
-필요한 백엔드 계약과 연동 완료 기준은 [API 요청 문서](./docs/backend-api-requests.md)에서 관리합니다. 특히 비회원 흐름과 회사측 신규 입력 항목은 API-011·API-012를 참고하세요.
-
 ## 프로젝트 구조
 
 ```text
@@ -139,18 +137,6 @@ docs/                    # API 계약·요청 및 작업 문서
 - 브라우저에서 창업 예정 → 건설 업종 선택 → 소수 자본금 입력 → 내용 확인 → 최종 모달 → 취소 흐름 확인
 
 실제 운영 계정의 등록·입찰·저장과 전체 업종·권한 조합의 E2E 검증은 별도로 필요합니다.
-
-## 협업 문서
-
-- [프론트엔드 작업 규칙](./AGENTS.md)
-- [기업진단 입력 흐름 및 통합 내역](./docs/JINDANMATCH_FRONTEND_UPDATE.md)
-- [백엔드 API 요청 기준 문서](./docs/backend-api-requests.md)
-- [전문가 API 계약](./docs/expert-api-contract.md)
-- [전문가 백엔드 API 요청](./docs/expert-backend-api-requests.md)
-- [프론트엔드 보완 계획](./docs/frontend-stabilization-review-2026-10-29.md)
-- [플랫폼 분석](./docs/platform-analysis-2026-10-29.md)
-
-문서의 작성 시점과 현재 코드를 함께 확인해 주세요. 백엔드 변경이 필요하면 임의로 계약을 가정하지 않고 API 요청 문서에 현재 동작·제안 계약·상태·완료 기준을 기록합니다.
 
 ## 외부 구성요소
 
