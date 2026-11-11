@@ -161,7 +161,7 @@ export function CompanyInfo() {
 
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
+    <div className="desktop-company max-w-3xl mx-auto py-8">
       <Alert className="mb-6 border-blue-200 bg-blue-50">
         <Info className="h-4 w-4 text-blue-600" />
         <AlertDescription className="text-blue-800">
@@ -169,7 +169,7 @@ export function CompanyInfo() {
         </AlertDescription>
       </Alert>
 
-      <Card className="shadow-md">
+      <Card className="company-card shadow-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">기업 정보 입력</CardTitle>
           <CardDescription>
@@ -237,7 +237,7 @@ export function CompanyInfo() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="company-contact-row grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <div className="flex items-baseline gap-2">
                   <Label>사업장 소재지</Label>
@@ -342,7 +342,7 @@ export function CompanyInfo() {
               </div>
             </div>
 
-            <div className="flex gap-4 pt-4">
+            <div className="company-actions flex gap-4 pt-4">
               <Button type="submit" disabled={checking || !!checkError || saving || !isLoggedIn} className="flex-1 bg-blue-600 hover:bg-blue-700">
                 다음: 의뢰 작성하기
               </Button>

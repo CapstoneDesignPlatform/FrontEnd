@@ -255,7 +255,7 @@ export function Root() {
 
   return (
     <div
-      className={`min-h-screen bg-gray-50 ${
+      className={`${["/register", "/signup/expert"].includes(location.pathname) ? "registration-theme" : ""} ${(["/", "/login", "/client/start", "/client/company-info", "/client/project-success", "/check-request"].includes(location.pathname) || location.pathname === "/client/create-project" || location.pathname.startsWith("/client/create-project/") || location.pathname.startsWith("/client/project-success/")) ? "desktop-public" : ""} min-h-screen bg-gray-50 ${
         shouldShowMobileExpertBottomNav ? "pb-24 md:pb-0" : ""
       }`}
     >

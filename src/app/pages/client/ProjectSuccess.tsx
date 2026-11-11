@@ -10,7 +10,7 @@ export function ProjectSuccess() {
   const isLoggedIn = !!getStoredAccessToken();
 
   return (
-    <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-200px)]">
+    <div className="desktop-success container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-200px)]">
       <div className="max-w-2xl w-full">
         <Card className="text-center">
           <CardHeader>
@@ -25,7 +25,7 @@ export function ProjectSuccess() {
           <CardContent className="space-y-6">
             {!isLoggedIn && <p className="rounded-lg border border-blue-100 bg-blue-50 p-6 text-sm text-gray-600">비회원 휴대폰 조회 기능은 준비 중입니다.</p>}
 
-            <div className="bg-blue-50 rounded-lg p-4 text-left">
+            <div className="success-next bg-blue-50 rounded-lg p-4 text-left">
               <h3 className="font-semibold text-blue-900 mb-2">다음 단계 안내</h3>
               <ul className="text-sm text-blue-800 space-y-2">
                 <li className="flex items-start gap-2">
@@ -47,7 +47,7 @@ export function ProjectSuccess() {
               </ul>
             </div>
 
-            {!isLoggedIn && <div className="bg-purple-50 rounded-lg p-4 text-left border border-purple-200">
+            {!isLoggedIn && <div className="success-membership bg-purple-50 rounded-lg p-4 text-left border border-purple-200">
               <h3 className="font-semibold text-purple-900 mb-2">💡 회원가입 하시겠어요?</h3>
               <p className="text-sm text-purple-800 mb-3">
                 회원가입 시 의뢰 관리, 전문가와의 소통, 알림 등의 기능을 이용하실 수 있습니다.
@@ -62,7 +62,7 @@ export function ProjectSuccess() {
               </Button>
             </div>}
 
-            <div className="grid gap-3 pt-4 sm:grid-cols-2">
+            <div className="success-actions grid gap-3 pt-4 sm:grid-cols-2">
               <Button variant="outline" size="lg" onClick={() => navigate("/")}>
                 <Home className="mr-2 h-5 w-5" />
                 메인으로
