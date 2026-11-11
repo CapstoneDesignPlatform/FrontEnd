@@ -1,3 +1,15 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+@import './desktop.css';
+
+/* Keep registration controls in the brand palette at every viewport size. */
+.registration-theme {
+  --primary: #34499c;
+  --primary-foreground: #ffffff;
+  --ring: #34499c;
+}
+
+.registration-theme [data-slot="button"].bg-primary:not(:disabled):hover {
+  background-color: #293b80;
+}

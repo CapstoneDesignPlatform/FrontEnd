@@ -229,7 +229,7 @@ export function ExpertSignup() {
               <span
                 className={`rounded-md px-3 py-1.5 ${
                   step === "agreements"
-                    ? "bg-white text-slate-950 shadow-sm"
+                    ? "bg-white text-primary shadow-sm"
                     : "text-slate-500"
                 }`}
               >
@@ -238,7 +238,7 @@ export function ExpertSignup() {
               <span
                 className={`rounded-md px-3 py-1.5 ${
                   step === "account"
-                    ? "bg-white text-slate-950 shadow-sm"
+                    ? "bg-white text-primary shadow-sm"
                     : "text-slate-500"
                 }`}
               >
@@ -420,7 +420,7 @@ export function ExpertSignup() {
                         </span>
                       ) : null}
                       {hasPasswordMatch ? (
-                        <span className="text-xs font-medium text-blue-600">
+                        <span className="text-xs font-medium text-primary">
                           비밀번호가 일치합니다.
                         </span>
                       ) : null}
@@ -512,7 +512,7 @@ function StepNavigation({
       </Button>
       <Button
         type={nextType}
-        className="bg-blue-600 hover:bg-blue-700 sm:w-40"
+        className="sm:w-40"
         disabled={isNextDisabled}
         onClick={onNext}
       >

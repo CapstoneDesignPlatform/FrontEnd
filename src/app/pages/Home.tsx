@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Building2, Users, FileText, DollarSign, CheckCircle2, ArrowRight, Search } from "lucide-react";
 
 export function Home() {
   return (
-    <div>
+    <div className="desktop-home">
       {/* 히어로 섹션 */}
-      <section className="bg-[#34499C] text-white py-20">
+      <section className="home-hero bg-[#34499C] text-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl mb-6">
             전문가와 의뢰인을 연결하는
@@ -28,7 +28,7 @@ export function Home() {
                 </Link>
               </Button>
               <p className="mt-2 max-w-xs text-sm text-blue-100">
-                회원으로 의뢰할 수 있으며, 비회원 휴대폰 인증은 준비 중입니다.
+                회원가입 후 의뢰 또는 비회원 의뢰 안내를 선택하세요.
               </p>
             </div>
             <Button asChild size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/30">
@@ -47,7 +47,7 @@ export function Home() {
       </section>
 
       {/* 서비스 소개 */}
-      <section className="py-16 bg-white">
+      <section className="home-services py-16 bg-white">
         <div className="container mx-auto px-4 ">
           <h2 className="text-3xl text-center mb-12">서비스 분야</h2>
           <div className="grid md:grid-cols-3 gap-6">
@@ -83,7 +83,7 @@ export function Home() {
       </section>
 
       {/* 이용 방법 */}
-      <section className="py-16 bg-gray-50">
+      <section className="home-process py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12">
             {/* 의뢰인 */}
@@ -95,8 +95,8 @@ export function Home() {
                     1
                   </div>
                   <div>
-                    <h3 className="mb-2">회원가입 또는 비회원 이용</h3>
-                    <p className="text-gray-600">간편하게 회원가입하거나 비회원으로도 서비스를 이용할 수 있습니다.</p>
+                    <h3 className="mb-2">회원가입</h3>
+                    <p className="text-gray-600">회원가입 후 서비스를 이용할 수 있습니다. 비회원 휴대폰 인증은 준비 중입니다.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -113,7 +113,7 @@ export function Home() {
                     3
                   </div>
                   <div>
-                    <h3 className="mb-2">의뢰 의뢰 작성 및 게시</h3>
+                    <h3 className="mb-2">의뢰 작성 및 게시</h3>
                     <p className="text-gray-600">필요한 서비스를 선택하고 상세 내용을 작성합니다.</p>
                   </div>
                 </div>
@@ -176,7 +176,7 @@ export function Home() {
       </section>
 
       {/* 주요 특징 */}
-      <section className="py-16 bg-white">
+      <section className="home-benefits py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl text-center mb-12">왜 저희 플랫폼인가요?</h2>
           <div className="grid md:grid-cols-4 gap-6">
@@ -221,7 +221,7 @@ export function Home() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-[#34499C] text-white">
+      <section className="home-close py-16 bg-[#34499C] text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl mb-6">지금 바로 시작하세요</h2>
           <p className="text-xl mb-8 text-blue-100">
@@ -234,7 +234,7 @@ export function Home() {
       </section>
 
       {/* 데모버전 - 관리인 접속 */}
-      <section className="py-8 bg-gray-100 border-t">
+      <section className="home-demo py-8 bg-gray-100 border-t">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm text-gray-500 mb-3">데모 버전</p>
           <Button asChild variant="outline" size="sm">

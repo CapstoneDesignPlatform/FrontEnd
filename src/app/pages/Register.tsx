@@ -42,7 +42,7 @@ function TermsModal({ onClose, userType }: { onClose: () => void; userType: "cli
           <div className="flex gap-3">
             {tabs.map((tab) => (
               <button key={tab.key} type="button" onClick={() => setActiveTab(tab.key)}
-                className={`text-sm font-medium pb-1 transition-colors ${activeTab === tab.key ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:text-gray-700"}`}>
+                className={`text-sm font-medium pb-1 transition-colors ${activeTab === tab.key ? "text-primary border-b-2 border-primary" : "text-gray-500 hover:text-gray-700"}`}>
                 {tab.label}
               </button>
             ))}
@@ -67,7 +67,7 @@ function TermsPreviewBox({ content, onOpenModal }: { content: string; onOpenModa
         <pre className="text-xs text-gray-500 whitespace-pre-wrap leading-relaxed font-sans">{content}</pre>
       </div>
       <div className="border-t border-gray-200 px-4 py-2 bg-white flex justify-end">
-        <button type="button" onClick={onOpenModal} className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline">전문보기 →</button>
+        <button type="button" onClick={onOpenModal} className="text-xs text-primary hover:text-primary/90 font-medium hover:underline">전문보기 →</button>
       </div>
     </div>
   );
@@ -91,8 +91,9 @@ export function Register() {
 
   const isSocial = searchParams.get("social") === "true";
   const [pendingSocial, setPendingSocial] = useState<PendingSocialUser | null>(null);
-  const [step, setStep] = useState(1);
-  const [userType, setUserType] = useState<"client" | "expert" | null>(null);
+  const isRequestSignup = searchParams.get("type") === "client" && searchParams.get("next") === "/client/company-info";
+  const [step, setStep] = useState(isRequestSignup ? 2 : 1);
+  const [userType, setUserType] = useState<"client" | "expert" | null>(isRequestSignup ? "client" : null);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -154,7 +155,7 @@ export function Register() {
         setUser(null);
         if (isSocialSignup) sessionStorage.removeItem("pendingSocialUser");
         toast.success("회원가입이 완료되었습니다.");
-        navigate("/", { replace: true });
+        navigate(isRequestSignup ? "/login?next=%2Fclient%2Fcompany-info" : "/", { replace: true });
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "회원가입에 실패했습니다.");
@@ -187,8 +188,8 @@ export function Register() {
             <div className="flex items-center justify-center gap-2 mt-4">
               {Array.from({ length: totalSteps }, (_, i) => i + 1).map((num) => (
                 <div key={num} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${displayStep >= num ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"}`}>{num}</div>
-                  {num < totalSteps && <div className={`w-12 h-1 ${displayStep > num ? "bg-blue-600" : "bg-gray-200"}`} />}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${displayStep >= num ? "bg-primary text-white" : "bg-gray-200 text-gray-600"}`}>{num}</div>
+                  {num < totalSteps && <div className={`w-12 h-1 ${displayStep > num ? "bg-primary" : "bg-gray-200"}`} />}
                 </div>
               ))}
             </div>
@@ -199,12 +200,12 @@ export function Register() {
             {step === 1 && (
               <div className="grid grid-cols-2 gap-4">
                 <button onClick={() => { setUserType("client"); setStep(2); }} className="p-8 border-2 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-center group">
-                  <User className="h-16 w-16 mx-auto mb-4 text-gray-400 group-hover:text-blue-600" />
+                  <User className="h-16 w-16 mx-auto mb-4 text-gray-400 group-hover:text-primary" />
                   <h3 className="font-bold mb-1">의뢰인</h3>
                   <p className="text-xs text-gray-500">서비스를 의뢰하고 싶어요</p>
                 </button>
                 <button onClick={() => { setUserType("expert"); setStep(2); }} className="p-8 border-2 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-center group">
-                  <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400 group-hover:text-blue-600" />
+                  <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400 group-hover:text-primary" />
                   <h3 className="font-bold mb-1">전문가</h3>
                   <p className="text-xs text-gray-500">전문 서비스를 제공하고 싶어요</p>
                 </button>
@@ -336,7 +337,7 @@ export function Register() {
             {/* 4단계: 완료 */}
             {step === 4 && (
               <div className="text-center space-y-6 py-8">
-                <CheckCircle2 className="h-20 w-20 text-blue-600 mx-auto animate-bounce" />
+                <CheckCircle2 className="h-20 w-20 text-primary mx-auto animate-bounce" />
                 <h3 className="text-2xl font-bold">회원가입이 완료되었습니다!</h3>
                 <p className="text-gray-500">이제 다양한 진단매치의 서비스를 이용하실 수 있습니다.</p>
                 <Button onClick={() => navigate("/")} className="w-full" size="lg">시작하기</Button>

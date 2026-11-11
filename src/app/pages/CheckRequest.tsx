@@ -70,7 +70,7 @@ export function CheckRequest() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+    <div className="desktop-lookup min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="w-full max-w-4xl">
         <div className="text-center mb-8">
           <h1 className="text-3xl mb-2">의뢰 확인하기</h1>
@@ -80,7 +80,7 @@ export function CheckRequest() {
         {!selectedMethod ? (
           <div className="grid md:grid-cols-2 gap-6">
             <Card
-              className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-500"
+              className="lookup-method lookup-phone cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-500"
               onClick={() => setSelectedMethod("phone")}
             >
               <CardHeader className="text-center">
@@ -108,7 +108,7 @@ export function CheckRequest() {
 
             {/* 회원 로그인 방식은 기존대로 유지 */}
             <Card
-              className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-green-500"
+              className="lookup-method lookup-member cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-green-500"
               onClick={() => setSelectedMethod("login")}
             >
               <CardHeader className="text-center">

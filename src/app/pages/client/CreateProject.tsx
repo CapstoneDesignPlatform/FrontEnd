@@ -39,7 +39,7 @@ const INDUSTRY_MAP: Record<string, string> = { construction: "CONSTRUCTION", ele
 const PURPOSE_MAP:  Record<string, string> = { license: "REQUIRED_LICENSE", periodic: "PERIODIC_REPORT", survey: "SURVEY", other: "OTHER" };
 const OWNER_TYPE_MAP: Record<string, string> = { corporation: "CORPORATION", individual: "INDIVIDUAL", startup: "STARTUP" };
 
-const ACTIVE = "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:text-white focus-visible:bg-blue-600 focus-visible:text-white";
+const ACTIVE = "request-selected bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:text-white focus-visible:bg-blue-600 focus-visible:text-white";
 const INACTIVE_HOVER = "hover:bg-blue-600 hover:text-white focus-visible:bg-blue-600 focus-visible:text-white";
 
 const diagnosisSectionTitles: Record<string, string> = {
@@ -222,7 +222,8 @@ function ChoiceButtonGroup({ activeClassName = ACTIVE, columnsClassName, disable
           key={opt.value}
           type="button"
           variant="outline"
-          className={`h-auto py-4 ${value === opt.value ? activeClassName : inactiveClassName}`}
+          aria-pressed={value === opt.value}
+          className={`request-choice h-auto py-4 ${value === opt.value ? activeClassName : inactiveClassName}`}
           disabled={disabled}
           onClick={() => onChange(opt.value)}
         >
@@ -235,8 +236,8 @@ function ChoiceButtonGroup({ activeClassName = ACTIVE, columnsClassName, disable
 
 function FormSection({ children, description, label, guide, required = true }: { children: ReactNode; description?: string; label: string; guide?: { title: string; items: string[] }; required?: boolean }) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
+    <div className="request-field space-y-3">
+      <div className="request-field-label flex items-center gap-2">
         <Label className="text-base font-semibold">
           {label} {required && <span className="text-red-500">*</span>}
         </Label>
@@ -250,7 +251,7 @@ function FormSection({ children, description, label, guide, required = true }: {
 
 function SectionDivider({ title }: { title: string }) {
   return (
-    <div className="flex items-center gap-3 py-2">
+    <div className="request-divider flex items-center gap-3 py-2">
       <div className="h-px flex-1 bg-gray-200" />
       <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{title}</span>
       <div className="h-px flex-1 bg-gray-200" />
@@ -273,7 +274,7 @@ function ReviewCard({ title, rows, onEdit }: {
   onEdit: () => void;
 }) {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <section className="request-review-section rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
       <div className="mb-2 flex items-center justify-between gap-4">
         <h2 className="text-lg font-bold text-gray-900">{title}</h2>
         <Button
@@ -376,7 +377,7 @@ function DeadlineField({ date, period, hour, minute, onDateChange, onPeriodChang
   const availableMinuteOptions = minuteOptions.filter((value) => isSelectableTime(date, period, hour, value));
 
   return (
-    <div className="space-y-4">
+    <div className="request-deadline space-y-4">
       <div className="h-px bg-gray-200" />
       <FormSection label="희망 의뢰 마감 (미리보기)" required={false} description="마감 시간 지정은 준비 중입니다. 아래 선택값은 등록 정보에 저장되지 않습니다.">
         <div className="grid grid-cols-1 items-end gap-3 lg:grid-cols-[minmax(240px,1.2fr)_minmax(330px,1fr)]">
@@ -1401,15 +1402,15 @@ export function CreateProject() {
 
 
   return (
-    <div className="max-w-6xl mx-auto py-10 px-6">
-      <div className="mb-6">
+    <div className="desktop-request max-w-6xl mx-auto py-10 px-6">
+      <div className="request-heading mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{isReviewing ? "의뢰 내용 확인" : "의뢰 등록"}</h1>
         <p className="mt-1 text-sm text-gray-500">
           {isReviewing ? "제출하기 전에 입력한 내용을 한 번 더 확인해 주세요." : "진단에 필요한 정보를 순서대로 입력해 주세요."}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className={`bg-white rounded-2xl shadow-sm border border-gray-100 space-y-8 ${isReviewing ? "p-4 sm:p-6" : "p-8"}`}>
+      <form onSubmit={handleSubmit} className={`request-form bg-white rounded-2xl shadow-sm border border-gray-100 space-y-8 ${isReviewing ? "p-4 sm:p-6" : "p-8"}`}>
         {isReviewing ? (
           <div className="space-y-3">
             <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">업종별 세부 조건 일부와 희망 마감은 아직 저장을 지원하지 않습니다. 기본 의뢰 정보 등록 후 상세 내용을 다시 확인해 주세요.</p>
@@ -1421,7 +1422,7 @@ export function CreateProject() {
               <ReviewCard title="기타 정보" rows={otherReviewRows} onEdit={() => editReviewSection(otherInfoSectionRef, true)} />
             )}
 
-            <div className="grid grid-cols-2 gap-4 border-t pt-4">
+            <div className="request-actions grid grid-cols-2 gap-4 border-t pt-4">
               <Button
                 type="button"
                 variant="outline"
@@ -2014,7 +2015,7 @@ export function CreateProject() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4 pt-6 border-t">
+        <div className="request-actions grid grid-cols-2 gap-4 pt-6 border-t">
           <Button
             type="button"
             variant="outline"
@@ -2048,7 +2049,7 @@ export function CreateProject() {
               aria-modal="true"
               aria-labelledby="submit-confirmation-title"
               aria-describedby="submit-confirmation-description"
-              className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+              className="request-confirmation w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
             >
               <h2 id="submit-confirmation-title" className="text-xl font-bold text-gray-900">
                 이 내용으로 의뢰를 등록할까요?
