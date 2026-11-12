@@ -2,6 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { clearAuthTokens, getStoredAccessToken } from "../../api/authTokens";
 import Cookies from 'js-cookie';
+import { toast } from "sonner";
 
 
 import {
@@ -242,6 +243,13 @@ export function Root() {
     navigate("/", { replace: true });
   };
 
+  const handleAdminLogout = () => {
+    clearAuthTokens();
+    setUser(null);
+    toast.success("관리자 모드에서 로그아웃했습니다.");
+    navigate("/admin/login", { replace: true });
+  };
+
   const handleMyRequestsNavigation = () => {
     setNavValue("");
 
@@ -463,8 +471,21 @@ export function Root() {
 
               <div className="flex items-center gap-4">
                 {isAdminRoute ? (
-                  <div className="px-4 py-2 bg-blue-100 text-blue-700 rounded-md text-xs font-bold shadow-sm">
-                    관리자 모드
+                  <div className="flex items-center gap-2">
+                    <div className="px-4 py-2 bg-blue-100 text-blue-700 rounded-md text-xs font-bold shadow-sm">
+                      관리자 모드
+                    </div>
+                    {location.pathname !== "/admin/login" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleAdminLogout}
+                        className="text-gray-500 hover:text-red-500"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        로그아웃
+                      </Button>
+                    )}
                   </div>
                 ) : !user ? (
                   <>
