@@ -49,9 +49,29 @@ function mapVerificationBusinessLicenseDtoToVM(
   };
 }
 
+const verificationStatuses: ExpertVerificationStatus[] = [
+  "NOT_APPLIED",
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+];
+
+function parseVerificationStatus(value: unknown): ExpertVerificationStatus | null {
+  if (value === "NOT_SUBMITTED") return "NOT_APPLIED";
+  return verificationStatuses.includes(value as ExpertVerificationStatus)
+    ? (value as ExpertVerificationStatus)
+    : null;
+}
+
 function mapBackendVerificationStatus(
   request: ExpertVerificationStatusResponseDto["verification_request"],
 ): ExpertVerificationStatus {
+  const standardStatus = parseVerificationStatus(request.verification_status);
+  if (standardStatus) {
+    return standardStatus;
+  }
+
+  // verification_status가 없는 이전 백엔드 응답 호환용 추론
   if (request.status === true) {
     return "APPROVED";
   }

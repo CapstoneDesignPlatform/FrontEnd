@@ -105,6 +105,8 @@ export interface VerificationRequestDto {
   id: number | null;
   expert_profile_id?: number;
   status: ExpertVerificationStatusDto;
+  /** 백엔드 표준 상태값. 있으면 status boolean보다 우선한다. */
+  verification_status?: string | null;
   specialty?: string | null;
   license_number?: string | null;
   issue_date?: string | null;
