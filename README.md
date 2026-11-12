@@ -40,9 +40,9 @@ npm run dev
 | `npm run typecheck` | TypeScript 타입 검사 |
 | `npm run build` | `dist/`에 프로덕션 빌드 생성 |
 | `npm run preview` | 빌드 결과 로컬 미리보기 |
-| `node --experimental-strip-types --test tests/*.test.mjs` | 단위 테스트 실행 |
+| `npm test` | 단위 테스트 실행 (Node.js 기본 테스트 러너) |
 
-`test`와 `lint` npm 스크립트는 아직 등록되어 있지 않습니다. 타입 검사와 빌드는 각각 실행해야 합니다.
+`lint` npm 스크립트는 아직 등록되어 있지 않습니다. 타입 검사·빌드·테스트는 각각 실행해야 합니다.
 
 ## API 연결과 환경 변수
 
@@ -116,23 +116,22 @@ src/
 │   ├── pages/           # 공통·의뢰인·전문가·관리자 화면
 │   ├── routes.tsx       # 라우트 및 화면 로딩 구성
 │   └── utils/           # 금액 표시·엑셀 등 유틸리티
-├── assets/              # 이미지·SVG
 ├── data/                # 약관 등 정적 데이터
 ├── mocks/               # Mock 응답 데이터
 ├── styles/              # 전역 스타일·테마
 └── types/               # 공통 타입
-public/                  # 정적 공개 파일
+public/                  # 정적 공개 파일 (로고·관련 기관 SVG)
 tests/                   # 단위 테스트
 docs/                    # API 계약·요청 및 작업 문서
 ```
 
-화면 진입점은 `src/main.tsx`, 라우트 정의는 `src/app/routes.tsx`입니다. 실제 의뢰 작성 화면은 `src/app/pages/client/CreateProject.tsx`이며, 같은 폴더의 `createProject/`에는 설정·타입·변환 함수와 기존 폼 코드가 함께 있습니다. 수정 전 라우트와 import 관계를 확인해 주세요.
+화면 진입점은 `src/main.tsx`, 라우트 정의는 `src/app/routes.tsx`입니다. 실제 의뢰 작성 화면은 `src/app/pages/client/CreateProject.tsx`이며, 같은 폴더의 `createProject/`에는 설정·타입·재무 정보 변환 함수가 있습니다. 수정 전 라우트와 import 관계를 확인해 주세요.
 
 ## 검증 범위
 
 2026-11-05 통합 버전 기준:
 
-- 단위 테스트 **37개 통과**: 인증 요청 정책, 기업 ID, 의뢰 응답, 입찰 규칙, 선정 의뢰, 관리자 심사, 금액 변환 등
+- 단위 테스트 **32개 통과**: 인증 요청 정책, 기업 ID, 의뢰 응답, 입찰 규칙, 선정 의뢰, 관리자 심사, 금액 변환 등
 - TypeScript 타입 검사 및 Vite 프로덕션 빌드 통과
 - 브라우저에서 창업 예정 → 건설 업종 선택 → 소수 자본금 입력 → 내용 확인 → 최종 모달 → 취소 흐름 확인
 
