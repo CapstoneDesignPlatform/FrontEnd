@@ -378,7 +378,7 @@ export function Root() {
                         </NavigationMenuItem>
                         <NavigationMenuItem>
                           <Link
-                            to="/"
+                            to="/community"
                             className="text-sm px-4 py-2 hover:text-blue-600 transition-colors"
                           >
                             커뮤니티

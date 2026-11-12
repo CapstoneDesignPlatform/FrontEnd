@@ -77,6 +77,10 @@ const searchExpertsPage = page(
   () => import("./pages/category/SearchExperts"),
   ({ SearchExperts }) => SearchExperts,
 );
+const bidIntroPage = page(
+  () => import("./pages/category/bid/BidIntro"),
+  ({ BidIntro }) => BidIntro,
+);
 const noticePage = page(
   () => import("./pages/category/bid/Notice"),
   ({ Notice }) => Notice,
@@ -344,6 +348,7 @@ export const router = createBrowserRouter([
       { path: "oauth/callback/naver", lazy: oauthCallbackPage },
       { path: "oauth/callback/google", lazy: oauthCallbackPage },
 
+      { path: "bids/intro", lazy: bidIntroPage },
       { path: "bids/notice", lazy: noticePage },
       { path: "bids/search-experts", lazy: searchExpertsPage },
       { path: "construction", element: <Navigate to="/client/create-project/construction" replace /> },

@@ -33,7 +33,7 @@ export function Payment() {
       setIsProcessing(false);
       toast.success("결제가 완료되었습니다!");
       setTimeout(() => {
-        navigate("/client/dashboard");
+        navigate("/client/mypage");
       }, 1500);
     }, 2000);
   };
