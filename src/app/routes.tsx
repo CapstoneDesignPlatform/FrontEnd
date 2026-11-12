@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
 import type { ComponentType, ReactNode } from "react";
-import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { AdminAuthGuard } from "./components/admin/AdminAuthGuard";
 
@@ -238,15 +237,6 @@ const adminLoginPage = page(
   ({ AdminLogin }) => AdminLogin,
 );
 
-function withAdminAuth(Component: React.ComponentType) {
-  return function GuardedComponent() {
-    const isAuth = sessionStorage.getItem("admin-auth") === "true";
-    if (!isAuth) {
-      return <Navigate to="/admin/login" replace />;
-    }
-    return <Component />;
-  };
-}
 const adminExpertsPage = page(
   () => import("./pages/admin/AdminExperts"),
   ({ AdminExperts }) => AdminExperts,
