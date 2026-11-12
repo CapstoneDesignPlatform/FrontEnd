@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { isPublicAuthRequest, shouldExpireSession, getRoleNextPath } from '../src/api/authRequestPolicy.ts';
 test('로그인 실패와 이전 토큰의 401은 새 세션을 삭제하지 않는다', () => {
   assert.equal(isPublicAuthRequest('auth/login'), true);
+  assert.equal(isPublicAuthRequest('admin/login'), true);
+  assert.equal(isPublicAuthRequest('/admin/experts'), false);
+  assert.equal(shouldExpireSession('admin/login', 'Bearer current', 'current'), false);
   assert.equal(shouldExpireSession('/auth/login', 'Bearer current', 'current'), false);
   assert.equal(shouldExpireSession('/users/myInfo', 'Bearer previous', 'current'), false);
   assert.equal(shouldExpireSession('/users/myInfo', 'Bearer current', 'current'), true);

@@ -1,40 +1,60 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useRootOutletContext } from "../../hooks/useRootOutletContext";
 import { Building2, Lock } from "lucide-react";
+import {
+  clearAuthTokens,
+  markAdminSession,
+  persistAuthTokens,
+} from "../../../api/authTokens";
+import { userInstance } from "../../../api/instance";
 
 export function AdminLogin() {
   const navigate = useNavigate();
+  const { setUser } = useRootOutletContext();
 
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const [shake, setShake] = useState(false);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const failLogin = () => {
+    setError(true);
+    setShake(true);
+    setPassword("");
+    setTimeout(() => setShake(false), 500);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    // 이전 의뢰인·전문가 토큰이 관리자 요청에 섞이지 않도록 먼저 비운다.
+    clearAuthTokens();
+    setUser(null);
+
     try {
-      const response = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ adminId: 11, password }),
+      const response = await userInstance.post("admin/login", {
+        adminId: 11,
+        password,
       });
-      if (response.ok) {
-        const data = await response.json();
-        import("js-cookie").then((Cookies) => {
-          Cookies.default.set("ACCESS_TOKEN", data.data.accessToken, {
-            path: "/",
-          });
-        });
-        sessionStorage.setItem("admin-auth", "true");
-        navigate("/admin/projects");
-      } else {
-        setError(true);
-        setShake(true);
-        setPassword("");
-        setTimeout(() => setShake(false), 500);
+      const payload = response.data;
+
+      if (!payload?.success || !persistAuthTokens(payload.data ?? {})) {
+        clearAuthTokens();
+        failLogin();
+        return;
       }
+
+      markAdminSession();
+      navigate("/admin/projects");
     } catch {
-      setError(true);
+      clearAuthTokens();
+      failLogin();
+    } finally {
+      setIsSubmitting(false);
     }
   };
   return (
@@ -80,9 +100,10 @@ export function AdminLogin() {
 
             <button
               type="submit"
-              className="w-full py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              disabled={isSubmitting}
+              className="w-full py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-60"
             >
-              접속
+              {isSubmitting ? "확인 중..." : "접속"}
             </button>
           </form>
         </div>

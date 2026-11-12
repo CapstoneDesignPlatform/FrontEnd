@@ -4,6 +4,7 @@ const ACCESS_TOKEN_COOKIE_KEY = "ACCESS_TOKEN";
 const REFRESH_TOKEN_COOKIE_KEY = "REFRESH_TOKEN";
 const ACCESS_TOKEN_STORAGE_KEY = "serviceplatform.accessToken";
 const REFRESH_TOKEN_STORAGE_KEY = "serviceplatform.refreshToken";
+const ADMIN_SESSION_STORAGE_KEY = "admin-auth";
 
 export interface AuthTokenPayload {
   accessToken?: string | null;
@@ -14,6 +15,21 @@ export interface AuthTokenPayload {
 
 function getLocalStorage() {
   return typeof window === "undefined" ? null : window.localStorage;
+}
+
+function getSessionStorage() {
+  return typeof window === "undefined" ? null : window.sessionStorage;
+}
+
+/** 관리자 로그인 성공 후 호출. 토큰이 바뀌면 clearAuthTokens()가 함께 해제한다. */
+export function markAdminSession() {
+  getSessionStorage()?.setItem(ADMIN_SESSION_STORAGE_KEY, "true");
+}
+
+/** 관리자 플래그와 실제 토큰이 모두 있어야 관리자 세션으로 본다. */
+export function hasAdminSession() {
+  return getSessionStorage()?.getItem(ADMIN_SESSION_STORAGE_KEY) === "true"
+    && Boolean(getStoredAccessToken());
 }
 
 export function getStoredAccessToken() {
@@ -50,4 +66,5 @@ export function clearAuthTokens() {
   Cookies.remove(REFRESH_TOKEN_COOKIE_KEY);
   Cookies.remove("USER_ROLE");
   Cookies.remove("CLIENT_INFO_ID");
+  getSessionStorage()?.removeItem(ADMIN_SESSION_STORAGE_KEY);
 }
