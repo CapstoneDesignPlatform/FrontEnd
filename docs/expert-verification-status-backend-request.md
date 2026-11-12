@@ -1,5 +1,13 @@
 # 전문가 인증 상태 조회 API 수정 요청
 
+> **✅ 백엔드 반영 완료 (2026-11 확인)**
+> `GET /api/expert/me/verification-status` 응답의 `verification_request`에 아래 내용이 반영되었습니다. (BackEnd main·dev 브랜치 `ExpertVerificationStatusResponse`)
+> - `verification_status`: `NOT_APPLIED` / `PENDING` / `APPROVED` / `REJECTED`
+> - `rejected_reason`, `reviewed_at`: 실제 심사 결과 값
+>
+> 프론트는 `verification_status`를 우선 사용하고, 필드가 없을 때만 기존 `status` boolean 추론을 사용합니다. (`src/api/expertVerificationMappers.ts`)
+> 아래는 요청 당시의 기록입니다.
+
 ## 목적
 
 프론트 전문가 플로우에서 `NOT_APPLIED`, `PENDING`, `APPROVED`, `REJECTED` 상태를 정확히 구분할 수 있도록 `GET /api/expert/me/verification-status` 응답을 보강 요청드립니다.
