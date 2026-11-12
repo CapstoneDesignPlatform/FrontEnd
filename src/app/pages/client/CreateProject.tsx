@@ -11,6 +11,15 @@ import { Textarea } from "../../components/ui/textarea";
 import { userInstance } from "../../../api/instance";
 import { getStoredAccessToken } from "../../../api/authTokens";
 import { buildRequestFinancialPayload, normalizeFinancialInput, parseFinancialAmount } from "./createProject/requestFinancialPayload";
+import {
+  buildConstructionAnnouncementPayload,
+  SUPPORTED_REQUEST_INDUSTRIES,
+  UNSUPPORTED_INDUSTRY_MESSAGE,
+  type BusinessStatus,
+  type ConstructionPurpose,
+  type ConstructionRegistrationStatus,
+  type ConstructionRegistrationType,
+} from "./createProject/announcementPayload";
 
 import {
   tabGuides,
@@ -33,11 +42,6 @@ import type {
   ElectricalPeriodicData,
   ProjectTab,
 } from "./createProject/types";
-
-// ─── 백엔드 API 규격 변환 맵핑 ───────────────────────────────────────────────
-const INDUSTRY_MAP: Record<string, string> = { construction: "CONSTRUCTION", electrical: "ELECTRICAL" };
-const PURPOSE_MAP:  Record<string, string> = { license: "REQUIRED_LICENSE", periodic: "PERIODIC_REPORT", survey: "SURVEY", other: "OTHER" };
-const OWNER_TYPE_MAP: Record<string, string> = { corporation: "CORPORATION", individual: "INDIVIDUAL", startup: "STARTUP" };
 
 const ACTIVE = "request-selected bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:text-white focus-visible:bg-blue-600 focus-visible:text-white";
 const INACTIVE_HOVER = "hover:bg-blue-600 hover:text-white focus-visible:bg-blue-600 focus-visible:text-white";
@@ -937,7 +941,7 @@ export function CreateProject() {
     Boolean(currentBusinessStatus) &&
     (currentBusinessStatus === "startup" || hasExistingBusiness !== null) &&
     Boolean(registrationStatus && constructionCategory && registeredBusiness && (constructionPurpose || otherPurpose.trim())) &&
-    (constructionPurpose !== "construction-registration" || registrationStatus === "unsure" || Boolean(constructionRegistrationType));
+    (constructionPurpose !== "construction-registration" || Boolean(constructionRegistrationType));
 
   const isOtherSelectionComplete = industry === "other" && Boolean(currentBusinessStatus && (currentBusinessStatus === "startup" || hasExistingBusiness !== null) && customIndustryName.trim());
   const isElectricalSelectionComplete =
@@ -990,6 +994,7 @@ export function CreateProject() {
   const getSelectionValidationMessage = () => {
     if (!currentBusinessStatus) return "현재 사업 상태를 선택해 주세요.";
     if (!industry) return "진단 분야를 선택해 주세요.";
+    if (!SUPPORTED_REQUEST_INDUSTRIES.has(industry)) return UNSUPPORTED_INDUSTRY_MESSAGE;
     if (industry === "forestry" && currentBusinessStatus === "individual") {
       return "산림사업법인은 개인사업자로 등록할 수 없습니다. 법인사업자나 창업예정을 선택해 주세요.";
     }
@@ -1003,7 +1008,7 @@ export function CreateProject() {
       if (!constructionPurpose && !otherPurpose.trim()) {
         return "진단 목적을 선택하거나 그 외 진단 목적을 입력해 주세요.";
       }
-      if (constructionPurpose === "construction-registration" && registrationStatus !== "unsure" && !constructionRegistrationType) {
+      if (constructionPurpose === "construction-registration" && !constructionRegistrationType) {
         return "등록 구분을 선택해 주세요.";
       }
     }
@@ -1136,49 +1141,24 @@ export function CreateProject() {
 
     const isLoggedIn = !!getStoredAccessToken();
 
-    const selectedBusinessLabel = constructionBusinesses.find((business) => business.value === registeredBusiness)?.label ?? registeredBusiness;
-    const constructionClassification = constructionRegistrationType === "additional-business"
-      ? "ADD"
-      : constructionRegistrationType === "new-registration"
-        ? "NEW"
-        : null;
-
-    const currentIndustryStatus = currentBusinessStatus === "startup"
-      ? "NONE"
-      : effectivePurpose === "license"
-        ? (hasExistingBusiness ? "CONSTRUCTION_RELATED" : "NONE")
-        : hasExistingBusiness === false
-          ? "NONE"
-          : null;
-    const currentIndustryDetail = currentIndustryStatus === "CONSTRUCTION_RELATED"
-      ? "현재 사업 운영 중"
-      : null;
-
-    const payload = {
-      clientInfoId,
-      industry:              INDUSTRY_MAP[industry] || industry.toUpperCase(),
-      purpose:               PURPOSE_MAP[effectivePurpose] || effectivePurpose.toUpperCase(),
-      businessOwnerType:     OWNER_TYPE_MAP[currentBusinessStatus] ?? null,
-      ...financialPayload,
-      category:              industry === "construction" ? constructionClassification : ((currentData as any).classification?.toUpperCase() ?? null),
-      requiredLicense:       industry === "construction" && effectivePurpose === "license" ? selectedBusinessLabel : ((currentData as any).requiredLicense || null),
-      currentIndustryStatus,
-      currentIndustryDetail,
-      heldLicense:           industry === "construction" && effectivePurpose === "survey" ? selectedBusinessLabel : ((currentData as any).currentLicense || null),
-      diagnosisReason:       null,
-      diagnosisReasonDetail: industry === "construction"
-        ? (otherPurpose.trim() || null)
-        : industry === "electrical"
-          ? (electricalPurposeDetails.trim() || (electricalDiagnosisPurpose === "other" ? "양도·양수" : null))
-          : industry === "fire"
-            ? (firePurposeOther.trim() || null)
-          : industry === "forestry"
-            ? (forestryPurposeOther.trim() || null)
-          : industry === "national-heritage"
-            ? (nationalHeritagePurposeOther.trim() || null)
-          : ((currentData as any).customReason || null),
-    };
-
+    let payload: ReturnType<typeof buildConstructionAnnouncementPayload>;
+    try {
+      payload = buildConstructionAnnouncementPayload({
+        businessStatus: currentBusinessStatus as BusinessStatus,
+        hasExistingBusiness,
+        registrationStatus: registrationStatus as ConstructionRegistrationStatus,
+        constructionPurpose: constructionPurpose as ConstructionPurpose,
+        registrationType: constructionRegistrationType as ConstructionRegistrationType,
+        targetBusinessLabel: constructionBusinesses.find((business) => business.value === registeredBusiness)?.label ?? "",
+        otherPurpose,
+        financial: financialPayload,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "의뢰 내용을 확인해 주세요.");
+      submitLock.current = false;
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const res = await userInstance.post(
@@ -1470,6 +1450,11 @@ export function CreateProject() {
             disabled={!currentBusinessStatus}
           />
         </FormSection>
+        {industry && !SUPPORTED_REQUEST_INDUSTRIES.has(industry) && (
+          <p role="status" className="mt-3 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {UNSUPPORTED_INDUSTRY_MESSAGE} 업종별 입력 항목은 미리 확인할 수 있지만 의뢰 등록은 아직 되지 않습니다.
+          </p>
+        )}
         {showForestryIndividualNotice && (
           <p className="mt-3 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-700">
             산림사업법인은 개인사업자로 등록할 수 없습니다. 법인사업자나 창업예정을 선택해 주세요.
@@ -1597,7 +1582,7 @@ export function CreateProject() {
                   <div className="space-y-3 pt-2">
                     <div className="flex items-center gap-2">
                       <Label className="text-base font-semibold">
-                        등록 구분 <span className="text-sm font-normal text-gray-500">(선택)</span>
+                        등록 구분 <span className="text-red-500">*</span>
                       </Label>
                     </div>
                     <ChoiceButtonGroup
