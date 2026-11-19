@@ -19,6 +19,7 @@ import {
 } from "./verificationConstants";
 
 interface ExpertVerificationFormCardProps {
+  pendingDraft?: boolean;
   businessLicense: VerificationBusinessLicenseData;
   canSubmit: boolean;
   certificates: VerificationCertificateData[];
@@ -39,6 +40,7 @@ interface ExpertVerificationFormCardProps {
 }
 
 export function ExpertVerificationFormCard({
+  pendingDraft = false,
   businessLicense,
   canSubmit,
   certificates,
@@ -78,7 +80,7 @@ export function ExpertVerificationFormCard({
           {verificationStatus === "REJECTED" ? <RejectedNotice /> : null}
           {isPending ? <PendingNotice /> : null}
 
-          {canSubmit ? (
+          {pendingDraft ? <Button type="button" disabled className="w-full">수정 저장 준비 중</Button> : canSubmit ? (
             <FormActions isSubmitting={isSubmitting} onSkip={onSkip} isResubmission={verificationStatus === "REJECTED"} />
           ) : null}
         </form>

@@ -55,3 +55,19 @@ test('경로 문자는 파일명에서 제거하고 요청 취소를 전달한�
   const result = await fetchExpertFile(7, 'token', controller.signal);
   assert.equal(result.filename, '_서류.pdf');
 });
+
+
+test('JSON으로 잘못 표시된 PNG·JPG·PDF는 실제 파일 식별 정보로 형식을 복구한다', async t => {
+  for (const [bytes, type] of [
+    [[137, 80, 78, 71, 13, 10, 26, 10, 0], 'image/png'],
+    [[255, 216, 255, 224, 0], 'image/jpeg'],
+    [[37, 80, 68, 70, 45, 49, 46, 55], 'application/pdf'],
+  ]) {
+    let calls = 0;
+    const mock = t.mock.method(globalThis, 'fetch', async () => ++calls === 1 ? metadata() : new Response(new Uint8Array(bytes), { headers: { 'Content-Type': 'application/json' } }));
+    const result = await fetchExpertFile(7, 'token', signal());
+    assert.equal(result.blob.type, type);
+    assert.deepEqual([...new Uint8Array(await result.blob.arrayBuffer())], bytes);
+    mock.mock.restore();
+  }
+});
