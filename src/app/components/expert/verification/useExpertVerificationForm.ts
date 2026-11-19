@@ -29,6 +29,7 @@ import {
 import { CERTIFICATE_TYPE_OPTIONS } from "./verificationConstants";
 
 interface UseExpertVerificationFormOptions {
+  allowPendingDraft?: boolean;
   onSubmitted: () => void;
   statusOverride?: ExpertVerificationStatus;
 }
@@ -163,6 +164,7 @@ function getSubmitErrorMessage(error: Error) {
 export function useExpertVerificationForm({
   onSubmitted,
   statusOverride,
+  allowPendingDraft = false,
 }: UseExpertVerificationFormOptions) {
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
@@ -237,10 +239,10 @@ export function useExpertVerificationForm({
   }, [applyVerificationRequest, verificationRequest]);
 
   const handleAddCertificate = useCallback(() => {
-    if (isPending) return;
+    if (isPending && !allowPendingDraft) return;
 
     setCertificates((current) => [...current, createEmptyCertificate()]);
-  }, [isPending]);
+  }, [isPending, allowPendingDraft]);
 
   const handleUpdateCertificate = useCallback(
     (id: string, data: VerificationCertificateData) => {

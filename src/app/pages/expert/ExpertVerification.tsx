@@ -10,7 +10,11 @@ import {
 } from "../../components/expert/verification";
 import { getStatusFromSearch } from "../../components/expert/expertGuardUtils";
 
-export function ExpertVerification() {
+export function ExpertVerificationEdit() {
+  return <ExpertVerification editMode />;
+}
+
+export function ExpertVerification({ editMode = false }: { editMode?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -34,6 +38,7 @@ export function ExpertVerification() {
     setQualificationType,
     verificationStatus,
   } = useExpertVerificationForm({
+    allowPendingDraft: editMode,
     onSubmitted: () => navigate("/expert/verification/status"),
     statusOverride: getStatusFromSearch(location.search),
   });
@@ -45,7 +50,8 @@ export function ExpertVerification() {
 
   return (
     <div className="mx-auto max-w-[1071px] space-y-6">
-      <ExpertVerificationHeader verificationStatus={verificationStatus} />
+      {editMode ? <div className="space-y-2"><Button asChild variant="outline"><Link to="/expert/verification/status">인증 상태로 돌아가기</Link></Button><h1 className="text-2xl font-semibold">인증 정보 수정</h1><p className="text-sm text-gray-500">신청 정보와 제출 서류를 확인하고 수정하세요.</p></div> : <ExpertVerificationHeader verificationStatus={verificationStatus} />}
+      {editMode && isPending && <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">승인 대기 중 정보 수정 저장은 준비 중입니다. 입력값을 편집할 수 있지만 서버에는 저장되지 않으며, 페이지를 나가면 변경 내용이 사라집니다.</div>}
 
       {verificationRequest && <div className="rounded-xl border bg-white p-6"><ExpertSubmittedDocuments verificationRequest={verificationRequest} /></div>}
 
@@ -55,9 +61,10 @@ export function ExpertVerification() {
       {!isApproved ? (
         <ExpertVerificationFormCard
           businessLicense={businessLicense}
-          canSubmit={canSubmit}
+          canSubmit={canSubmit || (editMode && isPending)}
+          pendingDraft={editMode && isPending}
           certificates={certificates}
-          isPending={isPending}
+          isPending={isPending && !editMode}
           isSubmitting={isSubmitting}
           qualificationType={qualificationType}
           verificationStatus={verificationStatus}

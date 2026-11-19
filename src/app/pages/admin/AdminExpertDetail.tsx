@@ -75,6 +75,7 @@ export function AdminExpertDetail() {
             type: "사업자등록증",
             size: "-",
             uploadedAt: "-",
+            fileId: apiBusinessInfo.fileId,
           },
         ]
       : []),
@@ -298,12 +299,12 @@ export function AdminExpertDetail() {
                       </td>
                       <td className="border-b border-gray-200 px-2 py-1">
                         <button
-                          className="text-teal-600 hover:underline"
-                          onClick={() =>
-                            alert("파일 다운로드 기능 연동 예정입니다.")
-                          }
+                          type="button"
+                          disabled
+                          className="text-gray-400 cursor-not-allowed"
+                          title="첨부서류 다운로드는 준비 중입니다."
                         >
-                          다운로드
+                          준비 중
                         </button>
                       </td>
                     </tr>

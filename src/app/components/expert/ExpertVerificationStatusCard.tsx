@@ -135,7 +135,21 @@ export function ExpertVerificationStatusCard({
         <CardTitle className="text-2xl">전문가 인증 승인 대기중</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-          <ExpertSubmittedDocuments verificationRequest={verificationRequest} />
+          <section className="rounded-lg border bg-gray-50 p-4 space-y-3" aria-label="인증 신청 정보">
+            <h3 className="font-semibold">신청 정보</h3>
+            <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+              {[
+                ['전문가 유형', verificationRequest.licenseType],
+                ['상호명', verificationRequest.businessLicense?.companyName || verificationRequest.companyName],
+                ['대표자명', verificationRequest.businessLicense?.ownerName],
+                ['사업자등록번호', verificationRequest.businessLicense?.businessNumber],
+              ].map(([label, value]) => <div key={label}><dt className="text-gray-500">{label}</dt><dd className="mt-1 font-medium break-words">{value || '미제공'}</dd></div>)}
+            </dl>
+            {verificationRequest.certificates?.map((certificate, index) => <p key={certificate.id ?? index} className="text-sm text-gray-600">
+              자격증 {index + 1} · {certificate.licenseType || '종류 미제공'} · {certificate.holderName || '성명 미제공'} · {certificate.licenseNumber || '번호 미제공'}
+            </p>)}
+            <p className="text-xs text-gray-500">제출 서류는 인증 정보 수정 페이지에서 확인할 수 있습니다.</p>
+          </section>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-center text-gray-700">
             전문가 인증 신청이 완료되었습니다.<br />
@@ -211,7 +225,7 @@ export function ExpertVerificationStatusCard({
             <Link to="/">홈으로</Link>
           </Button>
           <Button variant="outline" asChild className="flex-1">
-            <Link to="/expert/verification/apply">인증 정보 수정</Link>
+            <Link to="/expert/verification/edit">인증 정보 수정</Link>
           </Button>
         </div>
       </CardContent>

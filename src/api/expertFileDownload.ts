@@ -25,9 +25,18 @@ export async function fetchExpertFile(
   const response = await fetch(`${path}/download`, options);
   checkStatus(response);
   const type = response.headers.get('content-type')?.toLowerCase() ?? '';
-  // JSON/HTML error responses must never be saved as documents, even with HTTP 200.
-  if (type.includes('json') || type.startsWith('text/')) throw new Error('서버가 파일 대신 오류 응답을 반환했습니다.');
-  const blob = await response.blob();
+  let blob = await response.blob();
+  // The deployed API sometimes labels binary documents as JSON. Only accept
+  // recognized document signatures in that case; actual error bodies stay blocked.
+  if (type.includes('json') || type.startsWith('text/')) {
+    const bytes = new Uint8Array(await blob.slice(0, 8).arrayBuffer());
+    const startsWith = (signature: number[]) => signature.every((byte, index) => bytes[index] === byte);
+    const detectedType = startsWith([137, 80, 78, 71, 13, 10, 26, 10]) ? 'image/png'
+      : startsWith([255, 216, 255]) ? 'image/jpeg'
+      : startsWith([37, 80, 68, 70, 45]) ? 'application/pdf' : null;
+    if (!detectedType) throw new Error('서버가 파일 대신 오류 응답을 반환했습니다.');
+    blob = new Blob([blob], { type: detectedType });
+  }
   if (!blob.size) throw new Error('다운로드할 파일이 비어 있습니다.');
   const filename = file.original_name.replace(/[\\/\u0000-\u001f\u007f]/g, '_').replace(/^\.+/, '').trim() || `제출서류-${fileId}`;
   return { blob, filename };

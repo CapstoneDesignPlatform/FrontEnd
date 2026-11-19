@@ -200,6 +200,11 @@ const expertVerificationPage = guardedPage(
   () => import("./pages/expert/ExpertVerification"),
   ({ ExpertVerification }) => ExpertVerification,
 );
+const expertVerificationEditPage = guardedPage(
+  expertVerificationStatusGuard,
+  () => import("./pages/expert/ExpertVerification"),
+  ({ ExpertVerificationEdit }) => ExpertVerificationEdit,
+);
 const expertVerificationStatusPage = guardedPage(
   expertVerificationStatusGuard,
   () => import("./pages/expert/ExpertVerificationStatus"),
@@ -374,6 +379,7 @@ export const router = createBrowserRouter([
       { path: "expert/dashboard", lazy: expertDashboardPage },
       { path: "expert/verification", lazy: expertVerificationPage },
       { path: "expert/verification/apply", lazy: expertVerificationPage },
+      { path: "expert/verification/edit", lazy: expertVerificationEditPage },
       {
         path: "expert/verification/status",
         lazy: expertVerificationStatusPage,
