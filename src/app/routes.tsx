@@ -238,15 +238,6 @@ const adminLoginPage = page(
   ({ AdminLogin }) => AdminLogin,
 );
 
-function withAdminAuth(Component: React.ComponentType) {
-  return function GuardedComponent() {
-    const isAuth = sessionStorage.getItem("admin-auth") === "true";
-    if (!isAuth) {
-      return <Navigate to="/admin/login" replace />;
-    }
-    return <Component />;
-  };
-}
 const adminExpertsPage = page(
   () => import("./pages/admin/AdminExperts"),
   ({ AdminExperts }) => AdminExperts,

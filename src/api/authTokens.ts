@@ -38,6 +38,7 @@ export function persistAuthTokens(payload: AuthTokenPayload) {
     Cookies.set(REFRESH_TOKEN_COOKIE_KEY, refreshToken, { expires: 7 });
   }
 
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("auth-session-changed"));
   return Boolean(accessToken);
 }
 
@@ -50,4 +51,8 @@ export function clearAuthTokens() {
   Cookies.remove(REFRESH_TOKEN_COOKIE_KEY);
   Cookies.remove("USER_ROLE");
   Cookies.remove("CLIENT_INFO_ID");
+  if (typeof window !== "undefined") {
+    window.sessionStorage.removeItem("admin-auth");
+    window.dispatchEvent(new Event("auth-session-changed"));
+  }
 }

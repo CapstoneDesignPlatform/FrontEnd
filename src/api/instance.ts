@@ -37,7 +37,7 @@ userInstance.interceptors.response.use(
     if (axios.isAxiosError(error) && error.response?.status === 401
       && shouldExpireSession(error.config?.url ?? "", error.config?.headers?.Authorization, getStoredAccessToken())) {
       clearAuthTokens();
-      window.location.href = '/login';
+      window.location.href = window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login';
     }
     return Promise.reject(error);
   },

@@ -61,7 +61,7 @@ export function ExpertVerificationFormCard({
           <CertificateSection
             canSubmit={canSubmit}
             certificates={certificates}
-            isPending={isPending || isSubmitting}
+            isPending={isPending || isSubmitting || !canSubmit}
             qualificationType={qualificationType}
             onAddCertificate={onAddCertificate}
             onCertificateChange={onCertificateChange}
@@ -71,7 +71,7 @@ export function ExpertVerificationFormCard({
 
           <BusinessLicenseSection
             businessLicense={businessLicense}
-            isPending={isPending || isSubmitting}
+            isPending={isPending || isSubmitting || !canSubmit}
             onBusinessLicenseChange={onBusinessLicenseChange}
           />
 
@@ -79,7 +79,7 @@ export function ExpertVerificationFormCard({
           {isPending ? <PendingNotice /> : null}
 
           {canSubmit ? (
-            <FormActions isSubmitting={isSubmitting} onSkip={onSkip} />
+            <FormActions isSubmitting={isSubmitting} onSkip={onSkip} isResubmission={verificationStatus === "REJECTED"} />
           ) : null}
         </form>
       </CardContent>
@@ -158,6 +158,7 @@ function CertificateSection({
 
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <CertificateListHeader certificateCount={certificates.length} />
+        {certificates.some(item => item.existing || item.serverId) && <p className="mb-3 text-sm text-gray-500">기존 서류는 정보 수정과 파일 교체가 가능합니다. 기존 서류 삭제는 준비 중입니다.</p>}
 
         <div className="space-y-4">
           {certificates.map((certificate, index) => (
@@ -169,7 +170,7 @@ function CertificateSection({
               isPrimary={index === 0}
               onChange={(data) => onCertificateChange(certificate.id, data)}
               onDelete={
-                certificates.length > 1 && !isPending
+                certificates.length > 1 && !isPending && !certificate.existing && !certificate.serverId
                   ? () => onCertificateDelete(certificate.id)
                   : undefined
               }
@@ -344,15 +345,16 @@ function PendingNotice() {
 }
 
 interface FormActionsProps {
+  isResubmission: boolean;
   isSubmitting: boolean;
   onSkip: () => void;
 }
 
-function FormActions({ isSubmitting, onSkip }: FormActionsProps) {
+function FormActions({ isSubmitting, onSkip, isResubmission }: FormActionsProps) {
   return (
     <div className="flex flex-col gap-3 pt-2 sm:flex-row">
       <Button type="submit" className="flex-1" disabled={isSubmitting}>
-        {isSubmitting ? "인증 신청 중..." : "인증 신청하기"}
+        {isSubmitting ? "서류 저장 및 신청 중..." : isResubmission ? "수정 후 재신청하기" : "인증 신청하기"}
       </Button>
       <Button
         type="button"

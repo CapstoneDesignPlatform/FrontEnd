@@ -1,3 +1,4 @@
+import { ExpertSubmittedDocuments } from './ExpertSubmittedDocuments';
 import { Link } from "react-router-dom";
 import { AlertCircle, CheckCircle2, Clock, FileText } from "lucide-react";
 import { Button } from "../ui/button";
@@ -23,6 +24,7 @@ export function ExpertVerificationStatusCard({
           <CardTitle className="text-2xl">전문가 인증 완료</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          <ExpertSubmittedDocuments verificationRequest={verificationRequest} />
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <p className="text-center text-gray-700">
               전문가 인증이 완료되었습니다.<br />
@@ -55,6 +57,7 @@ export function ExpertVerificationStatusCard({
           <CardTitle className="text-2xl">전문가 인증 반려</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          <ExpertSubmittedDocuments verificationRequest={verificationRequest} />
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-center text-gray-700">
               제출하신 인증 신청이 반려되었습니다.<br />
@@ -101,6 +104,7 @@ export function ExpertVerificationStatusCard({
           <CardTitle className="text-2xl">전문가 인증이 필요합니다</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          <ExpertSubmittedDocuments verificationRequest={verificationRequest} />
           <div className="bg-gray-50 border rounded-lg p-4">
             <p className="text-center text-gray-700">
               전문가 서비스를 이용하려면 인증 신청을 먼저 완료해주세요.
@@ -131,6 +135,7 @@ export function ExpertVerificationStatusCard({
         <CardTitle className="text-2xl">전문가 인증 승인 대기중</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+          <ExpertSubmittedDocuments verificationRequest={verificationRequest} />
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-center text-gray-700">
             전문가 인증 신청이 완료되었습니다.<br />
