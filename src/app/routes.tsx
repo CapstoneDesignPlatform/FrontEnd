@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
 import type { ComponentType, ReactNode } from "react";
-import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { AdminAuthGuard } from "./components/admin/AdminAuthGuard";
 
@@ -76,6 +75,10 @@ const homePage = page(
 const searchExpertsPage = page(
   () => import("./pages/category/SearchExperts"),
   ({ SearchExperts }) => SearchExperts,
+);
+const bidIntroPage = page(
+  () => import("./pages/category/bid/BidIntro"),
+  ({ BidIntro }) => BidIntro,
 );
 const noticePage = page(
   () => import("./pages/category/bid/Notice"),
@@ -335,6 +338,7 @@ export const router = createBrowserRouter([
       { path: "oauth/callback/naver", lazy: oauthCallbackPage },
       { path: "oauth/callback/google", lazy: oauthCallbackPage },
 
+      { path: "bids/intro", lazy: bidIntroPage },
       { path: "bids/notice", lazy: noticePage },
       { path: "bids/search-experts", lazy: searchExpertsPage },
       { path: "construction", element: <Navigate to="/client/create-project/construction" replace /> },
@@ -360,6 +364,7 @@ export const router = createBrowserRouter([
         path: "client/create-project/:industry/:tab?",
         lazy: createProjectPage,
       },
+      { path: "client/project-success", lazy: projectSuccessPage },
       { path: "client/project-success/:projectCode", lazy: projectSuccessPage },
       { path: "client/projects", lazy: projectListPage },
       { path: "client/projects/:id", lazy: projectDetailPage },

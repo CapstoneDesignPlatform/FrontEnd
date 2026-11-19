@@ -1,5 +1,5 @@
 export function isPublicAuthRequest(url = '') {
-  return /(?:^|\/)auth\/(login|signup)(?:[?#]|$)/.test(url);
+  return /(?:^|\/)(?:auth\/(?:login|signup)|admin\/login)(?:[?#]|$)/.test(url);
 }
 
 export function shouldExpireSession(url: string, sentAuthorization: unknown, currentToken: string | null | undefined) {

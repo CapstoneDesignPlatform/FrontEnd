@@ -116,7 +116,7 @@ export function Login() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-200px)]">
+    <div className="desktop-login container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-200px)]">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">로그인</CardTitle>
@@ -163,7 +163,7 @@ export function Login() {
 
             <div className="text-center text-sm">
               <span className="text-gray-600">계정이 없으신가요? </span>
-              <Link to="/register" className="text-blue-600 hover:underline">
+              <Link to={searchParams.get("next") === "/client/company-info" ? "/register?type=client&next=%2Fclient%2Fcompany-info" : "/register"} className="text-blue-600 hover:underline">
                 회원가입
               </Link>
             </div>
@@ -195,7 +195,7 @@ export function Login() {
                 type="button"
                 variant="outline"
                 className="w-full cursor-pointer"
-                style={{ backgroundColor: "#03C75A", borderColor: "#03C75A", color: "#FFFFFF" }}
+                style={{ backgroundColor: "#03C75A", borderColor: "#03C75A", color: "var(--naver-button-ink, #FFFFFF)" }}
                 onClick={() => handleSocialLogin("naver")}
               >
                 <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
