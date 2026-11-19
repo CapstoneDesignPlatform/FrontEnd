@@ -105,6 +105,7 @@ export interface VerificationRequestDto {
   id: number | null;
   expert_profile_id?: number;
   status: ExpertVerificationStatusDto;
+  verification_status?: ExpertVerificationStatus | "NOT_SUBMITTED" | null;
   specialty?: string | null;
   license_number?: string | null;
   issue_date?: string | null;
@@ -122,6 +123,8 @@ export interface ExpertVerificationStatusResponseDto {
 }
 
 export interface VerificationCertificateDto {
+  id?: number;
+  existing?: boolean;
   license_number?: string;
   certificate_name?: string;
   certificate_number?: string;
@@ -136,6 +139,8 @@ export interface VerificationCertificateDto {
 }
 
 export interface VerificationBusinessLicenseDto {
+  id?: number;
+  existing?: boolean;
   business_number?: string;
   owner_name?: string;
   representative_name?: string;
@@ -165,6 +170,8 @@ export interface ExpertVerificationStatusVM {
 }
 
 export interface VerificationCertificateVM {
+  id?: number;
+  existing?: boolean;
   licenseType: string;
   licenseNumber: string;
   issueDate: string;
@@ -175,6 +182,8 @@ export interface VerificationCertificateVM {
 }
 
 export interface VerificationBusinessLicenseVM {
+  id?: number;
+  existing?: boolean;
   businessNumber?: string;
   ownerName?: string;
   companyName?: string;
@@ -183,6 +192,8 @@ export interface VerificationBusinessLicenseVM {
 }
 
 export interface SubmitExpertVerificationCertificate {
+  id?: number;
+  existing?: boolean;
   licenseType: string;
   licenseNumber: string;
   issueDate: string;
@@ -194,6 +205,8 @@ export interface SubmitExpertVerificationCertificate {
 }
 
 export interface SubmitExpertVerificationBusinessLicense {
+  id?: number;
+  existing?: boolean;
   businessNumber?: string;
   file?: File | null;
   ownerName?: string;
@@ -203,6 +216,9 @@ export interface SubmitExpertVerificationBusinessLicense {
 }
 
 export interface SubmitExpertVerificationRequest {
+  onProgress?: (event: { kind: "certificate" | "business"; index: number; id?: number; fileId: number }) => void;
+  onSubmissionAttempt?: () => void;
+  onSubmissionRejected?: () => void;
   licenseType: string;
   licenseNumber: string;
   issueDate: string;

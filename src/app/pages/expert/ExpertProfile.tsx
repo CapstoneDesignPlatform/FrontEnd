@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Badge } from "../../components/ui/badge";
 import { AsyncStateCard } from "../../components/common/AsyncStateCard";
 import { ExpertProfileForm } from "../../components/expert/ExpertProfileForm";
@@ -6,6 +7,39 @@ import type { ExpertProfileFormVM } from "../../../types/expert";
 import { toast } from "sonner";
 import { useAsyncAction } from "../../hooks/useAsyncAction";
 import { useAsyncData } from "../../hooks/useAsyncData";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent } from "../../components/ui/card";
+import { ExpertSubmittedDocuments } from "../../components/expert/ExpertSubmittedDocuments";
+import { getExpertVerificationStatus } from "../../../api/expertVerification";
+
+function ProfileSubmittedDocuments() {
+  const { data, error, isLoading, reload } = useAsyncData(getExpertVerificationStatus);
+
+  return (
+    <Card>
+      <CardContent className="pt-6 space-y-3">
+        {isLoading ? (
+          <div role="status">
+            <h2 className="font-semibold mb-2">본인 제출 서류</h2>
+            <p className="text-sm text-gray-500">제출 서류를 불러오는 중입니다.</p>
+          </div>
+        ) : error ? (
+          <div role="alert" className="space-y-3">
+            <h2 className="font-semibold">본인 제출 서류</h2>
+            <p className="text-sm text-red-600">제출 서류를 불러오지 못했습니다. 다시 시도해 주세요.</p>
+            <Button type="button" variant="outline" onClick={reload}>다시 시도</Button>
+          </div>
+        ) : data ? (
+          <>
+            <ExpertSubmittedDocuments verificationRequest={data} />
+            {data.status === "REJECTED" && <Button asChild variant="outline"><Link to="/expert/verification/apply">인증 서류 수정·재신청</Link></Button>}
+            <p className="text-sm text-gray-500">인증 완료 후에도 본인이 제출한 자격증과 사업자등록증을 다운로드할 수 있습니다.</p>
+          </>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
 
 export function ExpertProfile() {
   const {
@@ -81,6 +115,7 @@ export function ExpertProfile() {
         onChange={handleChange}
         onSubmit={handleSubmit}
       />
+      <ProfileSubmittedDocuments />
     </div>
   );
 }

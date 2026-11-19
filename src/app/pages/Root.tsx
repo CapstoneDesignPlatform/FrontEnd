@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { clearAuthTokens, getStoredAccessToken } from "../../api/authTokens";
+import { requestLogout } from "../../api/logout";
 import Cookies from 'js-cookie';
 import { toast } from "sonner";
 
@@ -12,7 +13,7 @@ import {
   ChevronDown,
   UserRound,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { AppUser, RootOutletContext } from "../types/rootContext";
 import { userInstance } from "../../api/instance";
 
@@ -196,6 +197,16 @@ export function Root() {
   const [user, setUser] = useState<AppUser | null>(null);
   const [navValue, setNavValue] = useState("");
 
+  useEffect(() => {
+    const syncLogout = () => { if (!getStoredAccessToken()) setUser(null); };
+    window.addEventListener("auth-session-changed", syncLogout);
+    window.addEventListener("storage", syncLogout);
+    return () => {
+      window.removeEventListener("auth-session-changed", syncLogout);
+      window.removeEventListener("storage", syncLogout);
+    };
+  }, []);
+
   // 새로고침 시 쿠키에 토큰이 있으면 유저 정보 복원
   useEffect(() => {
     const token = getStoredAccessToken();
@@ -205,9 +216,9 @@ export function Root() {
     let active = true;
     userInstance.get("/users/myInfo")
       .then((res) => {
-        if (active && getStoredAccessToken() === token && res.data?.success) {
+        if (active && getStoredAccessToken() === token && res.data?.success && ["CLIENT", "EXPERT", "ADMIN"].includes(res.data.data?.userType)) {
           setUser({
-            type: role.toLowerCase() as "client" | "expert",
+            type: res.data.data.userType.toLowerCase() as AppUser["type"],
             name: res.data.data.name,
           });
         }
@@ -235,12 +246,30 @@ export function Root() {
     shouldShowExpertNavigation && !isAdminRoute;
   const outletContext: RootOutletContext = { user, setUser };
 
-  const handleLogout = () => {
-    clearDemoExpertApproval();
-    clearAuthTokens();
-    Cookies.remove("CLIENT_INFO_ID");
-    setUser(null);
-    navigate("/", { replace: true });
+  const logoutPending = useRef(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const handleLogout = async () => {
+    if (logoutPending.current) return;
+    logoutPending.current = true;
+    setIsLoggingOut(true);
+    const token = getStoredAccessToken();
+    try {
+      if (token) await requestLogout(token);
+    } catch {
+      // Network failure or expiry must not prevent local logout.
+      console.warn('서버 로그아웃을 확인하지 못했습니다. 로컬 세션을 종료합니다.');
+    } finally {
+      const currentToken = getStoredAccessToken();
+      // A delayed response must not log out a newly signed-in account.
+      if (!currentToken || currentToken === token) {
+        clearDemoExpertApproval();
+        clearAuthTokens();
+        setUser(null);
+        navigate("/", { replace: true });
+      }
+      logoutPending.current = false;
+      setIsLoggingOut(false);
+    }
   };
 
   const handleAdminLogout = () => {
@@ -514,7 +543,7 @@ export function Root() {
                         to={
                           user.type === "client"
                             ? "/client/mypage"
-                            : "/expert/dashboard"
+                            : user.type === "admin" ? "/admin/projects" : "/expert/dashboard"
                         }
                       >
                         My Page
@@ -524,6 +553,8 @@ export function Root() {
                       variant="ghost"
                       size="icon"
                       onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      aria-label={isLoggingOut ? "로그아웃 중" : "로그아웃"}
                       className="text-gray-500 hover:text-red-500"
                     >
                       <LogOut className="h-5 w-5" />

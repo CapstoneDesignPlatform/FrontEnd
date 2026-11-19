@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { VerificationSaveUncertainError } from "../../../../api/verificationAssets";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { toast } from "sonner";
 
@@ -22,6 +23,7 @@ import type {
 import { useVerificationPreviewUrls } from "./useVerificationPreviewUrls";
 import {
   buildSubmitVerificationPayload,
+  isCertificateStarted,
   validateExpertVerificationForm,
 } from "./verificationSubmit";
 import { CERTIFICATE_TYPE_OPTIONS } from "./verificationConstants";
@@ -56,6 +58,8 @@ function createCertificateFromVerification(
 ): VerificationCertificateData {
   return {
     ...createEmptyCertificate(),
+    serverId: certificate.id,
+    existing: certificate.existing,
     type: certificate.licenseType,
     number: certificate.licenseNumber,
     issueDate: certificate.issueDate,
@@ -106,6 +110,8 @@ function createBusinessLicenseFromVerification(
 
   return {
     ...createEmptyBusinessLicense(),
+    serverId: businessLicense.id,
+    existing: businessLicense.existing,
     businessNumber: businessLicense.businessNumber ?? "",
     name: businessLicense.ownerName ?? "",
     companyName: businessLicense.companyName ?? "",
@@ -158,6 +164,8 @@ export function useExpertVerificationForm({
   onSubmitted,
   statusOverride,
 }: UseExpertVerificationFormOptions) {
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const { releasePreviewUrl, trackPreviewUrl } = useVerificationPreviewUrls();
   const [verificationStatus, setVerificationStatus] =
     useState<ExpertVerificationStatus>("NOT_APPLIED");
@@ -171,11 +179,13 @@ export function useExpertVerificationForm({
     () => getExpertVerificationStatus(statusOverride),
     [statusOverride],
   );
-  const { data: verificationRequest } = useAsyncData(loadVerificationRequest);
+  const { data: verificationRequest, error: loadError, isLoading, reload } = useAsyncData(loadVerificationRequest);
+  const [submissionNeedsCheck, setSubmissionNeedsCheck] = useState(false);
   const { isPending: isSubmitting, run: submitVerification } = useAsyncAction(
     submitExpertVerification,
     {
       onError: (error) => {
+        if (error instanceof VerificationSaveUncertainError) setSubmissionNeedsCheck(true);
         toast.error(getSubmitErrorMessage(error));
       },
       onSuccess: () => {
@@ -188,19 +198,8 @@ export function useExpertVerificationForm({
   const isApproved = verificationStatus === "APPROVED";
   const isPending = verificationStatus === "PENDING";
   const canSubmit =
-    verificationStatus === "NOT_APPLIED" || verificationStatus === "REJECTED";
-
-  const resetVerificationForm = useCallback(() => {
-    setCertificates((current) => {
-      releaseCertificatePreviewUrls(current, releasePreviewUrl);
-      return [createEmptyCertificate()];
-    });
-    setBusinessLicense((current) => {
-      releasePreviewUrl(current.previewUrl);
-      return createEmptyBusinessLicense();
-    });
-    setQualificationType("");
-  }, [releasePreviewUrl]);
+    Boolean(verificationRequest) && !loadError && !isLoading && !submissionNeedsCheck &&
+    (verificationStatus === "NOT_APPLIED" || verificationStatus === "REJECTED");
 
   const applyVerificationRequest = useCallback(
     (request: ExpertVerificationStatusVM) => {
@@ -232,14 +231,10 @@ export function useExpertVerificationForm({
     if (!verificationRequest) return;
 
     setVerificationStatus(verificationRequest.status);
-
-    if (verificationRequest.status === "NOT_APPLIED") {
-      resetVerificationForm();
-      return;
-    }
+    setSubmissionNeedsCheck(false);
 
     applyVerificationRequest(verificationRequest);
-  }, [applyVerificationRequest, resetVerificationForm, verificationRequest]);
+  }, [applyVerificationRequest, verificationRequest]);
 
   const handleAddCertificate = useCallback(() => {
     if (isPending) return;
@@ -267,6 +262,10 @@ export function useExpertVerificationForm({
       if (certificates.length <= 1) return;
 
       const deleted = certificates.find((certificate) => certificate.id === id);
+      if (deleted?.existing || deleted?.serverId) {
+        toast.info("기존 등록 서류 삭제는 준비 중입니다. 정보 수정과 파일 교체를 이용해 주세요.");
+        return;
+      }
       if (deleted?.previewUrl) {
         releasePreviewUrl(deleted.previewUrl);
       }
@@ -293,6 +292,7 @@ export function useExpertVerificationForm({
   const handleSubmit = useCallback(
     (event: FormEvent) => {
       event.preventDefault();
+      if (!canSubmit || isSubmitting) return;
 
       const formValues = {
         businessLicense,
@@ -305,12 +305,34 @@ export function useExpertVerificationForm({
         return;
       }
 
-      void submitVerification(buildSubmitVerificationPayload(formValues));
+      const submitted = certificates.filter(isCertificateStarted);
+      const payload = buildSubmitVerificationPayload(formValues);
+      payload.onProgress = (progress) => {
+        if (!mounted.current) return;
+        if (progress.kind === 'certificate') {
+          const localId = submitted[progress.index]?.id;
+          setCertificates(current => current.map(item => item.id === localId ? {
+            ...item, serverId: progress.id ?? item.serverId,
+            existing: Boolean(progress.id) || item.existing, fileId: progress.fileId, file: null,
+          } : item));
+        } else {
+          setBusinessLicense(current => ({ ...current, serverId: progress.id ?? current.serverId,
+            existing: Boolean(progress.id) || current.existing, fileId: progress.fileId, file: null }));
+        }
+      };
+      payload.onSubmissionAttempt = () => { if (mounted.current) setSubmissionNeedsCheck(true); };
+      payload.onSubmissionRejected = () => { if (mounted.current) setSubmissionNeedsCheck(false); };
+      void submitVerification(payload);
     },
-    [businessLicense, certificates, qualificationType, submitVerification],
+    [businessLicense, certificates, qualificationType, submitVerification, canSubmit, isSubmitting],
   );
 
   return {
+    verificationRequest,
+    loadError,
+    isLoading,
+    reload,
+    submissionNeedsCheck,
     businessLicense,
     canSubmit,
     certificates,

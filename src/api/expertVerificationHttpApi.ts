@@ -1,124 +1,40 @@
-import type {
-  RegisterBusinessRegistrationRequestDto,
-  RegisterBusinessRegistrationResponseDto,
-  RegisterCertificateRequestDto,
-  RegisterCertificateResponseDto,
-  ExpertVerificationStatusResponseDto,
-  SubmitExpertVerificationRequest,
-  UploadFileResponseDto,
-  VerificationFilePurpose,
-} from "../types/expertVerification";
-import { apiClient } from "./apiClient";
-import {
-  mapSubmitVerificationRequestToDto,
-  mapVerificationStatusDtoToVM,
-} from "./expertVerificationMappers";
-import type { ExpertVerificationApi } from "./expertApiTypes";
-
-function mapCertificateNameToBackend(value: string) {
-  return value === "경영지도사(재무관리)" ? "경영지도사" : value;
-}
-
-async function uploadVerificationFile(
-  file: File,
-  purpose: VerificationFilePurpose,
-) {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const response = await apiClient.post<UploadFileResponseDto>("/files", {
-    body: formData,
-    query: { purpose },
-  });
-
-  return response.file.id;
-}
-
-function getFileId(
-  requestFile: File | null | undefined,
-  existingFileId: number | undefined,
-  purpose: VerificationFilePurpose,
-) {
-  if (requestFile) {
-    return uploadVerificationFile(requestFile, purpose);
-  }
-
-  if (existingFileId) {
-    return Promise.resolve(existingFileId);
-  }
-
-  return Promise.reject(new Error("인증 파일 정보가 없습니다."));
-}
-
-async function registerCertificate(
-  certificate: NonNullable<SubmitExpertVerificationRequest["certificates"]>[number],
-) {
-  const fileId = await getFileId(certificate.file, certificate.fileId, "CERTIFICATE");
-  const payload: RegisterCertificateRequestDto = {
-    certificate_name: mapCertificateNameToBackend(certificate.licenseType),
-    certificate_number: certificate.licenseNumber,
-    expiry_date: certificate.expiryDate,
-    file_id: fileId,
-    issue_date: certificate.issueDate,
-    owner_name: certificate.holderName,
-  };
-
-  await apiClient.post<RegisterCertificateResponseDto>(
-    "/expert/me/certificates",
-    { body: payload },
-  );
-}
-
-async function registerBusinessRegistrationInfo(
-  businessLicense: NonNullable<SubmitExpertVerificationRequest["businessLicense"]>,
-) {
-  const fileId = await getFileId(
-    businessLicense.file,
-    businessLicense.fileId,
-    "BUSINESS_REGISTRATION",
-  );
-  const payload: RegisterBusinessRegistrationRequestDto = {
-    business_number: businessLicense.businessNumber,
-    company_name: businessLicense.companyName,
-    file_id: fileId,
-    representative_name: businessLicense.ownerName,
-  };
-
-  await apiClient.post<RegisterBusinessRegistrationResponseDto>(
-    "/expert/me/business-registration-info",
-    { body: payload },
-  );
-}
-
-async function registerVerificationAssets(request: SubmitExpertVerificationRequest) {
-  const certificates = request.certificates ?? [];
-
-  await Promise.all(certificates.map(registerCertificate));
-
-  if (request.businessLicense) {
-    await registerBusinessRegistrationInfo(request.businessLicense);
-  }
-}
+import type { ExpertVerificationStatusResponseDto } from '../types/expertVerification';
+import { apiClient, ApiError } from './apiClient';
+import { mapSubmitVerificationRequestToDto, mapVerificationStatusDtoToVM } from './expertVerificationMappers';
+import type { ExpertVerificationApi } from './expertApiTypes';
+import { saveVerificationAssets } from './verificationAssets';
 
 async function fetchExpertVerificationStatus() {
-  const response = await apiClient.get<ExpertVerificationStatusResponseDto>(
-    "/expert/me/verification-status",
-  );
-
+  const response = await apiClient.get<ExpertVerificationStatusResponseDto>('/expert/me/verification-status');
   return mapVerificationStatusDtoToVM(response);
 }
 
 export const expertVerificationHttpApi: ExpertVerificationApi = {
-  async getExpertVerificationStatus() {
-    return fetchExpertVerificationStatus();
-  },
-
+  async getExpertVerificationStatus() { return fetchExpertVerificationStatus(); },
   async submitExpertVerification(request) {
-    await registerVerificationAssets(request);
-    await apiClient.post<void>("/expert/me/verification-requests", {
-      body: mapSubmitVerificationRequestToDto(request),
-    });
-
-    return fetchExpertVerificationStatus();
+    // Refresh status before writes: another tab may already have submitted the request.
+    const current = await fetchExpertVerificationStatus();
+    if (current.status !== 'NOT_APPLIED' && current.status !== 'REJECTED') {
+      throw new Error('현재 상태에서는 수정·재신청할 수 없습니다. 인증 상태를 다시 확인해 주세요.');
+    }
+    await saveVerificationAssets(apiClient, request);
+    request.onSubmissionAttempt?.();
+    try {
+      await apiClient.post<void>('/expert/me/verification-requests', { body: mapSubmitVerificationRequestToDto(request) });
+    } catch (error) {
+      // A definite validation/permission rejection permits editing. Network/5xx outcomes are uncertain.
+      if (error instanceof ApiError && [400, 401, 403, 422].includes(error.status)) {
+        request.onSubmissionRejected?.();
+        throw error;
+      }
+      throw new Error('신청 접수 여부를 확인하지 못했습니다. 인증 상태를 확인한 뒤 다시 진행해 주세요.');
+    }
+    try {
+      const result = await fetchExpertVerificationStatus();
+      if (result.status !== 'PENDING' && result.status !== 'APPROVED') throw new Error('unexpected status');
+      return result;
+    } catch {
+      throw new Error('신청 요청은 처리되었지만 최신 상태를 확인하지 못했습니다. 인증 상태를 다시 확인해 주세요.');
+    }
   },
 };

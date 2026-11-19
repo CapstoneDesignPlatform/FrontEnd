@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 
-export type AppUserType = "client" | "expert";
+export type AppUserType = "client" | "expert" | "admin";
 
 export type AppUser = {
   type: AppUserType;

@@ -130,6 +130,8 @@ export function buildSubmitVerificationPayload({
     certificates: certificates
       .filter(isCertificateStarted)
       .map((certificate) => ({
+        id: certificate.serverId,
+        existing: certificate.existing,
         licenseType: certificate.type,
         licenseNumber: certificate.number,
         issueDate: certificate.issueDate,
@@ -140,6 +142,8 @@ export function buildSubmitVerificationPayload({
         fileName: certificate.fileName || undefined,
       })),
     businessLicense: {
+      id: businessLicense.serverId,
+      existing: businessLicense.existing,
       businessNumber: businessLicense.businessNumber || undefined,
       file: businessLicense.file,
       ownerName: businessLicense.name || undefined,

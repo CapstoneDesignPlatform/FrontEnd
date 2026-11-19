@@ -1,6 +1,8 @@
 import type { VerificationPreviewKind } from "./filePreview";
 
 export interface VerificationCertificateData {
+  serverId?: number;
+  existing?: boolean;
   id: string;
   type: string;
   number: string;
@@ -15,6 +17,8 @@ export interface VerificationCertificateData {
 }
 
 export interface VerificationBusinessLicenseData {
+  serverId?: number;
+  existing?: boolean;
   businessNumber: string;
   name: string;
   companyName: string;
