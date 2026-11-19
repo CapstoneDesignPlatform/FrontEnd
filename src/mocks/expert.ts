@@ -6,6 +6,18 @@ import type {
   MyBidsResponseDto,
 } from "../types/expert";
 
+export const mockExpertPlans = {
+  free: { grade: "무료", alertLimit: 3, price: 0 },
+  business: { grade: "비즈니스", alertLimit: 10, price: 220000 },
+  special: { grade: "스페셜", alertLimit: "무제한", price: 330000 },
+} as const;
+
+export const mockExpertMembership = {
+  memberNumber: "EX-2026-0001",
+  grade: "business",
+  initialRemainingAlerts: 8,
+} as const;
+
 export const mockExpertProfileDto: ExpertProfileResponseDto = {
   user: {
     id: 101,

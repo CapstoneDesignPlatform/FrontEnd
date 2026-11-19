@@ -25,7 +25,10 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { AsyncStateCard } from "../../components/common/AsyncStateCard";
+import { ExpertPlanPicker } from "../../components/expert/ExpertPlanPicker";
 import { getExpertProfile, getMyBids } from "../../../api/expert";
+import { mockExpertMembership, mockExpertPlans, mockExpertProfileDto } from "../../../mocks/expert";
+import { useMockExpertAlertBalance } from "../../../mocks/expertAlertBalance";
 import type { ExpertProfileFormVM, MyBidItemVM } from "../../../types/expert";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { cn } from "../../components/ui/utils";
@@ -37,6 +40,7 @@ type ExpertDashboardData = {
 };
 
 export function ExpertDashboard() {
+  const sharedBalance = useMockExpertAlertBalance();
   const [expandedContactBidId, setExpandedContactBidId] = useState<
     number | null
   >(null);
@@ -95,6 +99,9 @@ export function ExpertDashboard() {
 
   const verification = getVerificationMeta(profile.verificationStatus);
   const VerificationIcon = verification.icon;
+  const membership = sharedBalance && profile.userId === mockExpertProfileDto.user.id
+    ? { grade: mockExpertPlans[mockExpertMembership.grade].grade, remainingAlerts: sharedBalance.remainingCount }
+    : null;
 
   return (
     <div className="space-y-6">
@@ -118,6 +125,30 @@ export function ExpertDashboard() {
           </p>
         </div>
       </div>
+
+      <Card className="gap-3 border-slate-200 p-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-semibold text-slate-950">내 이용권</h2>
+          {membership && <Badge variant="outline">예시 데이터</Badge>}
+        </div>
+        {membership ? (
+          <dl className="grid grid-cols-1 gap-3 rounded-lg bg-slate-50 px-4 py-3 sm:grid-cols-2">
+            <div>
+              <dt className="text-sm text-slate-600">내 등급</dt>
+              <dd className="mt-1 font-semibold text-slate-950">{membership.grade}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-slate-600">남은 의뢰 알림 횟수</dt>
+              <dd className="mt-1 font-semibold tabular-nums text-blue-700">
+                {membership.remainingAlerts.toLocaleString("ko-KR")}회
+              </dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="text-sm text-slate-600">이용권 조회를 준비 중입니다.</p>
+        )}
+        {membership && <ExpertPlanPicker currentGrade={membership.grade} />}
+      </Card>
 
       <Card className="border-slate-200 shadow-sm">
         <CardContent className="grid gap-3 p-4 md:grid-cols-3">

@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Download } from "lucide-react";
+import { mockExpertMembership, mockExpertPlans, mockExpertProfileDto } from "../../../mocks/expert";
+import { saveMockExpertAlertBalance, useMockExpertAlertBalance } from "../../../mocks/expertAlertBalance";
 
 interface NotificationMember {
   id: number;
@@ -16,19 +18,44 @@ interface NotificationMember {
   usedCount: number;
   remainingCount: number;
   serviceStatus: "continue" | "suspended";
+  lastAdjustment?: { delta: number; reason: string };
 }
 
-const GRADE_LIMIT: Record<string, number | "무제한"> = {
-  special: "무제한",
-  business: 10,
-  free: 3,
-};
+interface AdjustmentDraft {
+  direction: "add" | "deduct";
+  quantity: string;
+  reason: string;
+  serviceStatus?: NotificationMember["serviceStatus"];
+}
+
+const emptyDraft: AdjustmentDraft = { direction: "add", quantity: "", reason: "" };
+
+function previewAdjustment(current: number, draft: AdjustmentDraft) {
+  if (draft.quantity === "" && draft.reason === "") {
+    return { balance: current, error: "", hasAdjustment: false };
+  }
+
+  const quantity = Number(draft.quantity);
+  if (!/^\d+$/.test(draft.quantity) || !Number.isSafeInteger(quantity) || quantity < 1) {
+    return { balance: null, error: "조정 횟수는 1 이상의 정수로 입력해 주세요.", hasAdjustment: true };
+  }
+
+  const balance = draft.direction === "add" ? current + quantity : current - quantity;
+  if (balance < 0) {
+    return { balance: null, error: "잔여 횟수보다 많이 차감할 수 없습니다.", hasAdjustment: true };
+  }
+  if (!Number.isSafeInteger(balance)) {
+    return { balance: null, error: "조정 횟수가 너무 큽니다.", hasAdjustment: true };
+  }
+  return { balance, error: draft.reason.trim() ? "" : "변경 사유를 입력해 주세요.", hasAdjustment: true };
+}
 
 export function AdminNotificationManage() {
-  const [members, setMembers] = useState<NotificationMember[]>([
+  const sharedBalance = useMockExpertAlertBalance();
+  const [localMembers, setMembers] = useState<NotificationMember[]>([
     {
       id: 1,
-      memberNumber: "EX-2026-0001",
+      memberNumber: mockExpertMembership.memberNumber,
       company: "케이법무법인",
       businessNumber: "123-45-67890",
       phone: "010-1234-5678",
@@ -94,30 +121,79 @@ export function AdminNotificationManage() {
   ]);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [addCounts, setAddCounts] = useState<Record<number, string>>({});
+  const [drafts, setDrafts] = useState<Record<number, AdjustmentDraft>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
-  const handleToggleService = (id: number) => {
+  const members = localMembers.map((member) => {
+    if (!sharedBalance || member.memberNumber !== mockExpertMembership.memberNumber) return member;
+    return {
+      ...member,
+      grade: mockExpertMembership.grade,
+      company: mockExpertProfileDto.expert_profile.company_name,
+      email: mockExpertProfileDto.user.email,
+      remainingCount: sharedBalance.remainingCount,
+      lastAdjustment: sharedBalance.lastAdjustment,
+    };
+  });
+
+  const rows = members.map((member) => {
+    const draft = drafts[member.id] ?? emptyDraft;
+    const serviceStatus = draft.serviceStatus ?? member.serviceStatus;
+    return { member, draft, serviceStatus, ...previewAdjustment(member.remainingCount, draft) };
+  });
+  const canSave =
+    rows.some(({ member, serviceStatus, hasAdjustment }) => hasAdjustment || serviceStatus !== member.serviceStatus) &&
+    rows.every(({ error }) => !error);
+
+  const updateDraft = (id: number, change: Partial<AdjustmentDraft>) => {
+    setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] ?? emptyDraft), ...change } }));
+  };
+
+  const handleToggleService = (member: NotificationMember, status: NotificationMember["serviceStatus"]) => {
+    const serviceStatus = status === "continue" ? "suspended" : "continue";
+    if (isEditing) {
+      updateDraft(member.id, { serviceStatus });
+      return;
+    }
     setMembers((prev) =>
-      prev.map((m) =>
-        m.id === id
-          ? {
-              ...m,
-              serviceStatus:
-                m.serviceStatus === "continue" ? "suspended" : "continue",
-            }
-          : m,
-      ),
+      prev.map((m) => m.id === member.id ? { ...m, serviceStatus } : m),
     );
   };
 
-  const handleSave = () => {
-    setMembers((prev) =>
-      prev.map((m) => {
-        const add = parseInt(addCounts[m.id] ?? "0") || 0;
-        return { ...m, remainingCount: m.remainingCount + add };
+  const handleSave = async () => {
+    if (!canSave || isSaving) return;
+    setSaveError("");
+    const target = rows.find(({ member }) => member.memberNumber === mockExpertMembership.memberNumber);
+    if (sharedBalance && target?.hasAdjustment && target.balance !== null) {
+      setIsSaving(true);
+      try {
+        const saved = await saveMockExpertAlertBalance(
+          target.member.remainingCount, target.balance, target.draft.reason.trim(),
+        );
+        if (!saved) {
+          setSaveError("다른 화면에서 잔여 횟수가 변경되었습니다. 조정 후 횟수를 다시 확인해 주세요.");
+          return;
+        }
+      } catch {
+        setSaveError("이 브라우저에 변경사항을 저장할 수 없습니다. 브라우저 저장 공간을 확인해 주세요.");
+        return;
+      } finally {
+        setIsSaving(false);
+      }
+    }
+    setMembers(
+      rows.map(({ member, draft, serviceStatus, balance, hasAdjustment }) => {
+        if (!hasAdjustment || balance === null) return { ...member, serviceStatus };
+        return {
+          ...member,
+          serviceStatus,
+          remainingCount: balance,
+          lastAdjustment: { delta: balance - member.remainingCount, reason: draft.reason.trim() },
+        };
       }),
     );
-    setAddCounts({});
+    setDrafts({});
     setIsEditing(false);
   };
 
@@ -148,7 +224,7 @@ export function AdminNotificationManage() {
           m.businessNumber,
           m.email,
           gradeLabel(m.grade),
-          GRADE_LIMIT[m.grade],
+          mockExpertPlans[m.grade].alertLimit,
           m.usedCount,
           m.remainingCount,
           m.serviceStatus === "continue" ? "계속" : "정지",
@@ -178,7 +254,9 @@ export function AdminNotificationManage() {
         <div>
           <h1 className="text-xl font-bold">알림서비스 사용관리</h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            회원별 알림서비스 사용 현황을 관리합니다.
+            {sharedBalance
+              ? `예시 회원 ${mockExpertMembership.memberNumber}의 잔여 횟수는 이 브라우저에 저장되며 전문가 마이페이지에도 반영됩니다.`
+              : "예시 데이터입니다. 변경사항은 이 화면에서만 유지됩니다."}
           </p>
         </div>
         <Button
@@ -222,13 +300,13 @@ export function AdminNotificationManage() {
       </div>
 
       {/* 테이블 */}
-      <div className="border border-gray-300 rounded overflow-hidden">
+      <fieldset disabled={isSaving} className="min-w-0 border border-gray-300 rounded overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="bg-gray-100">
                 {[
-                  ...(isEditing ? ["추가건수"] : []),
+                  ...(isEditing ? ["잔여 횟수 조정"] : []),
                   "번호",
                   "회원번호",
                   "대표자",
@@ -252,26 +330,48 @@ export function AdminNotificationManage() {
               </tr>
             </thead>
             <tbody>
-              {members.map((m, i) => (
+              {rows.map(({ member: m, draft, serviceStatus, balance, error, hasAdjustment }, i) => (
                 <tr
                   key={m.id}
                   className={`hover:bg-blue-50 transition-colors ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
                 >
                   {isEditing && (
-                    <td className="border-b border-r border-gray-200 px-2 py-1">
+                    <td className="min-w-48 border-b border-r border-gray-200 px-2 py-2">
+                      <div className="flex items-center gap-1">
+                        <select
+                          aria-label={`${m.memberNumber} 조정 유형`}
+                          className="h-7 rounded-md border bg-white px-1"
+                          value={draft.direction}
+                          onChange={(e) => updateDraft(m.id, { direction: e.target.value === "deduct" ? "deduct" : "add" })}
+                        >
+                          <option value="add">추가</option>
+                          <option value="deduct">차감</option>
+                        </select>
+                        <Input
+                          inputMode="numeric"
+                          aria-label={`${m.memberNumber} 조정 횟수`}
+                          aria-describedby={`preview-${m.id}`}
+                          placeholder="횟수"
+                          value={draft.quantity}
+                          onChange={(e) => updateDraft(m.id, { quantity: e.target.value })}
+                          className="h-7 w-20 text-xs"
+                        />
+                        <span>회</span>
+                      </div>
                       <Input
-                        type="number"
-                        min={0}
-                        placeholder="0"
-                        value={addCounts[m.id] ?? ""}
-                        onChange={(e) =>
-                          setAddCounts((prev) => ({
-                            ...prev,
-                            [m.id]: e.target.value,
-                          }))
-                        }
-                        className="h-6 text-xs w-16"
+                        aria-label={`${m.memberNumber} 변경 사유`}
+                        aria-describedby={`preview-${m.id}`}
+                        placeholder="변경 사유"
+                        value={draft.reason}
+                        onChange={(e) => updateDraft(m.id, { reason: e.target.value })}
+                        className="mt-1 h-7 text-xs"
                       />
+                      <div id={`preview-${m.id}`} aria-live="polite">
+                        {hasAdjustment && balance !== null && (
+                          <p className="mt-1 font-medium">현재 {m.remainingCount}회 → 조정 후 {balance}회</p>
+                        )}
+                        {error && <p className="mt-1 text-red-700">{error}</p>}
+                      </div>
                     </td>
                   )}
                   <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
@@ -304,20 +404,25 @@ export function AdminNotificationManage() {
                     </span>
                   </td>
                   <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
-                    {GRADE_LIMIT[m.grade]}
+                    {mockExpertPlans[m.grade].alertLimit}
                   </td>
                   <td className="border-b border-r border-gray-200 px-2 py-1 text-center">
                     {m.usedCount}
                   </td>
                   <td className="border-b border-r border-gray-200 px-2 py-1 text-center font-semibold">
                     {m.remainingCount}
+                    {m.lastAdjustment && (
+                      <p className="mt-1 min-w-24 max-w-48 break-words text-left font-normal text-gray-600">
+                        최근 {Math.abs(m.lastAdjustment.delta)}회 {m.lastAdjustment.delta > 0 ? "추가" : "차감"} · {m.lastAdjustment.reason}
+                      </p>
+                    )}
                   </td>
                   <td className="border-b border-r border-gray-200 px-2 py-1">
                     <button
-                      onClick={() => handleToggleService(m.id)}
-                      className={`px-2 py-0.5 rounded border text-xs font-medium transition-colors ${m.serviceStatus === "continue" ? "text-blue-600 border-blue-300 hover:bg-blue-50" : "text-red-600 border-red-300 hover:bg-red-50"}`}
+                      onClick={() => handleToggleService(m, serviceStatus)}
+                      className={`px-2 py-0.5 rounded border text-xs font-medium transition-colors ${serviceStatus === "continue" ? "text-blue-600 border-blue-300 hover:bg-blue-50" : "text-red-600 border-red-300 hover:bg-red-50"}`}
                     >
-                      {m.serviceStatus === "continue" ? "계속" : "정지"}
+                      {serviceStatus === "continue" ? "계속" : "정지"}
                     </button>
                   </td>
                   <td className="border-b border-gray-200 px-2 py-1">
@@ -333,17 +438,20 @@ export function AdminNotificationManage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </fieldset>
 
       {/* 수정/저장 버튼 */}
+      {saveError && <p role="alert" className="text-sm text-red-700">{saveError}</p>}
       <div className="flex justify-end gap-2 pt-2">
         <Button
           variant="outline"
           size="sm"
           className="text-xs px-6"
+          disabled={isSaving}
           onClick={() => {
             setIsEditing(!isEditing);
-            setAddCounts({});
+            setDrafts({});
+            setSaveError("");
           }}
         >
           {isEditing ? "취소" : "수정"}
@@ -351,6 +459,7 @@ export function AdminNotificationManage() {
         <Button
           size="sm"
           className="bg-[#009689] hover:bg-[#007d71] text-xs px-6"
+          disabled={!isEditing || !canSave || isSaving}
           onClick={handleSave}
         >
           저장
